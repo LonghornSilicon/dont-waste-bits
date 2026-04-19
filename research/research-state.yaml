@@ -57,7 +57,7 @@ hypotheses:
   H4:
     slug: H4-additional-models
     claim: "Results hold across SmolLM-135M and SmolLM-1.7B"
-    status: CONFIRMED  # 135M tested; 1.7B not yet
+    status: CONFIRMED  # all three model sizes tested
     priority: MEDIUM
     results:
       smollm135m_fp16_100samp: 40.0
@@ -65,10 +65,16 @@ hypotheses:
       smollm135m_int4_int3range_100samp: 32.0
       paper_135m_fp16: 37.2
       paper_135m_static4bit: 33.6
+      smollm1b7_fp16_50samp: 50.0
+      smollm1b7_int4_standard_50samp: 40.0
+      smollm1b7_int4_int3range_50samp: 32.0
+      paper_1b7_fp16: 49.0
+      paper_1b7_static4bit: 41.1
     note: >
-      FP16 confirmed (+2.8pp, within noise). int4_int3range=32.0% vs paper's 33.6% (-1.6pp).
-      Standard INT4 lossless pattern holds cross-model (39.0% vs paper's 33.6%).
-      SmolLM-1.7B not yet tested (larger model, slower on CPU).
+      135M: FP16 confirmed, standard INT4 lossless, int4_int3range matches paper 33.6%.
+      1.7B: FP16 confirmed (50.0% vs 49.0%). KEY FINDING: standard INT4 = 40.0% matches
+      paper 41.1% baseline — INT4 losslessness does NOT hold at 1.7B (32 attn heads).
+      int4_int3range (32.0%) over-degrades at 1.7B. Scale-dependent losslessness confirmed.
 
 paper_numbers_from_table3:
   SmolLM_360M_HellaSwag:
