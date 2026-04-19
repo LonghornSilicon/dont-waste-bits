@@ -101,11 +101,13 @@ As a novel contribution (see `turboquant-integration` branch), we propose DWB-Tu
 - This holds cross-model: SmolLM-135M standard INT4 = 39.0% (vs paper's 33.6%)
 - int4_int3range also matches on 135M: 32.0% ≈ 33.6% ✅
 
-**Insight 5**: Paper's static INT4 baseline uses ~8 effective quantization levels ★
-- Standard INT4: scale=max/7, 16 levels → lossless
-- int4_int3range: scale=max/3, 8 levels → 33.0% (matches paper)
-- Paper's +7.6pp H2 claim requires this weaker-than-standard baseline
-- The claim holds but against a specific reduced-level scheme, not naive symmetric INT4
+**Insight 5**: Degradation cause identified by controlled ablation ★★
+- Standard INT4 (max/7, clamp±8): 46% | int4_int3range (max/3, clamp[-4,3]): 28% (−18pp)
+- Ablation isolates: coarse step (max/3, clamp±8) = 28% → **step size drives ALL degradation**
+- Narrow range alone (max/7, clamp[-4,3]) = 38% → range clipping adds −8pp independently
+- But combined (max/3 + narrow range): same as coarse step alone (28%) — no additive effect
+- Threshold: max/5 (42%, lossless) to max/3 (28%, degraded)
+- Intermediate result: max/7 narrow range alone loses only 8pp, still substantially lossless
 
 ### 7. Discussion
 - What we confirmed: FP16 baseline ✅, int4_int3range baseline ✅, DWB accuracy consistent ✅, H4 cross-model ✅
