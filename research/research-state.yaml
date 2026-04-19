@@ -214,16 +214,17 @@ experiments_complete:
     status: PARTIAL_CONFIRMED
     partial_results:
       beta_0_1: {acc: 39.0, avg_bits: 5.30, val_acc: 0.407, bit_dist: {2: 38.5, 4: 37.6, 8: 9.9, 16: 14.0}}
-      beta_0_5: {acc: 37.0, avg_bits: 3.06, val_acc: 0.341, bit_dist: {2: 79.9, 4: 14.5, 16: 5.5}}
-      beta_1_0: RUNNING_TRAIN_ONLY
-      beta_2_0: PENDING
+      beta_0_5: {acc: 39.0, avg_bits: 3.92, val_acc: 0.341, bit_dist: {2: 37.0, 4: 57.4, 16: 5.5}}
+      beta_1_0: TRAIN_ONLY_val_acc_0.257_approx_random
+      beta_2_0: NOT_RUN_hardware_blocked
     log: research/data/beta_sweep_run.log
     question: "Does higher latency penalty beta resolve dual-objective tension (bring avg_bits to ~5.05)?"
     conclusion: >
-      CONFIRMED even with 2 betas: no beta achieves paper's 41.2% at 5.05 bits.
-      beta=0.1 gives 39.0% @ 5.30 bits (closest to target bits, 2.2pp accuracy gap).
-      beta=0.5 gives 37.0% @ 3.06 bits (bits overshoot low, accuracy worse).
-      Dual-objective tension is NOT a hyperparameter issue.
+      CONFIRMED: no beta achieves paper's 41.2% at 5.05 bits.
+      beta=0.1: 39.0% @ 5.30 bits (closest to paper bits, 2.2pp accuracy gap).
+      beta=0.5: 39.0% @ 3.92 bits (more bits but same accuracy — wasted compression).
+      beta=1.0: training val_acc=0.257 ≈ random (0.25) — controller collapses at high penalty.
+      Dual-objective tension is NOT a hyperparameter issue — compound loss is essential.
 
 experiments_running: []
 
