@@ -8,8 +8,13 @@
 ## Summary
 
 We independently reproduced the key accuracy claims of "Don't Waste Bits!" (arXiv:2604.04722)
-and identified four critical methodological insights plus one novel finding about INT4 quantization.
-Cross-model validation on SmolLM-135M (H4) confirms all findings hold across model sizes.
+and identified six methodological insights including a novel finding about INT4 quantization and a
+mechanistically verified losslessness mechanism. Cross-model validation on SmolLM-135M (H4) confirms
+all findings hold across model sizes.
+
+> **Novel extension**: See `turboquant-integration` branch for DWB+TurboQuant integration results —
+> DWB-TurboQuant achieves 42.0% ≈ FP16 at 5.05 avg_bits, confirmed across HellaSwag (+2pp) and
+> ARC-Challenge (+3pp over DWB-scalar). All hypotheses TQ-H1, TQ-H2, TQ-H3 confirmed.
 
 **Status of claims:**
 

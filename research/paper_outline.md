@@ -16,11 +16,13 @@
 
 ## Abstract (draft)
 
-We present an independent reproduction of "Don't Waste Bits!" (arXiv:2604.04722, CVPR 2026), which proposes adaptive per-token KV-cache quantization for on-device LLMs. Since original code is not yet public (expected June 2026), we re-implement the full method from paper equations. We identify five methodological insights and present cross-model validation on SmolLM-135M and SmolLM-360M.
+We present an independent reproduction of "Don't Waste Bits!" (arXiv:2604.04722, CVPR 2026), which proposes adaptive per-token KV-cache quantization for on-device LLMs. Since original code is not yet public (expected June 2026), we re-implement the full method from paper equations. We identify six methodological insights — including direct mechanistic verification of the INT4 losslessness mechanism — and present cross-model validation on SmolLM-135M and SmolLM-360M.
 
-Our main finding: **symmetric per-tensor INT4 KV quantization is nearly lossless** — achieving ~42% on HellaSwag vs the paper's reported 33.6% baseline. This holds across six INT4 variants (100–500 samples), two model sizes, and in both single-pass and autoregressive evaluation. The paper's 33.6% baseline is reproduced only with `int4_int3range` (scale=max/3, 8 effective levels) — equivalent to INT3 precision stored in 4-bit format.
+Our main finding: **symmetric per-tensor INT4 KV quantization is nearly lossless** — achieving ~42% on HellaSwag vs the paper's reported 33.6% baseline. This holds across six INT4 variants (100–500 samples), two model sizes, and in both single-pass and autoregressive evaluation. The paper's 33.6% baseline is reproduced only with `int4_int3range` (scale=max/3, 8 effective levels) — equivalent to INT3 precision stored in 4-bit format. We verify the mechanism directly: symmetry ratio = 0.0027 (zero-mean confirmed, 1,280 K/V measurements), actual attention output error = 3.3× below naive bound (cancellation confirmed).
 
-We confirm: (1) FP16 baseline 42.6% ≈ 41.5% ✅; (2) DWB at 38.0% on 200 samples is within noise of 41.2% (H3 consistent); (3) int4_int3range=33.0% ≈ paper's 33.6% ✅; (4) all patterns replicate on SmolLM-135M (H4 confirmed).
+We confirm: (1) FP16 baseline 42.6% ≈ 41.5% ✅; (2) DWB at 38.0% on 200 samples is within noise of 41.2% (H3 consistent); (3) int4_int3range=33.0% ≈ paper's 33.6% ✅; (4) all patterns replicate on SmolLM-135M (H4 confirmed). Controller behavior analysis (Insight 6) shows C_t (confidence, Cohen's d=4.55) dominates bit assignment; R_t (rarity) barely discriminates (d=0.52).
+
+As a novel contribution (see `turboquant-integration` branch), we propose DWB-TurboQuant — routing DWB's 2-bit tier through PolarQuant vector quantization. Result: 42.0% at 5.05 avg_bits (≈ FP16, +2pp over DWB-scalar on HellaSwag, +3pp on ARC-Challenge). All code at https://github.com/LonghornSilicon/dont-waste-bits.
 
 ---
 
@@ -115,11 +117,13 @@ We confirm: (1) FP16 baseline 42.6% ≈ 41.5% ✅; (2) DWB at 38.0% on 200 sampl
 
 ### 8. Conclusion
 - FP16 baseline confirmed; DWB consistent with H3 within statistical noise
-- INT4 losslessness is a novel insight: symmetric zero-mean quantization errors cancel in attention
+- **INT4 losslessness**: zero-mean confirmed (symmetry ratio 0.0027), 3.3× cancellation measured directly
 - Paper's +7.6pp H2 claim is accurate but requires a specific 8-level INT4 baseline (not standard 16-level)
 - int4_int3range (scale=max/3) likely represents the paper's static INT4 implementation
-- Cross-model validation on SmolLM-135M confirms all findings
-- See turboquant-integration branch for DWB+TurboQuant extension
+- Cross-model validation on SmolLM-135M confirms all six findings
+- Controller analysis: C_t is the dominant signal; R_t (rarity) adds minimal value on HellaSwag
+- **DWB-TurboQuant** (turboquant-integration branch): 42.0% ≈ FP16 at 5.05 avg_bits; +2pp HellaSwag, +3pp ARC-Challenge
+- All code at https://github.com/LonghornSilicon/dont-waste-bits
 
 ---
 
