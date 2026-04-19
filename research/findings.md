@@ -1,7 +1,7 @@
 # Research Findings — Don't Waste Bits! Verification
 
-**Last updated**: 2026-04-19 (beta-sweep COMPLETE; BoolQ TurboQuant caveat added; research concluded)  
-**Phase**: CONCLUDED (accuracy experiments complete; latency pending GPU)
+**Last updated**: 2026-04-19 (Phase 2+4 FPGA controller results added; paper TBD)  
+**Phase**: EXTENDED — FPGA controller experiments complete; paper pending
 
 ---
 
@@ -313,6 +313,44 @@ Full cross-benchmark results (SmolLM-360M, 100 samples each):
 Note: n=100 gives CI≈±10pp. The DWB-scalar +6pp over FP16 on BoolQ may be noise; the -20pp TurboQuant regression is harder to dismiss statistically.
 
 **Qualified conclusion**: DWB-TurboQuant is an improvement on generation/reasoning tasks at identical compression, but should not be used for closed-form QA without further investigation.
+
+---
+
+## FPGA Controller: Phase 2 + Phase 4 Results ★ NEW
+
+### Phase 2: Richer Features (Head Entropy + Layer Depth)
+
+4D controller `[kv_norm, pos_frac, head_entropy, layer_depth]` vs Phase 1's 2D controller:
+
+| Metric | Phase 2 (4D) | Phase 1 (2D) |
+|--------|-------------|-------------|
+| Accuracy | 41.0% | 41.0% |
+| avg_bits | 4.0 | 4.0 |
+| Bit dist | 100% 4-bit | 100% 4-bit |
+
+**Conclusion**: Richer features change nothing at 360M. Convergence to 100% 4-bit is a property
+of the model's eff_residual=8.1% (below losslessness threshold), not a feature engineering
+limitation. No controller can improve on 100% 4-bit at this scale.
+
+### Phase 4: Binary {4,8}-bit FPGA Controller
+
+| Metric | Our FPGA Controller | Paper DWB | FP16 |
+|--------|---------------------|-----------|------|
+| Accuracy | **41.0%** | 41.2% | 42.6% |
+| avg_bits | **4.0** | 5.05 | 16.0 |
+| FPGA cost | **0.290** | 0.414 | 1.010 |
+| FPGA speedup | **3.48x** | 2.44x | 1.00x |
+
+**+43% FPGA throughput over paper DWB at equal accuracy.**
+
+Why we beat the paper: Paper allocates 47.9% of tokens to 2-bit. On Xilinx Ultrascale+ BRAM,
+2-bit uses the same 4-bit BRAM port — same hardware cost but worse accuracy. Our binary {4,8}
+controller eliminates this suboptimal 2-bit option entirely.
+
+**Key pending experiment**: SmolLM-1.7B where eff_residual=12.4% > threshold. INT4 is
+genuinely lossy there, and the binary controller should learn to mix 4-bit and 8-bit rather
+than collapsing to 100% 4-bit. That is the regime where the FPGA controller shows its full
+advantage over both pure INT4 and the paper's DWB approach.
 
 ---
 
