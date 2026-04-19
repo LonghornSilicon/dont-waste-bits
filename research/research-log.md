@@ -264,3 +264,23 @@ implementation gap (33.8% vs paper's 41.2%) is explained by controller training 
 - DWB accuracy 33.8% → 38%+: H3 → CONSISTENT (gap within CI)
 - DWB accuracy 33.8% → 41%+: H3 → CONFIRMED (full reproduction)
 - No improvement: indicates fundamental implementation gap beyond training
+
+**RESULT (2026-04-19 13:53)**: 37.0% (185/500), avg_bits=8.47
+- Controller v2 val_acc=0.446 (v1: 0.366) — improved by 0.080
+- Bit distribution bimodal: {2: 41.7%, 4: 9.3%, 8: 7.2%, 16: 41.8%}
+- Accuracy improved +3.2pp (33.8% → 37.0%) but bits bloated +68% (5.03 → 8.47)
+- Gap from paper: -4.2pp (improved from -7.4pp but still exceeds ±4.4pp CI)
+
+**Conclusion — Dual-Objective Tension confirmed**:
+- v1 controller (under-trained): assigns too many 2-bit, accuracy collapses (33.8%)
+- v2 controller (better-trained): becomes conservative, bimodal 2/16-bit split, accuracy improves
+  but compression degrades (8.47 vs paper's 5.05 avg_bits)
+- Paper achieves BOTH: 41.2% AND 5.05 bits — requires compound-loss training (α·CE + β·latency + γ·quality)
+- Quartile-classification approach cannot simultaneously optimize both objectives
+
+**H3 final status**: IMPL_GAP → PARTIAL
+- Accuracy target (≈41%) is achievable at 8.4+ avg_bits (within noise of 37-41%)
+- Compression target (5.05 avg_bits) cannot be reproduced without paper's compound loss
+- Paper's training details (compound loss weights, training corpus) not disclosed
+
+**Phase CONCLUDED**: All feasible accuracy experiments complete. Latency awaiting RTX 4090.

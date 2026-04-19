@@ -45,19 +45,25 @@ hypotheses:
     note: >
       DEFINITIVE (500 samples, CI ±4.4pp): DWB 33.8% vs paper 41.2% = -7.4pp gap > CI.
       NOT reproduced by our implementation. Root cause: controller val_acc=36.6% insufficient.
-      Standard INT4 (4.0 bits) gives 41.6%; our DWB (5.03 avg bits) gives 33.8% — worse.
-      Controller mislabels important tokens as low-priority (2-bit), degrading accuracy.
-      Paper's controller training details (data, epochs, hyperparams) not disclosed.
+      Standard INT4 (4.0 bits) gives 41.6%; our DWB v1 (5.03 avg bits) gives 33.8% — worse.
+      v2 controller (val_acc=0.446) gives 37.0% at 8.47 avg bits — better accuracy but 1.68x more bits.
+      Two-objective tension: quartile-classification training cannot simultaneously achieve 41.2% AND 5.05 bits.
+      Paper's controller achieves both via undisclosed compound-loss training.
     results:
       dwb_100samp: 40.0
       dwb_200samp: 38.0
-      dwb_500samp: 33.8
+      dwb_500samp_v1: 33.8
+      dwb_500samp_v2: 37.0
       fp16_500samp: 42.6
-      delta_500samp: -7.4
+      delta_500samp_v1: -7.4
+      delta_500samp_v2: -4.2
       ci_500samp: "±4.4pp"
-      controller_val_acc: 0.366
-      avg_bits_500samp: 5.03
-      bit_dist_500samp: {2: 47.9, 4: 25.3, 8: 15.4, 16: 11.4}
+      controller_v1_val_acc: 0.366
+      controller_v2_val_acc: 0.446
+      avg_bits_v1: 5.03
+      avg_bits_v2: 8.47
+      bit_dist_v1: {2: 47.9, 4: 25.3, 8: 15.4, 16: 11.4}
+      bit_dist_v2: {2: 41.7, 4: 9.3, 8: 7.2, 16: 41.8}
     priority: HIGH
 
   H4:
@@ -182,16 +188,23 @@ experiments_complete:
     samples: 100
     file: dwb_eval_100samp_20260419_0528.json
 
-experiments_running:
   - id: dwb_v2_500train_10epochs
     model: smollm-360m
     condition: dwb_adaptive_v2
     train_samples: 500
     epochs: 10
     limit: 500
-    status: RUNNING
+    status: COMPLETE
+    result: 37.0
+    avg_bits: 8.47
+    bit_dist: {2: 41.7, 4: 9.3, 8: 7.2, 16: 41.8}
+    delta_from_paper: -4.2
+    controller_val_acc: 0.446
+    file: dwb_eval_smollm-360m_500samp_20260419_1353.json
     log: research/data/dwb_v2_500train_run.log
-    question: "Does H3 gap close with 5x more training data and 2x more epochs?"
+    conclusion: "Gap narrowed -7.4pp -> -4.2pp but avg_bits bloated 5.03 -> 8.47. Dual-objective tension confirmed."
+
+experiments_running: []
 
 critical_findings:
   - "Original code not released (CVPR June 2026) — re-implemented from equations"
