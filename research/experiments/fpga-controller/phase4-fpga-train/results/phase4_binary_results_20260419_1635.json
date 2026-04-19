@@ -1,0 +1,50 @@
+{
+  "experiment": "phase4_binary_fpga",
+  "model": "HuggingFaceTB/SmolLM-360M",
+  "bit_classes": [
+    4,
+    8
+  ],
+  "beta_sweep": [
+    {
+      "beta": 0.3,
+      "avg_bits": 4.000862121582031,
+      "fpga_cost": 0.2900581955909729
+    },
+    {
+      "beta": 0.5,
+      "avg_bits": 4.001077175140381,
+      "fpga_cost": 0.2900727093219757
+    },
+    {
+      "beta": 0.7,
+      "avg_bits": 4.000215530395508,
+      "fpga_cost": 0.2900145351886749
+    }
+  ],
+  "best_beta": 0.7,
+  "eval_samples": 200,
+  "accuracy": 41.0,
+  "avg_bits": 4.0,
+  "avg_fpga_cost": 0.29,
+  "fpga_speedup_vs_fp16": 3.48,
+  "bit_dist_pct": {
+    "4": 100.0,
+    "8": 0.0
+  },
+  "baselines": {
+    "paper_dwb": {
+      "accuracy": 41.2,
+      "avg_bits": 5.05,
+      "fpga_cost": 0.414,
+      "fpga_speedup": 2.44
+    },
+    "fp16": {
+      "accuracy": 42.6,
+      "avg_bits": 16.0,
+      "fpga_cost": 1.01,
+      "fpga_speedup": 1.0
+    }
+  },
+  "elapsed_s": 516.7
+}
