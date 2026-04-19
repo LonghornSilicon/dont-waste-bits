@@ -176,44 +176,36 @@ experiments_complete:
     samples: 100
     file: dwb_eval_100samp_20260419_0528.json
 
-experiments_running:
-  - id: int4_investigation
-    script: run_int4_investigation.py
-    conditions: 7 INT4 variants
-    samples: 100
-    status: RUNNING
-
-  - id: kv_comparison_200samp
-    script: run_kv_comparison.py
-    conditions: [fp16, static4bit, static4bit_per_token, static4bit_asym]
-    samples: 200
-    status: RUNNING (static4bit_per_token in progress)
+experiments_running: []  # ALL COMPLETE as of 2026-04-19
 
 critical_findings:
   - "Original code not released (CVPR June 2026) — re-implemented from equations"
   - "KV cache quantization must hook k_proj/v_proj, NOT model weights or past_key_values"
   - "transformers 5.x uses DynamicCache — tuple-hunting hooks silently fail"
   - "Paper uses unnormalized acc metric (~42%), NOT acc_norm (~54%)"
-  - "Symmetric INT4 KV nearly lossless — errors cancel in attention sum (44.5% vs paper's 33.6%)"
-  - "DWB controller learns importance (val_acc=45.6% vs 25% random)"
+  - "Symmetric INT4 KV nearly lossless — zero-mean errors cancel (symmetry_ratio=0.0027, 3.3x cancellation)"
+  - "DWB controller learns importance (val_acc=45.6% vs 25% random); C_t dominates (d=4.55), R_t barely helps (d=0.52)"
+  - "int4_int3range (scale=max/3, 8 levels) reproduces paper's 33.6% baseline; ablation confirms coarse step drives all -18pp, range clipping adds 0pp"
+  - "DWB-TurboQuant: +2pp HellaSwag, +3pp ARC-Challenge at identical compression (5.05 avg_bits)"
 
 implementation:
   kv_cache_quant_version: v2
   approach: "Hook k_proj and v_proj Linear outputs directly"
-  models_tested: [smollm-360m, smollm2-360m]
-  quant_modes: [fp16, static4bit, static4bit_per_token, static4bit_asym, static8bit, static2bit]
+  models_tested: [smollm-360m, smollm2-360m, smollm-135m]
+  quant_modes: [fp16, static4bit, static4bit_per_token, static4bit_asym, static8bit, static2bit, int4_int3range]
 
-next_steps:
-  - Read INT4 investigation results — does any variant reproduce 33.6%?
-  - Read KV comparison 200-samp results (per-token, asym)
-  - Run DWB on 200 samples for tighter CI (±7pp)
-  - Commit all results, push to GitHub
-  - Set up Brev for latency experiments (H1)
-  - Write paper using academic-research-paper-writer skill (user must install from mcpmarket)
+final_status:
+  accuracy_experiments: COMPLETE
+  latency_experiments: AWAITING_GPU  # H1: 17.75% reduction, arithmetic verified; RTX 4090 required
+  paper_writeup: READY_TO_WRITE  # paper_outline.md complete; install academic-research-paper-writer from mcpmarket
+  github: https://github.com/LonghornSilicon/dont-waste-bits
+  branches:
+    main: verification + ablation results
+    turboquant-integration: DWB-TurboQuant extension + controller analysis + INT4 mechanism
 
 blockers:
   - GPU (RTX 4090 on NVIDIA Brev) for latency measurement (H1)
-  - academic-research-paper-writer skill not yet installed (user action needed)
+  - academic-research-paper-writer skill not yet installed (user action: mcpmarket.com)
 
 original_repo: https://github.com/SayedPedramHaeri/Dont-Waste-Bits
 our_repo: https://github.com/LonghornSilicon/dont-waste-bits
