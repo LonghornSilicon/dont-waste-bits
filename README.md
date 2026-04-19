@@ -40,6 +40,7 @@ we re-implement the full method from paper equations and document critical metho
 | KV-2bit | 200 | 25.0% | — | -17pp (hooks confirmed) |
 | DWB adaptive | 100 | 40.0% | 41.2% | -1.2pp |
 | DWB adaptive | 200 | **38.0%** | 41.2% | -3.2pp (within ±6.7pp CI) |
+| KV-4bit sym per-tensor (autoregressive) | 50 | **42.0%** | 33.6% | +8.4pp — AR methodology doesn't explain gap |
 | Latency (FP16) | — | — | 3.50 ms/tok | — |
 | Latency (KV-4bit) | — | — | 2.93 ms/tok | — |
 | Latency (DWB) | — | — | 2.41 ms/tok | — |

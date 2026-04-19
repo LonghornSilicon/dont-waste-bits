@@ -98,11 +98,12 @@ instead of the 16 levels of standard INT4. This is equivalent to INT3 precision 
 entirely on this specific weaker-than-standard baseline. With proper 16-level INT4, there is no
 7.6pp gap to recover — our standard INT4 already matches FP16.
 
-**What explains the paper's weaker baseline?** Likely candidates:
-1. The reference baseline (from another published KV quantization method) uses a non-standard scale
-2. The paper uses unsigned INT4 [0,15] with zero-point but an off-center configuration
-3. The quantization scale uses absmax/3 or similar as the divisor (common in some NF4 formats)
-4. The evaluation includes accumulated errors from autoregressive generation (not single-pass)
+**What explains the paper's weaker baseline?** Tested hypotheses:
+
+- ~~Candidate 4: Accumulated errors from autoregressive generation~~ — **RULED OUT** (AR eval gives 42.0% for INT4, same as single-pass; see run_ar_50)
+- Candidate 1: Reference baseline from another published KV quantization method uses non-standard scale
+- Candidate 2: Unsigned INT4 [0,15] with zero-point but off-center configuration
+- Candidate 3: Quantization scale uses absmax/3 or similar (common in NF4/GPTQ formats)
 
 ---
 
@@ -142,6 +143,9 @@ Both 100-sample and 200-sample results are within noise of the paper's 41.2%.
 | 500 | KV-4bit per-tensor | 500 | **41.6%** | 33.6% | ⚠️ Cannot reproduce (statistically significant) |
 | inv | **int4_int3range** | 100 | **33.0%** | 33.6% | ✅ **MATCHES PAPER** |
 | dwb | DWB adaptive | 100 | 40.0% | 41.2% | ~✅ H3 consistent |
+| dwb_200 | DWB adaptive | 200 | **38.0%** | 41.2% | ~✅ H3 consistent (CI ±6.7pp) |
+| run_ar_50 | FP16 (autoregressive) | 50 | 42.0% | 41.5% | ✅ AR matches single-pass |
+| run_ar_50 | INT4 (autoregressive) | 50 | 42.0% | 33.6% | ⚠️ AR still doesn't reproduce — rules out methodology hypothesis |
 | H1 | Latency | — | — | 2.41 ms/tok | ⏳ AWAITING GPU |
 
 ---
