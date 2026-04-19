@@ -275,15 +275,15 @@ final_status:
   fpga_controller_1b7: PENDING  # Key experiment: 1.7B is the interesting regime (eff_residual=12.4%)
   github: https://github.com/LonghornSilicon/dont-waste-bits
   git_heads:
-    main: cc51aa6
-    turboquant-integration: 7e1ba69
-    gumbel-controller: 0b0f854  # phase2 richer features result
-    fpga-controller: e0bab99   # phase4 binary FPGA controller result
+    main: fe6e2ed
+    turboquant-integration: dd78315
+    gumbel-controller: fec47ec  # concluded — superseded by fpga-controller
+    fpga-controller: 557dd09   # phase5 1.7B GPU script ready
   branches:
     main: verification + ablation + 1.7B mechanistic + paper
     turboquant-integration: all of main + DWB-TurboQuant + controller analysis + HTML report
-    gumbel-controller: phase1 + phase2 (richer features — confirms scale-driven 4-bit)
-    fpga-controller: phase1 + phase3 (FPGA model) + phase4 binary controller
+    gumbel-controller: phase1 + phase2 (richer features — concluded, superseded)
+    fpga-controller: phase1-4 results + paper draft + phase5 1.7B GPU script (ACTIVE)
 
 fpga_controller_results:
   phase2_richer_features:
