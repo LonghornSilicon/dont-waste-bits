@@ -134,6 +134,7 @@ _QUANT_FNS = {
     "static8bit": quantize_int8,
     "static8bit_per_token": quantize_int8_per_token,
     "static2bit": quantize_int2,
+    "int4_int3range": lambda x: (lambda s: (x / s).round().clamp(-4, 3) * s if s > 0 else x)(x.abs().max() / 3.0),
 }
 
 

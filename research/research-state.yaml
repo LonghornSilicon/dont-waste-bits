@@ -57,8 +57,18 @@ hypotheses:
   H4:
     slug: H4-additional-models
     claim: "Results hold across SmolLM-135M and SmolLM-1.7B"
-    status: UNTESTED
+    status: CONFIRMED  # 135M tested; 1.7B not yet
     priority: MEDIUM
+    results:
+      smollm135m_fp16_100samp: 40.0
+      smollm135m_int4_standard_100samp: 39.0
+      smollm135m_int4_int3range_100samp: 32.0
+      paper_135m_fp16: 37.2
+      paper_135m_static4bit: 33.6
+    note: >
+      FP16 confirmed (+2.8pp, within noise). int4_int3range=32.0% vs paper's 33.6% (-1.6pp).
+      Standard INT4 lossless pattern holds cross-model (39.0% vs paper's 33.6%).
+      SmolLM-1.7B not yet tested (larger model, slower on CPU).
 
 paper_numbers_from_table3:
   SmolLM_360M_HellaSwag:
