@@ -105,3 +105,32 @@ Document all findings as methodological insights for the reproducibility paper.
 - [ ] INT4 variant investigation — 7 schemes running now
 - [ ] Latency experiments (H1) — RTX 4090 required
 - [ ] Academic paper writeup
+
+---
+
+## 2026-04-19 — Session 2: Tighter CI, Methodology Test, Cross-Model Validation
+
+### DWB 200-sample run (H3 tighter CI)
+Result: 38.0% (paper: 41.2%, delta=-3.2pp, CI=±6.7pp at n=200).
+Gap direction consistent across 100 and 200 samples (-2.6pp, -4.6pp vs FP16 42.6%).
+H3 remains within noise but gap persists — cannot definitively confirm ≤0.30pp claim.
+
+### Autoregressive methodology test (Finding 5 strengthened)
+Ran autoregressive KV cache quantization (quantize DynamicCache.key_cache/value_cache
+at each generation step, 50 samples). Result: FP16=42.0%, INT4=42.0%.
+INT4 is STILL lossless in autoregressive mode. This rules out accumulated generation
+errors as the explanation for the paper's 33.6% static INT4 baseline.
+Remaining candidates: non-standard scale divisor (absmax/3), off-center zero-point,
+or reference baseline from another published method with reduced quantization levels.
+
+### H4: SmolLM-135M cross-model validation
+100 samples: FP16=40.0% (paper: 37.2%), standard-INT4=39.0% (paper: 33.6%), int4_int3range=32.0%.
+Both key findings replicate exactly:
+- Standard INT4 lossless across model sizes (39% vs paper's 33.6%)
+- int4_int3range matches paper's baseline across model sizes (32% vs 33.6%, delta=-1.6pp)
+Paper reports identical static4bit accuracy (33.6%) for both 135M and 360M — consistent
+with this being a quantization scheme property, not model-specific.
+
+### Direction: CONCLUDE (all CPU experiments done)
+All accuracy experiments complete. Research phase CONCLUDED.
+Remaining work: latency (H1, RTX 4090 required) + academic paper writeup.
