@@ -364,6 +364,45 @@ The v2 bit distribution is bimodal: $\{2: 41.7\%, 4: 9.3\%, 8: 7.2\%, 16: 41.8\%
 over-polarizes between unimportant (2-bit) and critical (16-bit) tiers,
 losing the intermediate compression range.
 
+\subsection{H3 Beta-Sweep: Can Latency Penalty Resolve the Tension?}
+\label{sec:beta_sweep}
+
+We test whether the dual-objective tension is simply a hyperparameter
+issue—i.e., whether increasing the latency penalty weight $\beta$ in
+$\mathcal{L} = \alpha\mathcal{L}_\text{CE} + \beta\mathcal{L}_\text{latency} + \gamma\mathcal{L}_\text{quality}$
+can drive avg\_bits toward the paper's 5.05 without collapsing accuracy.
+We sweep $\beta \in \{0.1, 0.5, 1.0, 2.0\}$ with 100 train/eval samples
+and 5 epochs, holding $\alpha=1, \gamma=0.1$ fixed.
+
+\begin{table}[h]
+\centering
+\caption{$\beta$ sweep results: latency penalty vs.\ accuracy/compression
+trade-off. Results pending (experiment running).}
+\label{tab:beta}
+\footnotesize
+\begin{tabular}{ccccc}
+\toprule
+$\beta$ & Acc & avg\_bits & val\_acc & Notes \\
+\midrule
+0.1 & \multicolumn{4}{c}{\textit{(results pending)}} \\
+0.5 & & & & \\
+1.0 & & & & \\
+2.0 & & & & \\
+\midrule
+\textit{Paper} & \textit{41.2\%} & \textit{5.05} & --- & target \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Prediction}: higher $\beta$ will lower avg\_bits (compression
+improves) but accuracy will also fall, confirming the dual-objective
+tension is a fundamental limitation of the quartile-labeling approach—not
+merely a hyperparameter choice.
+If $\beta=1.0$ or $\beta=2.0$ achieves $\approx$37\% accuracy at
+$\approx$5.05 avg\_bits, the gap would be attributable to
+$\beta$ alone.
+We will update this table when results are available.
+
 %-----------------------------------------------------------------------
 \section{Methodological Insights}
 \label{sec:insights}

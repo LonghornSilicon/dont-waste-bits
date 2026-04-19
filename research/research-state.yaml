@@ -204,6 +204,18 @@ experiments_complete:
     log: research/data/dwb_v2_500train_run.log
     conclusion: "Gap narrowed -7.4pp -> -4.2pp but avg_bits bloated 5.03 -> 8.47. Dual-objective tension confirmed."
 
+  - id: beta_sweep_h3
+    model: smollm-360m
+    condition: dwb_beta_sweep
+    betas: [0.1, 0.5, 1.0, 2.0]
+    train_samples: 100
+    eval_samples: 100
+    epochs: 5
+    status: RUNNING
+    log: research/data/beta_sweep_run.log
+    question: "Does higher latency penalty beta resolve dual-objective tension (bring avg_bits to ~5.05)?"
+    prediction: "Higher beta lowers avg_bits but accuracy also drops — fundamental limitation confirmed"
+
 experiments_running: []
 
 critical_findings:
