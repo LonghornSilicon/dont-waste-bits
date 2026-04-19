@@ -1,0 +1,15 @@
+{
+  "model": "smollm-360m",
+  "limit": 200,
+  "metric": "acc_unnormalized",
+  "date": "2026-04-19T05:25:25.946396",
+  "fp16": 44.0,
+  "kv4bit": 44.5,
+  "kv8bit": 44.0,
+  "kv2bit": 25.0,
+  "paper_fp16": 41.5,
+  "paper_kv4": 33.6,
+  "paper_dwb": 41.2,
+  "delta_fp16": 2.5,
+  "delta_kv4": 10.9
+}

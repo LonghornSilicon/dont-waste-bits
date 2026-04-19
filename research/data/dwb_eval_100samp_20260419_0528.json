@@ -1,0 +1,17 @@
+{
+  "model": "smollm-360m",
+  "condition": "dwb",
+  "metric": "acc_unnorm",
+  "limit": 100,
+  "accuracy": 40.0,
+  "bit_distribution": {
+    "2": 57.3,
+    "4": 18.9,
+    "8": 8.3,
+    "16": 15.6
+  },
+  "avg_bits": 5.050632911392405,
+  "paper_target": 41.2,
+  "delta": -1.2,
+  "date": "2026-04-19T05:28:04.316240"
+}

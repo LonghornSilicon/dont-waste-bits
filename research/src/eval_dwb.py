@@ -126,9 +126,18 @@ def evaluate_hellaswag_dwb(model, tokenizer, controller, limit=200, device="cpu"
     Two-pass: extract signals first, then score with per-token bit-widths.
     """
     from datasets import load_dataset
+    from transformers import AutoModelForCausalLM
 
     print("  Loading HellaSwag...", flush=True)
     ds = load_dataset("Rowan/hellaswag", split="validation").select(range(limit))
+
+    # Reload model with eager attention for output_attentions=True (sdpa doesn't support it)
+    model_name = model.config._name_or_path
+    print(f"  Reloading {model_name} with eager attention for signal extraction...", flush=True)
+    eager_model = AutoModelForCausalLM.from_pretrained(
+        model_name, dtype=torch.float32, attn_implementation="eager"
+    ).to(device)
+    eager_model.eval()
 
     # Build frequency table from first pass
     print("  Building token frequency table...", flush=True)
@@ -150,9 +159,9 @@ def evaluate_hellaswag_dwb(model, tokenizer, controller, limit=200, device="cpu"
 
         ctx = ex["activity_label"] + ": " + ex["ctx_a"] + " " + ex["ctx_b"].capitalize()
 
-        # Pass 1: extract signals from context
+        # Pass 1: extract signals from context using eager model
         signals, token_ids = extract_signals_for_sequence(
-            model, tokenizer, ctx, freq_table, device
+            eager_model, tokenizer, ctx, freq_table, device
         )
 
         # Controller prediction
@@ -168,6 +177,8 @@ def evaluate_hellaswag_dwb(model, tokenizer, controller, limit=200, device="cpu"
 
         if max(range(4), key=lambda j: scores[j]) == int(ex["label"]):
             correct += 1
+
+    del eager_model  # free memory after signal extraction is complete
 
     elapsed = time.time() - t0
     acc = correct / total * 100
