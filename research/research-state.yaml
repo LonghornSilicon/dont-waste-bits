@@ -183,25 +183,46 @@ critical_findings:
   - "KV cache quantization must hook k_proj/v_proj, NOT model weights or past_key_values"
   - "transformers 5.x uses DynamicCache — tuple-hunting hooks silently fail"
   - "Paper uses unnormalized acc metric (~42%), NOT acc_norm (~54%)"
-  - "Symmetric INT4 KV nearly lossless — zero-mean errors cancel (symmetry_ratio=0.0027, 3.3x cancellation)"
-  - "DWB controller learns importance (val_acc=45.6% vs 25% random); C_t dominates (d=4.55), R_t barely helps (d=0.52)"
-  - "int4_int3range (scale=max/3, 8 levels) reproduces paper's 33.6% baseline; ablation confirms coarse step drives all -18pp, range clipping adds 0pp"
-  - "DWB-TurboQuant: +2pp HellaSwag, +3pp ARC-Challenge at identical compression (5.05 avg_bits)"
+  - "INT4 losslessness is SCALE-DEPENDENT: lossless at 135M/360M (15 heads), lossy at 1.7B (32 heads)"
+  - "Mechanism fully quantified: eff_residual=rel_error*cancel_ratio — 8.1% at 360M (below threshold), 12.4% at 1.7B (above)"
+  - "Root cause: hidden_dim 2048 vs 960 -> higher KV variance -> larger errors at same scale divisor"
+  - "DWB controller: C_t dominates (d=4.55), R_t barely helps (d=0.52); val_acc=45.6% vs 25% random"
+  - "int4_int3range (scale=max/3, 8 levels) reproduces 135M/360M baseline; coarse step causes all -18pp (ablation)"
+  - "DWB-TurboQuant: +2pp HellaSwag, +3pp ARC-Challenge at identical 5.05 avg_bits"
+
+mechanistic_verification:
+  smollm_360m:
+    std_int4_symmetry: 0.0027
+    std_int4_rel_error: 0.2695
+    std_int4_cancellation: 0.30
+    std_int4_effective_residual: 0.081
+    data_file: research/data/int4_error_analysis_20260419.json
+  smollm_1b7:
+    std_int4_symmetry: 0.0006
+    std_int4_rel_error: 0.3531
+    std_int4_cancellation: 0.3511
+    std_int4_effective_residual: 0.124
+    data_file: research/data/int4_error_1b7_20260419_1100.json
+  losslessness_threshold: "between 8.1% and 12.4% effective residual"
 
 implementation:
   kv_cache_quant_version: v2
   approach: "Hook k_proj and v_proj Linear outputs directly"
-  models_tested: [smollm-360m, smollm2-360m, smollm-135m]
+  models_tested: [smollm-135m, smollm-360m, smollm-1.7b]
   quant_modes: [fp16, static4bit, static4bit_per_token, static4bit_asym, static8bit, static2bit, int4_int3range]
 
 final_status:
   accuracy_experiments: COMPLETE
+  mechanistic_verification: COMPLETE
   latency_experiments: AWAITING_GPU  # H1: 17.75% reduction, arithmetic verified; RTX 4090 required
   paper_writeup: READY_TO_WRITE  # paper_outline.md complete; install academic-research-paper-writer from mcpmarket
   github: https://github.com/LonghornSilicon/dont-waste-bits
+  git_heads:
+    main: 7fa6707
+    turboquant-integration: e28bc3b
   branches:
-    main: verification + ablation results
-    turboquant-integration: DWB-TurboQuant extension + controller analysis + INT4 mechanism
+    main: verification + ablation + 1.7B mechanistic
+    turboquant-integration: all of main + DWB-TurboQuant + controller analysis + HTML report
 
 blockers:
   - GPU (RTX 4090 on NVIDIA Brev) for latency measurement (H1)
