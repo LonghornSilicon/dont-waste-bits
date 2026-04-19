@@ -113,8 +113,23 @@ class DWBLoss(nn.Module):
 # ---- Dataset builder ----
 
 def build_training_dataset(model, tokenizer, texts, device="cpu", max_length=128):
-    """Extract (signal, target_bitwidth) pairs from texts."""
-    model.eval()
+    """Extract (signal, target_bitwidth) pairs from texts.
+
+    Uses eager attention to enable output_attentions=True (required for V_t signal).
+    transformers 5.x sdpa attention does not support output_attentions.
+    """
+    import re
+    from transformers import AutoModelForCausalLM
+
+    # Reload with eager attention so we can extract attention weights
+    model_name = model.config._name_or_path
+    print(f"  Reloading {model_name} with eager attention for signal extraction...", flush=True)
+    eager_model = AutoModelForCausalLM.from_pretrained(
+        model_name, dtype=torch.float32,
+        attn_implementation="eager"
+    ).to(device)
+    eager_model.eval()
+
     all_signals = []
     freq_counter = Counter()
 
@@ -122,17 +137,27 @@ def build_training_dataset(model, tokenizer, texts, device="cpu", max_length=128
         freq_counter.update(tokenizer.encode(text))
 
     with torch.no_grad():
-        for text in texts:
+        for i, text in enumerate(texts):
+            if i > 0 and i % 25 == 0:
+                print(f"  Signal extraction: {i}/{len(texts)}", flush=True)
             inputs = tokenizer(text, return_tensors="pt", truncation=True,
                                max_length=max_length).to(device)
-            outputs = model(**inputs, output_attentions=True)
+            outputs = eager_model(**inputs, output_attentions=True)
             logits_seq = outputs.logits[0]
-            attn = outputs.attentions[-1][0]
+            # outputs.attentions: tuple of (num_heads, seq, seq) per layer
+            if outputs.attentions and len(outputs.attentions) > 0:
+                attn = outputs.attentions[-1][0]   # last layer, batch 0
+            else:
+                # Fallback: uniform attention (V_t = 0)
+                seq_len = inputs["input_ids"].shape[1]
+                attn = torch.ones(1, seq_len, seq_len) / seq_len
             ids = inputs["input_ids"][0]
 
             for t in range(len(ids)):
                 s = extract_signals(logits_seq[t], ids[t].item(), attn, freq_counter)
                 all_signals.append(s)
+
+    del eager_model  # free memory
 
     signals = torch.stack(all_signals)
     # Importance = mean of normalized signals

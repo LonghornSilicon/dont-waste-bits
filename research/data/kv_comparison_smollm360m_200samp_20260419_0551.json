@@ -1,0 +1,45 @@
+{
+  "model": "smollm-360m",
+  "limit": 200,
+  "metric": "acc_unnorm",
+  "date": "2026-04-19T05:24:41.112342",
+  "paper_targets": {
+    "fp16": 41.5,
+    "static4bit": 33.6,
+    "dwb": 41.2
+  },
+  "conditions": {
+    "fp16": {
+      "accuracy": 44.0,
+      "correct": 88,
+      "total": 200,
+      "elapsed_s": 369.6,
+      "paper_target": 41.5,
+      "delta": 2.5
+    },
+    "static4bit": {
+      "accuracy": 44.5,
+      "correct": 89,
+      "total": 200,
+      "elapsed_s": 356.0,
+      "paper_target": 33.6,
+      "delta": 10.9
+    },
+    "static4bit_per_token": {
+      "accuracy": 43.5,
+      "correct": 87,
+      "total": 200,
+      "elapsed_s": 535.3,
+      "paper_target": 33.6,
+      "delta": 9.9
+    },
+    "static4bit_asym": {
+      "accuracy": 42.5,
+      "correct": 85,
+      "total": 200,
+      "elapsed_s": 362.0,
+      "paper_target": 33.6,
+      "delta": 8.9
+    }
+  }
+}

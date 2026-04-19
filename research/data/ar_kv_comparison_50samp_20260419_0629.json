@@ -1,0 +1,28 @@
+{
+  "model": "smollm-360m",
+  "limit": 50,
+  "metric": "acc_unnorm_autoregressive",
+  "date": "2026-04-19T06:19:41.000417",
+  "paper": {
+    "fp16": 41.5,
+    "static4bit": 33.6
+  },
+  "conditions": {
+    "fp16": {
+      "accuracy": 42.0,
+      "correct": 21,
+      "total": 50,
+      "elapsed_s": 280.0,
+      "paper_target": 41.5,
+      "delta": 0.5
+    },
+    "static4bit": {
+      "accuracy": 42.0,
+      "correct": 21,
+      "total": 50,
+      "elapsed_s": 290.4,
+      "paper_target": 33.6,
+      "delta": 8.4
+    }
+  }
+}

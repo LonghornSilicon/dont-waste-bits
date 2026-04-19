@@ -1,0 +1,14 @@
+{
+  "model": "smollm-360m",
+  "limit": 100,
+  "date": "2026-04-19T04:37:50.960750",
+  "fp16": 49.0,
+  "kv4bit": 48.0,
+  "kv8bit": 49.0,
+  "kv2bit": 21.0,
+  "paper_fp16": 41.5,
+  "paper_kv4": 33.6,
+  "paper_dwb": 41.2,
+  "delta_fp16": 7.5,
+  "delta_kv4": 14.4
+}

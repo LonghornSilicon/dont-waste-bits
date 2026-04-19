@@ -21,8 +21,8 @@
 - **Targets**: 3-bit keys, 2-bit values in KV cache
 - **Compression**: ~6× KV cache reduction, up to 8× speedup on H100
 - **Key property**: Training-free, data-oblivious
-- **Code**: https://github.com/0xSero/turboquant
-- **Relevance**: Integration target for Track 2
+- **Code**: https://github.com/tonbistudio/turboquant-pytorch (pure PyTorch, no vLLM dependency)
+- **Relevance**: Integration target for Track 2 — DWB importance signals route tokens needing compression to TurboQuant
 
 ### KIVI (arXiv:2402.02750)
 - **Method**: Asymmetric 2-bit KV cache quantization, tuning-free

@@ -1,0 +1,17 @@
+{
+  "model": "smollm-360m",
+  "limit": 100,
+  "paper_fp16": 41.0,
+  "paper_kv4": 33.6,
+  "results": {
+    "fp16": 41.0,
+    "int4_sym_pertensor": 44.0,
+    "int4_asym_pertensor": 43.0,
+    "int4_sym_pertoken": 44.0,
+    "int4_asym_pertoken": 39.0,
+    "int4_int3range": 33.0,
+    "int4_block64": 44.0,
+    "int4_offline_scale_2x": 28.000000000000004
+  },
+  "date": "2026-04-19T06:04:54.754912"
+}

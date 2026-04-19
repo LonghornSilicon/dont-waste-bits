@@ -27,55 +27,62 @@ Routing:
    2-bit  →  TurboQuant vector quant   ← novel contribution
 ```
 
+Expected: DWB-TurboQuant recovers accuracy lost by naive 2-bit scalar while maintaining
+TurboQuant's compression ratio, especially on reasoning-heavy benchmarks.
+
+---
+
+## Baseline Numbers (from main branch verification)
+
+| Condition | SmolLM-360M | SmolLM-135M | Source |
+|-----------|-------------|-------------|--------|
+| FP16 | 42.6% | 40.0% | Verified (500/100 samp) |
+| Standard INT4 KV | 41.2–44.5% | 39.0% | Verified (lossless) |
+| int4_int3range (8-level) | 33.0% | 32.0% | Verified (matches paper) |
+| DWB adaptive | 38.0–40.0% | — | Verified (200/100 samp) |
+| Scalar 2-bit | 25.0% | — | Verified (catastrophic) |
+
+**Key finding from main**: Standard INT4 is near-lossless (zero-mean error cancellation).
+DWB 2-bit assignment (57% of tokens) uses naive scalar 2-bit → 25% accuracy. TurboQuant's
+vector quantization should recover 5–15pp for these tokens.
+
 ---
 
 ## Hypotheses
 
-| ID | Claim | Prediction |
-|----|-------|-----------|
-| TQ-H1 | DWB+TurboQuant > DWB alone on accuracy | +0.5–2.0 pp on HellaSwag |
-| TQ-H2 | Compression maintained or improved vs DWB alone | Avg bits ≤ DWB |
-| TQ-H3 | Larger benefit on ARC-Challenge than HellaSwag | More reasoning benefit |
+### TQ-H1: Accuracy Recovery
+**Claim**: DWB-TurboQuant achieves higher accuracy than DWB-scalar for 2-bit tokens.  
+**Prediction**: +3–10pp over DWB-scalar on HellaSwag (from 38% toward 42%).  
+**Mechanism**: PolarQuant rotation decorrelates KV dimensions, reducing worst-case error.
 
----
+### TQ-H2: Compression Parity
+**Claim**: DWB-TurboQuant matches TurboQuant's compression ratio.  
+**Prediction**: avg_bits ≈ 4.5–5.0 (DWB routing) with <0.5pp accuracy difference from DWB-scalar.
 
-## Why This Should Work
-
-TurboQuant's QJL residual correction eliminates quantization bias that naive 2-bit scalar quantization introduces. For tokens DWB identifies as low-importance (where some error is tolerable), TurboQuant provides better-quality compression at the same bit budget.
-
-**Key risk**: TurboQuant's rotation matrix is calibrated globally. Applying it to a subset of tokens may require per-token re-calibration. The `turboquant-pytorch` fork (which replaced QJL with asymmetric K/V allocation) may integrate more cleanly.
-
----
-
-## TurboQuant Implementation
-
-Using [`tonbistudio/turboquant-pytorch`](https://github.com/tonbistudio/turboquant-pytorch) — pure PyTorch, no vLLM dependency:
-- Asymmetric K/V allocation (more bits for keys, fewer for values)
-- Layer-adaptive precision (protects first/last transformer layers)
-- Residual windowing: recent tokens stay in FP16
-
-Pipeline code: `research/src/turboquant_pipeline.py`
-
----
-
-## Experiments Plan
-
-| Run | Description | Primary Metric |
-|-----|-------------|---------------|
-| TQ-base | TurboQuant alone (uniform 3/2-bit) | HellaSwag acc%, latency |
-| DWB-base | DWB alone (from main branch) | HellaSwag acc%, latency |
-| DWB+TQ | DWB controller + TQ at 2-bit tier | HellaSwag acc%, latency |
-| DWB+TQ-ablation | TQ at all tiers | HellaSwag acc%, latency |
-
-All on SmolLM-360M. Expand to ARC-C and OBQA after primary results.
+### TQ-H3: Benchmark Robustness
+**Claim**: Gains are larger on reasoning tasks than factual recall.  
+**Status**: Untested (requires ARC/BoolQ in addition to HellaSwag).
 
 ---
 
 ## Status
 
-- [x] Pipeline architecture designed (`turboquant_pipeline.py`)
-- [x] Research protocols locked
-- [ ] TurboQuant PyTorch integration (attention hooks)
-- [ ] DWB baseline numbers from `main` branch
-- [ ] TQ-H1/H2/H3 experiments
-- [ ] Paper
+- [x] Baseline numbers established (from main branch)
+- [x] Protocol committed
+- [x] `turboquant_pipeline.py` scaffold created
+- [x] `turboquant_impl.py` — self-contained PolarQuant implementation (no external deps)
+- [ ] TQ-H1 experiment run
+- [ ] TQ-H2 experiment run
+- [ ] TQ-H3 (additional benchmarks)
+
+---
+
+## Running
+
+```bash
+# Run DWB-TurboQuant vs DWB-scalar comparison (100 samples)
+python research/src/run_turboquant_eval.py --limit 100
+
+# Or directly:
+python research/src/turboquant_pipeline.py
+```

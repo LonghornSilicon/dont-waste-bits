@@ -38,8 +38,14 @@ PAPER_TARGETS = {
 }
 
 
-def score_continuation(model, tokenizer, context, continuation, device="cpu"):
-    """Length-normalized log-likelihood of continuation given context."""
+def score_continuation(model, tokenizer, context, continuation, device="cpu", normalize=False):
+    """Log-likelihood of continuation given context.
+
+    normalize=False: raw sum (matches paper's reported 'accuracy' metric, ~41.5% FP16)
+    normalize=True:  per-token average (lm-eval acc_norm, ~54% FP16 — NOT what paper uses)
+
+    Confirmed via diagnostic: unnormalized gives 42.0% on 50 val samples vs paper's 41.5%.
+    """
     full_text = context + continuation
     full_ids = tokenizer.encode(full_text, return_tensors="pt").to(device)
     ctx_len = tokenizer.encode(context, return_tensors="pt").shape[1]
@@ -53,22 +59,16 @@ def score_continuation(model, tokenizer, context, continuation, device="cpu"):
 
     log_probs = F.log_softmax(logits[ctx_len - 1:ctx_len - 1 + len(cont_ids)], dim=-1)
     score = log_probs[range(len(cont_ids)), cont_ids].sum().item()
-    return score / len(cont_ids)
+    return score / len(cont_ids) if normalize else score
 
 
-def apply_int4_simulation(model):
-    """Simulate INT4 weight quantization for static 4-bit baseline."""
-    print("  Applying INT4 weight simulation...")
-    count = 0
-    with torch.no_grad():
-        for name, param in model.named_parameters():
-            if "weight" in name and param.dim() >= 2:
-                scale = param.abs().max() / 7.0
-                if scale > 0:
-                    param.data = (param.data / scale).round().clamp(-8, 7) * scale
-                    count += 1
-    print(f"  Quantized {count} weight tensors to INT4")
-    return model
+def apply_kv_cache_quant(model, mode="static4bit"):
+    """Wrap model with KV cache quantization hooks (NOT weight quantization).
+    Paper applies 4-bit to KV cache only — keys/values during decoding.
+    """
+    from kv_cache_quant import attach_kv_hooks
+    hooks = attach_kv_hooks(model, mode=mode)
+    return model, hooks
 
 
 def evaluate_hellaswag(model, tokenizer, limit=None, device="cpu"):
@@ -86,8 +86,9 @@ def evaluate_hellaswag(model, tokenizer, limit=None, device="cpu"):
             eta = (time.time() - t0) / i * (total - i)
             print(f"  [{i}/{total}] acc={correct/i*100:.1f}% eta={eta:.0f}s")
 
-        ctx = ex["ctx"]
-        scores = [score_continuation(model, tokenizer, ctx, " " + e, device)
+        # lm-eval HellaSwag format: activity_label + ": " + ctx_a + " " + ctx_b
+        ctx = ex["activity_label"] + ": " + ex["ctx_a"] + " " + ex["ctx_b"].capitalize()
+        scores = [score_continuation(model, tokenizer, ctx, " " + e, device, normalize=False)
                   for e in ex["endings"]]
         if max(range(4), key=lambda j: scores[j]) == int(ex["label"]):
             correct += 1

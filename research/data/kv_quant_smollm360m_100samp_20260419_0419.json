@@ -1,0 +1,26 @@
+{
+  "model": "smollm-360m",
+  "limit": 100,
+  "date": "2026-04-19T04:19:18.063029",
+  "fp16": {
+    "accuracy": 49.0,
+    "correct": 49,
+    "total": 100,
+    "elapsed_s": 199.2595672607422
+  },
+  "kv4bit": {
+    "accuracy": 49.0,
+    "correct": 49,
+    "total": 100,
+    "elapsed_s": 272.9634463787079
+  },
+  "kv8bit": {
+    "accuracy": 49.0,
+    "correct": 49,
+    "total": 100,
+    "elapsed_s": 111.55886507034302
+  },
+  "paper_fp16": 41.5,
+  "paper_kv4": 33.6,
+  "paper_dwb": 41.2
+}
