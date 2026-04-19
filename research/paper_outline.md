@@ -148,7 +148,9 @@ ARC bit distribution: {2: 37.4%, 4: 17.3%, 8: 12.2%, 16: 33.2%} — controller a
 - The "cannot reproduce" is itself a finding: naive INT4 is NOT harmful
 - Paper's +7.6pp H2 claim requires non-standard 8-level INT4 baseline
 - Latency claim (H1, 17.75%) cannot be tested without GPU — arithmetic verified
-- DWB-TurboQuant: CONFIRMED across two benchmarks — +2pp HellaSwag, +3pp ARC-Challenge
+- DWB-TurboQuant: CONFIRMED across two valid benchmarks — +2pp HellaSwag, +3pp ARC-Challenge
+- **Benchmark selection pitfall**: BoolQ confounded (FP16=55% < 70% majority baseline) — for KV quantization studies, only include benchmarks where FP16 meaningfully exceeds majority-class baseline. Binary classification tasks are susceptible to logit bias shifts from quantization masquerading as accuracy changes.
+- **Controller signal finding**: R_t (rarity, Eq. 15) adds minimal discriminative value on HellaSwag (Cohen's d=0.52). C_t dominates (d=4.55). This suggests the rarity signal may need re-calibration for datasets with diverse vocabulary.
 
 ### 9. Conclusion
 - FP16 baseline confirmed, DWB accuracy consistent with paper's claims

@@ -175,6 +175,14 @@ Routing:
   <li><strong>Paper's baseline</strong>: Reproduce 33.6% with <code>scale = x.abs().max() / 3.0</code>, clamp to [−4, 3] (8 levels). This is non-standard INT4 — equivalent to INT3 precision in 4-bit format.</li>
 </ul>
 
+<!-- ─────────────────── SECTION 4b: BOOLQ METHODOLOGICAL NOTE ─────────────────── -->
+<div class="card yellow">
+  <h3>BoolQ: Confounded Benchmark — Excluded from TQ-H3</h3>
+  <p>Ran BoolQ (yes/no reading comprehension, 100 samples). Results: FP16=55%, DWB-scalar=61%, DWB-TurboQuant=41%.</p>
+  <p><strong>Why this is excluded</strong>: First 100 BoolQ examples have <strong>70% True labels</strong>. SmolLM-360M FP16=55% is <em>below the 70% majority-class baseline</em> — the model cannot meaningfully solve BoolQ. The −20pp TurboQuant vs scalar gap reflects logit bias shifts (scalar biases toward "Yes", TurboQuant toward "No"), not comprehension quality.</p>
+  <p><strong>Methodological lesson for KV quantization papers</strong>: Only include benchmarks where FP16 > majority-class baseline. Binary classification tasks (BoolQ, COPA) are susceptible to logit bias artifacts from quantization. TQ-H3 stands on HellaSwag (+2pp) and ARC-Challenge (+3pp) where FP16 meaningfully discriminates.</p>
+</div>
+
 <!-- ─────────────────── SECTION 5: DATA FILES ─────────────────── -->
 <h2><span class="section-num">5.</span> Data Files</h2>
 
