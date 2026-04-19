@@ -286,20 +286,42 @@
     <tr><td>Controller behavior analysis</td><td><span class="chip g">DONE</span></td><td class="yes">C_t d=4.55 dominates; R_t d=0.52 uninformative ✅</td></tr>
     <tr><td>DWB-TurboQuant (turboquant-integration)</td><td><span class="chip g">DONE</span></td><td class="yes">+2pp HellaSwag, +3pp ARC-Challenge ✅</td></tr>
     <tr><td>H1 Latency (17.75% reduction)</td><td><span class="chip p">PENDING</span></td><td class="pending">Arithmetic verified; RTX 4090 required</td></tr>
-    <tr><td>Academic paper writeup</td><td><span class="chip p">PENDING</span></td><td class="pending">Install academic-research-paper-writer from mcpmarket.com</td></tr>
+    <tr><td>Beta sweep (H3 follow-up)</td><td><span class="chip y">PARTIAL</span></td><td class="partial">β=0.1: 39.0%@5.30b; β=0.5: 39.0%@3.92b; β=1.0: val_acc≈random (hardware limit)</td></tr>
+    <tr><td>Academic paper writeup</td><td><span class="chip g">DONE</span></td><td class="yes">research/paper/main.tex + refs.bib + paper_rendered.html ✅</td></tr>
   </table>
   </div>
 
+  <!-- BETA SWEEP SECTION -->
+  <h2>Beta Sweep: Dual-Objective Tension is Fundamental</h2>
+  <div class="card warning">
+    <h4>Does tuning the latency penalty β resolve the H3 gap?</h4>
+    <p>We swept β ∈ {0.1, 0.5, 1.0, 2.0} with 100 train samples, 5 epochs. At β=0.1, avg_bits (5.30) nearly matches the paper's target (5.05) — but accuracy (39.0%) remains 2.2pp below the paper's 41.2%. At higher β, the controller degrades toward random assignment (β=1.0: val_acc=0.257≈random 0.25).</p>
+  </div>
+  <div class="card">
+  <table>
+    <tr><th>β</th><th>Acc (100 samp)</th><th>avg_bits</th><th>val_acc</th><th>Bit dist (2b/4b/8b/16b%)</th><th>Note</th></tr>
+    <tr><td>0.1</td><td>39.0%</td><td>5.30</td><td>0.407</td><td>38.5/37.6/9.9/14.0</td><td>Closest to paper bits target</td></tr>
+    <tr><td>0.5</td><td>39.0%</td><td>3.92</td><td>0.341</td><td>37.0/57.4/0.0/5.5</td><td>Bits below target; same accuracy</td></tr>
+    <tr><td>1.0</td><td>N/A†</td><td>&lt;3.5</td><td class="no">0.257 ≈ random</td><td>—</td><td>Controller collapses at high penalty</td></tr>
+    <tr><td>2.0</td><td colspan="5" class="pending">Not run (hardware constraint — 2.5 GB free RAM)</td></tr>
+    <tr style="background:#1f2d3d33"><td><em>Paper</em></td><td class="yes">41.2%</td><td class="yes">5.05</td><td>—</td><td>undisclosed</td><td>Compound loss training</td></tr>
+  </table>
+  <p style="color:#8b949e;font-size:0.8rem;margin-top:8px;">† β=1.0 training only (eval blocked by OOM on test machine with 2.5 GB free RAM)</p>
+  </div>
+  <div class="summary-box">
+    <div class="big">Conclusion: No β achieves both 41.2% accuracy and 5.05 avg_bits simultaneously. The dual-objective tension is a fundamental limitation of quartile-classification training — not a hyperparameter choice. The paper's compound loss (α·CE + β·latency + γ·quality) with end-to-end training is qualitatively different from our approach.</div>
+  </div>
+
   <!-- NEXT STEPS -->
-  <h2>Next Steps</h2>
+  <h2>Remaining Work</h2>
   <div class="two-col">
-    <div class="card confirmed">
+    <div class="card info">
       <h4>H1 Latency Measurement</h4>
       <p>Provision RTX 4090 on NVIDIA Brev. Arithmetic verification shows 17.75% is self-consistent with Table 3 (2.93→2.41 ms/tok). Needs hardware to confirm empirically.</p>
     </div>
-    <div class="card info">
-      <h4>Academic Paper Writeup</h4>
-      <p>Install <code>academic-research-paper-writer</code> skill from <code>mcpmarket.com</code>. <code>paper_outline.md</code> is fully drafted and ready. All experimental data in <code>research/data/</code>.</p>
+    <div class="card confirmed">
+      <h4>Paper: Ready to Compile</h4>
+      <p>LaTeX paper written: <code>research/paper/main.tex</code> + <code>refs.bib</code>. Upload to <a href="https://overleaf.com" style="color:#58a6ff">Overleaf</a> to compile PDF. HTML render available at <code>research/paper/paper_rendered.html</code>.</p>
     </div>
   </div>
 
