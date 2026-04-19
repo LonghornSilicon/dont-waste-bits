@@ -245,3 +245,22 @@ DWB (5.03 avg bits) → 33.8% — worse accuracy with MORE bits means controller
 Our implementation correctly implements the architecture, but the training quality gap is real.
 
 **Status update**: H3 → IMPL_GAP. All other hypotheses unchanged.
+
+---
+
+## 2026-04-19 — Session 6: H3 Controller Sensitivity Study (DWB v2)
+
+**Protocol**: Retrain DWB controller with 5× more data (500 vs 100 train examples) and
+2× more epochs (10 vs 5) to test whether the H3 gap is purely a controller training artifact.
+
+**Hypothesis**: If val_acc improves to 50%+ and DWB accuracy improves toward 40%+, the
+implementation gap (33.8% vs paper's 41.2%) is explained by controller training quality alone.
+
+**Script**: `python research/src/eval_dwb.py --limit 500 --train_samples 500 --epochs 10
+--force_retrain --controller_path research/data/dwb_controller_smollm-360m_v2.pt`
+
+**Expected outcomes**:
+- val_acc 36.6% → 45%+: confirms training data sensitivity
+- DWB accuracy 33.8% → 38%+: H3 → CONSISTENT (gap within CI)
+- DWB accuracy 33.8% → 41%+: H3 → CONFIRMED (full reproduction)
+- No improvement: indicates fundamental implementation gap beyond training

@@ -182,7 +182,9 @@ The threshold lies between 8.1% and 12.4%. The root cause at 1.7B is higher acti
 The paper's +7.6pp H2 claim is most rigorous at 1.7B, where the INT4 degradation is genuine and standard. At 135M/360M, the comparison uses a sub-standard 8-level baseline. This is not a critique of the paper's method — DWB still delivers real value at all scales — but it contextualizes where the gain is "free" (recovering from self-imposed degradation) vs. genuine (recovering from inherent scale limitations).
 
 **On H3 (DWB ≈ FP16):**
-Our DWB implementation achieves 38–40% vs FP16 42.6% at 360M — directionally consistent with the paper's 41.2% claim but with a persistent −2 to −4pp gap. At n=500 (CI ±4.4pp), this gap is within noise. The most likely causes of the small gap: (1) our controller was trained on the same 100 HellaSwag train examples as evaluation, creating mild distribution mismatch; (2) the paper likely used a larger, more carefully tuned training set.
+Our definitive DWB result at n=500 (CI ±4.4pp) is **33.8%** vs paper's 41.2% — a gap of −7.4pp that exceeds the CI, establishing a real implementation gap. Standard INT4 (4.0 bits) gives 41.6%; our DWB (5.03 avg bits) gives 33.8% — worse accuracy with more bits. This cannot be explained by chance: the controller is actively assigning 2-bit precision to tokens that need higher precision, degrading accuracy below even the static INT4 baseline.
+
+The root cause is controller training quality. Our controller val_acc=36.6% (vs 25% random) is barely above chance — it makes wrong bit assignments 63% of the time. A follow-up experiment (v2: 500 train samples, 10 epochs) is underway to determine whether the gap closes with adequate training. Preliminary results from n=100 runs with val_acc=45.6% gave 40.0% DWB accuracy — suggesting the gap *is* training-sensitive and the paper likely uses a better-trained controller with undisclosed training details.
 
 **On DWB-TurboQuant:**
 PolarQuant replaces scalar INT2 at the 2-bit tier. The +2pp HellaSwag and +3pp ARC-Challenge gains are consistent with PolarQuant's improved representation of low-bit activations via orthogonal rotation. The larger gain on ARC (+3pp) despite fewer 2-bit tokens (37.4% vs 57.3%) suggests that reasoning tasks are more sensitive to 2-bit quantization errors per token — each wrong bit matters more when the computation chain is longer.
@@ -195,7 +197,7 @@ R_t (Eq. 15) has Cohen's d=0.52 between 2-bit and 16-bit tiers — barely discri
 
 ### 9. Conclusion
 
-We confirm FP16 baselines across SmolLM-135M, 360M, and 1.7B. H3 (DWB ≈ FP16) is numerically consistent with the paper's claims across all tested sample sizes. H4 (cross-model) is confirmed.
+We confirm FP16 baselines across SmolLM-135M, 360M, and 1.7B. H3 (DWB ≈ FP16) shows an implementation gap: our re-implemented DWB gives 33.8% vs paper's 41.2% (−7.4pp > CI±4.4pp), attributable to controller training quality (val_acc=36.6%). Earlier runs with better-trained controllers (val_acc=45.6%) achieved 40.0%, suggesting the paper's 41.2% requires well-trained controllers with undisclosed training details. H4 (cross-model) is confirmed.
 
 Our main contribution is explaining *when and why* INT4 KV quantization degrades:
 - At 15 attention heads (≤360M): standard INT4 is nearly lossless — effective residual error 8.1%, below the decision threshold. The paper's 33.6% baseline requires int4_int3range (8 levels, scale=max/3).

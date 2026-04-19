@@ -182,7 +182,16 @@ experiments_complete:
     samples: 100
     file: dwb_eval_100samp_20260419_0528.json
 
-experiments_running: []  # ALL COMPLETE as of 2026-04-19
+experiments_running:
+  - id: dwb_v2_500train_10epochs
+    model: smollm-360m
+    condition: dwb_adaptive_v2
+    train_samples: 500
+    epochs: 10
+    limit: 500
+    status: RUNNING
+    log: research/data/dwb_v2_500train_run.log
+    question: "Does H3 gap close with 5x more training data and 2x more epochs?"
 
 critical_findings:
   - "Original code not released (CVPR June 2026) — re-implemented from equations"
@@ -193,6 +202,8 @@ critical_findings:
   - "Mechanism fully quantified: eff_residual=rel_error*cancel_ratio — 8.1% at 360M (below threshold), 12.4% at 1.7B (above)"
   - "Root cause: hidden_dim 2048 vs 960 -> higher KV variance -> larger errors at same scale divisor"
   - "DWB controller: C_t dominates (d=4.55), R_t barely helps (d=0.52); val_acc=45.6% vs 25% random"
+  - "H3 IMPL_GAP: DWB v1 (100 train, 5 epochs, val_acc=36.6%) gives 33.8% — worse than standard INT4 (41.6%) at MORE bits (5.03)"
+  - "Controller sensitivity study running: v2 uses 500 train samples + 10 epochs to test if H3 gap is training-artifact"
   - "int4_int3range (scale=max/3, 8 levels) reproduces 135M/360M baseline; coarse step causes all -18pp (ablation)"
   - "DWB-TurboQuant: +2pp HellaSwag, +3pp ARC-Challenge at identical 5.05 avg_bits"
 
