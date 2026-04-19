@@ -1,0 +1,235 @@
+{
+  "model": "HuggingFaceTB/SmolLM-360M",
+  "n_examples": 50,
+  "n_tokens": 1484,
+  "date": "2026-04-19T08:29:34.421460",
+  "bit_distribution": {
+    "2": {
+      "count": 846,
+      "pct": 57.0
+    },
+    "4": {
+      "count": 270,
+      "pct": 18.2
+    },
+    "8": {
+      "count": 128,
+      "pct": 8.6
+    },
+    "16": {
+      "count": 240,
+      "pct": 16.2
+    }
+  },
+  "signal_stats_by_bit": {
+    "H_t (entropy)": {
+      "2": {
+        "mean": 4.9669559280923075,
+        "std": 1.0918717749390636
+      },
+      "4": {
+        "mean": 2.9118958791097005,
+        "std": 0.3137537011865074
+      },
+      "8": {
+        "mean": 2.1889774221926928,
+        "std": 0.29434354390506207
+      },
+      "16": {
+        "mean": 1.176190389569577,
+        "std": 0.7255023990877769
+      }
+    },
+    "R_t (rarity)": {
+      "2": {
+        "mean": 0.9850851944152345,
+        "std": 0.01568848374732972
+      },
+      "4": {
+        "mean": 0.9916891298912189,
+        "std": 0.013776262738719066
+      },
+      "8": {
+        "mean": 0.993324632756412,
+        "std": 0.010538896005320262
+      },
+      "16": {
+        "mean": 0.9921018645167351,
+        "std": 0.01103458927171525
+      }
+    },
+    "V_t (attn_var)": {
+      "2": {
+        "mean": NaN,
+        "std": NaN
+      },
+      "4": {
+        "mean": 0.033293646967245474,
+        "std": 0.018281725912700095
+      },
+      "8": {
+        "mean": 0.031792000139830634,
+        "std": 0.01999543566486165
+      },
+      "16": {
+        "mean": 0.0422666688876537,
+        "std": 0.04742461242880808
+      }
+    },
+    "C_t (confidence)": {
+      "2": {
+        "mean": 0.1744148586810639,
+        "std": 0.10994579164835616
+      },
+      "4": {
+        "mean": 0.32000454959494096,
+        "std": 0.09443771055749105
+      },
+      "8": {
+        "mean": 0.486136311898008,
+        "std": 0.05763283161889885
+      },
+      "16": {
+        "mean": 0.7686940580606461,
+        "std": 0.14869875340239358
+      }
+    }
+  },
+  "discriminability_cohens_d": {
+    "H_t (entropy)": 4.0894,
+    "R_t (rarity)": 0.5173,
+    "V_t (attn_var)": NaN,
+    "C_t (confidence)": 4.5446
+  },
+  "most_discriminative_signal": "C_t (confidence)",
+  "top_tokens_by_bit": {
+    "2": [
+      ".",
+      ":",
+      "a",
+      "the",
+      "The",
+      "A",
+      "and",
+      "is",
+      "He",
+      "man",
+      "to",
+      "then",
+      "boy",
+      ",",
+      "while",
+      "are",
+      "he",
+      "of",
+      "woman",
+      "Sh",
+      "arp",
+      "ening",
+      "knives",
+      "They",
+      "G",
+      "with",
+      "black",
+      "an",
+      "cream",
+      "face"
+    ],
+    "4": [
+      ".",
+      "in",
+      "the",
+      "to",
+      "a",
+      "standing",
+      "with",
+      "lawn",
+      "on",
+      "their",
+      "walks",
+      "child",
+      "camera",
+      "takes",
+      "it",
+      "stone",
+      "room",
+      "head",
+      "sink",
+      "teeth",
+      "outside",
+      "pole",
+      "other",
+      "lands",
+      "back",
+      "mat",
+      "sitting",
+      "pieces",
+      "wood",
+      "ball"
+    ],
+    "8": [
+      "talking",
+      "on",
+      "her",
+      "in",
+      "it",
+      "of",
+      "sitting",
+      ".",
+      "out",
+      "standing",
+      "and",
+      "to",
+      "from",
+      "knife",
+      "group",
+      "run",
+      "before",
+      "male",
+      "they",
+      "brush",
+      "a",
+      "beer",
+      "the",
+      "grabs",
+      "different",
+      "man",
+      "lifts",
+      "his",
+      "mat",
+      "playing"
+    ],
+    "16": [
+      "the",
+      "to",
+      "on",
+      "in",
+      "of",
+      "his",
+      "p",
+      "and",
+      "their",
+      "cheer",
+      "le",
+      "them",
+      "m",
+      "ice",
+      "from",
+      "piece",
+      "onto",
+      "sharp",
+      "ens",
+      "The",
+      "how",
+      "harmon",
+      "holding",
+      "s",
+      "stick",
+      "next",
+      "him",
+      "pip",
+      ".",
+      "cheering"
+    ]
+  }
+}
