@@ -56,19 +56,13 @@ def score_continuation(model, tokenizer, context, continuation, device="cpu"):
     return score / len(cont_ids)
 
 
-def apply_int4_simulation(model):
-    """Simulate INT4 weight quantization for static 4-bit baseline."""
-    print("  Applying INT4 weight simulation...")
-    count = 0
-    with torch.no_grad():
-        for name, param in model.named_parameters():
-            if "weight" in name and param.dim() >= 2:
-                scale = param.abs().max() / 7.0
-                if scale > 0:
-                    param.data = (param.data / scale).round().clamp(-8, 7) * scale
-                    count += 1
-    print(f"  Quantized {count} weight tensors to INT4")
-    return model
+def apply_kv_cache_quant(model, mode="static4bit"):
+    """Wrap model with KV cache quantization hooks (NOT weight quantization).
+    Paper applies 4-bit to KV cache only — keys/values during decoding.
+    """
+    from kv_cache_quant import attach_kv_hooks
+    hooks = attach_kv_hooks(model, mode=mode)
+    return model, hooks
 
 
 def evaluate_hellaswag(model, tokenizer, limit=None, device="cpu"):
@@ -86,7 +80,8 @@ def evaluate_hellaswag(model, tokenizer, limit=None, device="cpu"):
             eta = (time.time() - t0) / i * (total - i)
             print(f"  [{i}/{total}] acc={correct/i*100:.1f}% eta={eta:.0f}s")
 
-        ctx = ex["ctx"]
+        # lm-eval HellaSwag format: activity_label + ": " + ctx_a + " " + ctx_b
+        ctx = ex["activity_label"] + ": " + ex["ctx_a"] + " " + ex["ctx_b"].capitalize()
         scores = [score_continuation(model, tokenizer, ctx, " " + e, device)
                   for e in ex["endings"]]
         if max(range(4), key=lambda j: scores[j]) == int(ex["label"]):

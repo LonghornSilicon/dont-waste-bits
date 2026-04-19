@@ -1,0 +1,13 @@
+{
+  "accuracy": 44.0,
+  "correct": 132,
+  "total": 300,
+  "elapsed_s": 676.7030594348907,
+  "model": "smollm-360m",
+  "condition": "fp16",
+  "limit": 300,
+  "paper_target": 41.5,
+  "delta_from_paper": 2.5,
+  "verification_status": "DISCREPANCY",
+  "date": "2026-04-19T04:00:02.928986"
+}
