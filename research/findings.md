@@ -1,6 +1,6 @@
 # Research Findings — Don't Waste Bits! Verification
 
-**Last updated**: 2026-04-19 (H4 1.7B + TurboQuant extension)  
+**Last updated**: 2026-04-19 (H3 definitive 500-samp: 33.8% IMPL_GAP; H4 1.7B; TurboQuant)  
 **Phase**: CONCLUDED (accuracy experiments complete; latency pending GPU)
 
 ---
