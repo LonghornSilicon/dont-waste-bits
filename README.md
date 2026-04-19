@@ -39,6 +39,7 @@ we re-implement the full method from paper equations and document critical metho
 | **KV int4_int3range (8 levels)** | 100 | **33.0%** | 33.6% | **-0.6pp ✅** |
 | KV-2bit | 200 | 25.0% | — | -17pp (hooks confirmed) |
 | DWB adaptive | 100 | 40.0% | 41.2% | -1.2pp |
+| DWB adaptive | 200 | **38.0%** | 41.2% | -3.2pp (within ±6.7pp CI) |
 | Latency (FP16) | — | — | 3.50 ms/tok | — |
 | Latency (KV-4bit) | — | — | 2.93 ms/tok | — |
 | Latency (DWB) | — | — | 2.41 ms/tok | — |

@@ -112,11 +112,17 @@ entirely on this specific weaker-than-standard baseline. With proper 16-level IN
 - Training: 2,995 token samples, 5 epochs, lr=0.003
 - Val accuracy: **45.6%** (vs 25% random) — controller learns importance quartile
 - Bit distribution: {2bit: 57.3%, 4bit: 18.9%, 8bit: 8.3%, 16bit: 15.6%}, avg=5.05 bits/token
-- DWB accuracy: **40.0%** on 100 validation samples (paper: 41.2%)
+- DWB accuracy: **40.0%** on 100 samples, **38.0%** on 200 samples (paper: 41.2%)
 
-H3 consistency: DWB 40.0% vs FP16 42.6% = -2.6pp gap.  
-With 100-sample CI ±10pp, this is within noise.  
-**H3 is numerically consistent but not definitively confirmed at n=100.**
+H3 consistency: DWB 38.0% vs FP16 42.6% = -4.6pp gap at n=200 (CI ±6.7pp).  
+Both 100-sample and 200-sample results are within noise of the paper's 41.2%.  
+**H3 is numerically consistent but not definitively confirmed — gap direction stable at -2.6 to -4.6pp.**
+
+| Run | N | DWB | FP16 | Delta | CI | Status |
+|-----|---|-----|------|-------|----|--------|
+| dwb_100 | 100 | 40.0% | 42.6% | -2.6pp | ±10pp | Within noise |
+| dwb_200 | 200 | 38.0% | 42.6% | -4.6pp | ±6.7pp | Within noise |
+| Paper | — | 41.2% | 41.5% | -0.3pp | — | Target |
 
 ---
 

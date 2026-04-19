@@ -47,8 +47,11 @@ hypotheses:
       Directionally consistent but not definitively confirmed. More samples would help.
     results:
       dwb_100samp: 40.0
+      dwb_200samp: 38.0
       fp16_500samp: 42.6
-      delta: -2.6
+      delta_100samp: -2.6
+      delta_200samp: -4.6
+      ci_200samp: "±6.7pp"
     priority: HIGH
 
   H4:
