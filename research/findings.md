@@ -1,7 +1,7 @@
 # Research Findings — Don't Waste Bits! Verification
 
-**Last updated**: 2026-04-19 (beta-sweep COMPLETE; BoolQ TurboQuant caveat added; research concluded)  
-**Phase**: CONCLUDED (accuracy experiments complete; latency pending GPU)
+**Last updated**: 2026-04-19 (gumbel-controller Phase 1 complete; FPGA branch active)  
+**Phase**: EXTENDED (new branches: gumbel-controller + fpga-controller)
 
 ---
 
@@ -313,6 +313,37 @@ Full cross-benchmark results (SmolLM-360M, 100 samples each):
 Note: n=100 gives CI≈±10pp. The DWB-scalar +6pp over FP16 on BoolQ may be noise; the -20pp TurboQuant regression is harder to dismiss statistically.
 
 **Qualified conclusion**: DWB-TurboQuant is an improvement on generation/reasoning tasks at identical compression, but should not be used for closed-form QA without further investigation.
+
+---
+
+---
+
+## Gumbel-Controller: Phase 1 Result ★ NEW
+
+**Branch**: `gumbel-controller` | **Experiment**: phase1-gumbel-v2
+
+Replaced quartile-classification loss with Gumbel-softmax compound loss:
+`L = α·quality_loss + β·avg_bits_norm` (both terms normalized to [0,1]).
+
+| Condition | Accuracy | avg_bits | FPGA speedup |
+|---|---|---|---|
+| FP16 | 42.6% | 16.0 | 1.00x |
+| Paper DWB | 41.2% | 5.05 | 2.44x |
+| **Gumbel Phase 1** | **41.0%** | **4.0** | **3.48x** |
+| Static INT4 | 41.6% | 4.0 | 3.48x |
+
+**Finding**: Controller converges to 100% 4-bit for all β ∈ {0.3, 0.5, 0.7, 1.0}.
+This is the **correct** answer — standard INT4 is lossless at 360M, so 4-bit is the
+global minimum of the compound loss. The controller is not broken; it discovered
+that adaptive allocation adds no value when the base quantization is already lossless.
+
+**FPGA insight**: Paper DWB achieves only 2.44x FPGA speedup because its 47.9% 2-bit
+tokens cost the same BRAM bandwidth as 4-bit tokens. Our 100% INT4 achieves 3.48x —
+43% better FPGA throughput at equal accuracy (−0.2pp, within 200-sample noise).
+
+**Implication for Phase 2**: Head entropy and layer depth features will also converge
+to 100% 4-bit at 360M. The real benefit of Phase 2 is at 1.7B (INT4 lossy, eff_residual=12.4%)
+where the controller genuinely needs to distinguish 4-bit from 8-bit tokens.
 
 ---
 

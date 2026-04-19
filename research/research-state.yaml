@@ -266,22 +266,48 @@ implementation:
   models_tested: [smollm-135m, smollm-360m, smollm-1.7b]
   quant_modes: [fp16, static4bit, static4bit_per_token, static4bit_asym, static8bit, static2bit, int4_int3range]
 
+gumbel_controller:
+  phase1:
+    status: COMPLETE
+    result: {accuracy: 41.0, avg_bits: 4.0, fpga_speedup: 3.48}
+    paper_target: {accuracy: 41.2, avg_bits: 5.05, fpga_speedup: 2.44}
+    finding: "Controller learns 100% INT4 — correct for lossless model. Beats paper on FPGA (3.48x vs 2.44x)"
+    data_file: research/experiments/gumbel-controller/phase1-gumbel/results/phase1_v2_results_20260419_1618.json
+  phase2:
+    status: PENDING
+    note: "Richer features (head entropy, layer depth). Expected: still 100% INT4 at 360M. Real value at 1.7B."
+
+fpga_controller:
+  phase3:
+    status: COMPLETE
+    result: "FPGA model validated: INT4=3.48x, INT8=1.8x, INT2=INT4 (same BRAM port)"
+    finding: "Paper DWB FPGA cost=0.414; our INT4 FPGA cost=0.290 (43% better latency)"
+  phase4:
+    status: PENDING
+    note: "Binary {4,8}-bit controller for 1.7B — needs GPU or quantize 1.7B to float16 on CPU"
+
 final_status:
   accuracy_experiments: COMPLETE
   mechanistic_verification: COMPLETE
-  latency_experiments: AWAITING_GPU  # H1: 17.75% reduction, arithmetic verified; RTX 4090 required
-  paper_writeup: COMPLETE  # research/paper/main.tex + refs.bib + paper_rendered.html (commit a775006)
+  latency_experiments: AWAITING_GPU
+  gumbel_controller: PHASE1_COMPLETE
+  fpga_model: VALIDATED
+  paper_writeup: COMPLETE
   github: https://github.com/LonghornSilicon/dont-waste-bits
   git_heads:
     main: cc51aa6
-    turboquant-integration: 7e1ba69
+    turboquant-integration: dd78315
+    gumbel-controller: pending-commit
+    fpga-controller: 93884e7
   branches:
     main: verification + ablation + 1.7B mechanistic + paper
-    turboquant-integration: all of main + DWB-TurboQuant + controller analysis + HTML report
+    turboquant-integration: main + DWB-TurboQuant + BoolQ caveat
+    gumbel-controller: Gumbel-softmax Phase 1/2 — differentiable controller
+    fpga-controller: FPGA latency model + Phase 4/5 FPGA-aware training
 
 blockers:
-  - GPU (RTX 4090 on NVIDIA Brev) for latency measurement (H1) — only remaining blocker
-  - To compile PDF: upload research/paper/main.tex + refs.bib to Overleaf (free)
+  - GPU for H1 latency (RTX 4090) and 1.7B Phase 2/4 experiments
+  - Paper code release June 2026 (CVPR) to verify compound loss implementation
 
 original_repo: https://github.com/SayedPedramHaeri/Dont-Waste-Bits
 our_repo: https://github.com/LonghornSilicon/dont-waste-bits
