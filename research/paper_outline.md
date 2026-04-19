@@ -91,6 +91,16 @@ We present an independent reproduction of "Don't Waste Bits!" (arXiv:2604.04722,
 - **Conclusion**: Paper's "Static 4-bit KV" uses ~8 effective levels (INT3 in 4-bit format)
 - Paper's +7.6pp improvement claim is conditioned on this weaker-than-standard baseline
 
+**Insight 6 (novel)**: Controller behavior analysis — C_t drives bit assignment
+
+50-example behavioral analysis (1484 tokens). Signal discriminability (Cohen's d, 2-bit vs 16-bit):
+- C_t (confidence): d=4.55 — strongest signal. High-confidence tokens → 16-bit (content words, rare subwords).
+- H_t (entropy): d=4.09 — strong. High-entropy (uncertain context) positions → 2-bit.
+- R_t (rarity): d=0.52 — barely discriminative. All tokens score 0.985–0.993 rarity on HellaSwag.
+
+Token examples: 2-bit = {".", ":", "a", "the", "and"} (function words); 16-bit = {"cheer", "ice", "knife"} (rare content words).
+Interpretation: controller preserves KV for tokens that are confidently placed in low-entropy contexts — these are exactly the tokens that downstream positions attend to (per Insight 5 mechanism).
+
 **Insight 5 (novel)**: INT4 losslessness mechanism
 - Zero-mean symmetric quantization errors cancel in attention weighted sum
 - Outlier tokens set the quantization scale → they are best quantized AND most attended

@@ -111,6 +111,33 @@ entirely on this specific weaker-than-standard baseline. With proper 16-level IN
 
 ---
 
+## Insight 6: Controller relies on confidence (C_t) and entropy (H_t), not rarity ★ NEW
+
+**Controller behavior analysis**: 50 HellaSwag examples, 1484 tokens, trained DWBController.
+
+**Signal means by bit tier** (higher = signal value at that tier):
+
+| Signal | 2-bit (unimportant) | 4-bit | 8-bit | 16-bit (critical) | Cohen's d (2 vs 16) |
+|--------|---------------------|-------|-------|-------------------|---------------------|
+| H_t (entropy) | 4.97 | 2.91 | 2.19 | 1.18 | 4.09 |
+| R_t (rarity) | 0.985 | 0.992 | 0.993 | 0.992 | 0.52 |
+| C_t (confidence) | 0.174 | 0.320 | 0.486 | 0.769 | **4.55** |
+
+**Key findings:**
+1. **C_t (confidence) is the most discriminative signal** (Cohen's d = 4.55): tokens where the model predicts with high certainty are assigned to 16-bit. These are typically content words, proper nouns, or rare subwords where meaning is unambiguous in context.
+2. **H_t (entropy) is second most discriminative** (d = 4.09): high entropy (model uncertain about what comes next) → assigned 2-bit. Low entropy (model certain about context) → 16-bit.
+3. **R_t (rarity) barely discriminates** (d = 0.52): all tokens score 0.985–0.993 on HellaSwag's vocabulary, providing almost no signal. The paper's Eq. 15 rarity term adds minimal value on this distribution.
+
+**Token examples by tier:**
+- 2-bit (unimportant): `"."`, `":"`, `"a"`, `"the"`, `"The"`, `"and"`, `"is"` — common function words and punctuation
+- 16-bit (critical): `"cheer"`, `"le"`, `"ice"`, `"p"`, `"m"` — unusual subwords and rare content tokens
+
+**Interpretation:** The controller learned that **confident, low-entropy positions** (where meaning is clear and context determines the next token) are paradoxically the "important" ones to preserve at high precision. Common function words at uncertain positions are safe to quantize aggressively — their error propagates into already-unpredictable computation.
+
+This aligns with the INT4 losslessness mechanism (Insight 4): the most-attended tokens (those that matter for accuracy) are the ones where C_t is highest, and those are preserved at 16-bit by the controller.
+
+---
+
 ## H4 Results: SmolLM-135M Cross-Model Validation
 
 100 samples, `acc` (unnormalized), same hooks as 360M experiments.
