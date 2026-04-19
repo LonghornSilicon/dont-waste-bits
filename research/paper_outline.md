@@ -16,7 +16,7 @@
 
 ## Abstract (draft)
 
-We present an independent reproduction of "Don't Waste Bits!" (arXiv:2604.04722, CVPR 2026), which proposes adaptive per-token KV-cache quantization for on-device LLMs. Since original code is not yet public (expected June 2026), we re-implement the method from paper equations, confirm the FP16 accuracy baseline, and identify four critical methodological insights. Our most significant finding is that symmetric per-tensor INT4 KV quantization is **nearly lossless** — achieving ~42% on HellaSwag vs the paper's reported 33.6% baseline. We show this holds across six INT4 variants, two model sizes, and in both single-pass and autoregressive evaluation modes. The paper's 33.6% static INT4 baseline is reproduced only when using a non-standard 8-level quantization (scale=max/3), equivalent to INT3 precision in 4-bit storage. We confirm H3 (DWB ≈ FP16) at 38–40% vs 41.5%, and provide H4 cross-model validation on SmolLM-135M. As a novel contribution, we propose DWB-TurboQuant — routing DWB's 2-bit tokens through PolarQuant (per-head Walsh-Hadamard rotation) — and show it recovers +5pp over scalar 2-bit in uniform conditions (27% vs 22%).
+We present an independent reproduction of "Don't Waste Bits!" (arXiv:2604.04722, CVPR 2026), which proposes adaptive per-token KV-cache quantization for on-device LLMs. Since original code is not yet public (expected June 2026), we re-implement the method from paper equations, confirm the FP16 accuracy baseline, and identify six critical methodological insights. Our most significant finding is that symmetric per-tensor INT4 KV quantization exhibits **scale-dependent losslessness**: at 135M and 360M parameters (15 attention heads), INT4 is nearly lossless (~42% ≈ FP16), but at 1.7B parameters (32 heads) it shows genuine ~10pp degradation — matching the paper's reported baseline. The paper's 33.6% static INT4 baseline for smaller models is reproduced only when using a non-standard 8-level quantization (scale=max/3), equivalent to INT3 precision in 4-bit storage; this is identified and causally confirmed via controlled ablation. We confirm H3 (DWB ≈ FP16) at 38–40% vs 41.5%, and provide H4 cross-model validation on SmolLM-135M and SmolLM-1.7B. As a novel contribution, we propose DWB-TurboQuant — routing DWB's 2-bit tokens through PolarQuant (per-head Walsh-Hadamard rotation) — and show it recovers +2pp (HellaSwag) and +3pp (ARC-Challenge) over DWB-scalar at identical compression.
 
 ---
 
@@ -62,13 +62,25 @@ We present an independent reproduction of "Don't Waste Bits!" (arXiv:2604.04722,
 | FP16 latency | — | — | 3.50 ms/tok | — | ⏳ Needs GPU |
 | DWB latency | — | — | 2.41 ms/tok | — | ⏳ Needs GPU |
 
-**Table: Cross-model validation (H4, SmolLM-135M, 100 samples)**
+**Table: Cross-model validation (H4)**
+
+SmolLM-135M (100 samples):
 
 | Condition | Our Result | Paper | Status |
 |-----------|-----------|-------|--------|
 | FP16 | 40.0% | 37.2% | ✅ CONFIRMED |
-| Standard INT4 | 39.0% | 33.6% | ⚠️ LOSSLESS (cross-model) |
+| Standard INT4 | 39.0% | 33.6% | ⚠️ LOSSLESS (15 heads) |
 | int4_int3range | 32.0% | 33.6% | ✅ MATCHES |
+
+SmolLM-1.7B (50 samples) — **scale-dependent reversal**:
+
+| Condition | Our Result | Paper | Status |
+|-----------|-----------|-------|--------|
+| FP16 | 50.0% | 49.0% | ✅ CONFIRMED |
+| Standard INT4 | 40.0% | 41.1% | ✅ MATCHES (32 heads — genuinely lossy) |
+| int4_int3range | 32.0% | 41.1% | ⚠️ Over-degrades at 1.7B |
+
+**Key insight**: INT4 losslessness is scale-dependent. At 15 attention heads (135M/360M), zero-mean error cancellation is effective enough that standard INT4 ≈ FP16. At 32 heads (1.7B), this mechanism weakens — standard INT4 shows genuine 10pp degradation and directly matches the paper's claimed baseline. The paper's H2 claim is most strongly validated at 1.7B.
 
 ### 6. Methodological Insights
 
@@ -84,12 +96,13 @@ We present an independent reproduction of "Don't Waste Bits!" (arXiv:2604.04722,
 - DWB controller needs attention weights for V_t signal (Eq. 16)
 - Fix: reload with attn_implementation='eager' for training data extraction
 
-**Insight 4 (main finding)**: Symmetric per-tensor INT4 is nearly lossless ★
-- All 6 INT4 variants give ~41–44% ≈ FP16, across 100–500 samples
-- Confirmed autoregressive mode: AR INT4 = 42.0% (same as single-pass)
-- int4_int3range (8-level, scale=max/3) = 33.0% ≈ paper's 33.6% baseline
-- **Conclusion**: Paper's "Static 4-bit KV" uses ~8 effective levels (INT3 in 4-bit format)
-- Paper's +7.6pp improvement claim is conditioned on this weaker-than-standard baseline
+**Insight 4 (main finding)**: INT4 losslessness is scale-dependent ★
+- At 135M/360M (15 attn heads): all 6 INT4 variants give ~41–44% ≈ FP16 (lossless)
+- At 1.7B (32 attn heads): standard INT4 gives 40.0% vs FP16 50.0% — 10pp genuine degradation
+- Standard INT4 directly matches paper's 41.1% baseline at 1.7B (no int4_int3range needed)
+- int4_int3range (8-level, scale=max/3) = 33.0% ≈ paper's 33.6% at 135M/360M only
+- Autoregressive mode: AR INT4 = 42.0% at 360M (same as single-pass — methodology ruled out)
+- **Conclusion**: Paper's +7.6pp H2 claim is most valid at 1.7B where genuine INT4 degradation occurs. At smaller models, the comparison uses a sub-standard 8-level baseline.
 
 **Insight 6 (novel)**: Controller behavior analysis — C_t drives bit assignment
 
@@ -144,9 +157,10 @@ ARC bit distribution: {2: 37.4%, 4: 17.3%, 8: 12.2%, 16: 33.2%} — controller a
 
 ### 8. Discussion
 - What we confirmed: FP16 baseline (H3 numerically consistent)
-- Main finding: symmetric INT4 is lossless for transformer attention
-- The "cannot reproduce" is itself a finding: naive INT4 is NOT harmful
-- Paper's +7.6pp H2 claim requires non-standard 8-level INT4 baseline
+- Main finding: INT4 losslessness is scale-dependent — lossless at ≤360M (15 heads), lossy at 1.7B (32 heads)
+- At small models: "cannot reproduce" is itself a finding — naive INT4 is NOT harmful; paper uses int4_int3range baseline
+- At 1.7B: paper's baseline is correct — standard INT4 genuinely degrades 10pp; H2 strongest here
+- Paper's +7.6pp H2 claim is most rigorous at 1.7B; at smaller models it requires non-standard 8-level INT4 baseline
 - Latency claim (H1, 17.75%) cannot be tested without GPU — arithmetic verified
 - DWB-TurboQuant: CONFIRMED across two valid benchmarks — +2pp HellaSwag, +3pp ARC-Challenge
 - **Benchmark selection pitfall**: BoolQ confounded (FP16=55% < 70% majority baseline) — for KV quantization studies, only include benchmarks where FP16 meaningfully exceeds majority-class baseline. Binary classification tasks are susceptible to logit bias shifts from quantization masquerading as accuracy changes.
@@ -154,8 +168,9 @@ ARC bit distribution: {2: 37.4%, 4: 17.3%, 8: 12.2%, 16: 33.2%} — controller a
 
 ### 9. Conclusion
 - FP16 baseline confirmed, DWB accuracy consistent with paper's claims
-- INT4 losslessness is a novel insight with implications for KV cache design
-- int4_int3range (8 effective levels) is the likely paper baseline — identified and confirmed cross-model
+- Scale-dependent INT4 behavior is a novel insight: lossless at ≤360M, genuinely lossy at 1.7B
+- int4_int3range (8 effective levels) is the paper's 135M/360M baseline — identified, causally verified via ablation
+- At 1.7B, standard INT4 directly matches the paper — H2 claim is validated without baseline concerns
 - DWB-TurboQuant: vector quantization improves quality at 2-bit tier, confirmed on two benchmarks
 - All code available at https://github.com/LonghornSilicon/dont-waste-bits
 
