@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Don't Waste Bits! — Research Progress Report #1</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f0f13; color: #e0e0e8; line-height: 1.6; }
+  .header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); padding: 48px 40px; border-bottom: 1px solid #e94560; }
+  .header h1 { font-size: 2.2em; font-weight: 700; color: #fff; }
+  .header h2 { font-size: 1.1em; font-weight: 400; color: #a0a8c0; margin-top: 8px; }
+  .badge { display: inline-block; background: #e94560; color: white; font-size: 0.75em; font-weight: 600; padding: 3px 10px; border-radius: 12px; margin-left: 12px; vertical-align: middle; }
+  .content { max-width: 1100px; margin: 0 auto; padding: 40px 40px; }
+  .section { margin-bottom: 40px; }
+  .section h3 { font-size: 1.1em; font-weight: 600; color: #e94560; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 16px; border-bottom: 1px solid #2a2a3e; padding-bottom: 8px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .card { background: #1a1a2e; border: 1px solid #2a2a3e; border-radius: 10px; padding: 20px; }
+  .card h4 { font-size: 0.9em; font-weight: 600; color: #a0a8c0; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px; }
+  .metric { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #2a2a3e; }
+  .metric:last-child { border-bottom: none; }
+  .metric-label { font-size: 0.9em; color: #a0a8c0; }
+  .metric-value { font-size: 1.0em; font-weight: 600; color: #4fc3f7; }
+  .metric-value.green { color: #66bb6a; }
+  .metric-value.yellow { color: #ffa726; }
+  .metric-value.verified { color: #66bb6a; }
+  .claim-row { background: #1a1a2e; border-left: 4px solid #e94560; border-radius: 0 8px 8px 0; padding: 16px 20px; margin-bottom: 12px; }
+  .claim-row.verified { border-left-color: #66bb6a; }
+  .claim-row h5 { font-size: 0.95em; font-weight: 600; margin-bottom: 6px; }
+  .claim-row p { font-size: 0.85em; color: #a0a8c0; }
+  .claim-row .status { display: inline-block; font-size: 0.75em; font-weight: 700; padding: 2px 8px; border-radius: 10px; margin-left: 10px; }
+  .status.verified { background: #1b4332; color: #66bb6a; }
+  .status.pending { background: #1a1a2e; color: #ffa726; border: 1px solid #ffa726; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.9em; }
+  th { background: #1a1a2e; color: #a0a8c0; font-weight: 600; padding: 10px 14px; text-align: left; border-bottom: 2px solid #e94560; }
+  td { padding: 9px 14px; border-bottom: 1px solid #2a2a3e; }
+  tr:hover td { background: #1e1e30; }
+  td.highlight { color: #66bb6a; font-weight: 600; }
+  td.bold { font-weight: 600; color: #fff; }
+  .branch-card { background: #1a1a2e; border: 1px solid #2a2a3e; border-radius: 10px; padding: 20px 24px; margin-bottom: 16px; }
+  .branch-card h4 { font-size: 1.0em; font-weight: 700; color: #4fc3f7; margin-bottom: 8px; }
+  .branch-card .branch-name { font-family: monospace; font-size: 0.85em; color: #e94560; margin-bottom: 10px; }
+  .branch-card p { font-size: 0.88em; color: #a0a8c0; }
+  .pipeline { background: #0f0f18; border: 1px solid #2a2a3e; border-radius: 8px; padding: 20px; font-family: monospace; font-size: 0.85em; color: #a8e6cf; line-height: 1.8; }
+  .pipeline .comment { color: #5a6a7a; }
+  .pipeline .arrow { color: #e94560; }
+  .footer { text-align: center; padding: 32px; color: #5a6a7a; font-size: 0.8em; border-top: 1px solid #2a2a3e; margin-top: 20px; }
+  .tag { display: inline-block; background: #2a2a3e; color: #a0a8c0; font-size: 0.75em; padding: 2px 8px; border-radius: 4px; margin: 2px; }
+  .next-steps li { padding: 6px 0; font-size: 0.9em; color: #c0c8d8; }
+  .next-steps li::before { content: "→ "; color: #e94560; font-weight: 700; }
+  .next-steps { list-style: none; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Don't Waste Bits! <span class="badge">Report #1</span></h1>
+  <h2>arXiv:2604.04722 — Independent Verification + TurboQuant Integration Research</h2>
+  <p style="color:#5a7090; margin-top:12px; font-size:0.85em;">LonghornSilicon · 2026-04-19 · Phase: Bootstrap Complete</p>
+</div>
+
+<div class="content">
+
+  <!-- OVERVIEW -->
+  <div class="section">
+    <h3>Research Overview</h3>
+    <div class="grid-2">
+      <div class="card">
+        <h4>Track 1 — Verification (main)</h4>
+        <div class="metric"><span class="metric-label">Paper</span><span class="metric-value">arXiv:2604.04722</span></div>
+        <div class="metric"><span class="metric-label">Method</span><span class="metric-value">Adaptive KV-Cache Quant</span></div>
+        <div class="metric"><span class="metric-label">Models</span><span class="metric-value">SmolLM 135M/360M/1.7B</span></div>
+        <div class="metric"><span class="metric-label">Benchmarks</span><span class="metric-value">HellaSwag, OBQA, ARC-C</span></div>
+        <div class="metric"><span class="metric-label">Arithmetic Check</span><span class="metric-value verified">✓ All 3 claims verified</span></div>
+        <div class="metric"><span class="metric-label">GPU Status</span><span class="metric-value yellow">Awaiting Brev (RTX 4090)</span></div>
+      </div>
+      <div class="card">
+        <h4>Track 2 — TurboQuant Integration</h4>
+        <div class="metric"><span class="metric-label">Branch</span><span class="metric-value">turboquant-integration</span></div>
+        <div class="metric"><span class="metric-label">TurboQuant</span><span class="metric-value">Google ICLR 2026</span></div>
+        <div class="metric"><span class="metric-label">TQ Method</span><span class="metric-value">PolarQuant + QJL</span></div>
+        <div class="metric"><span class="metric-label">TQ Compression</span><span class="metric-value">6× KV, 3-bit K / 2-bit V</span></div>
+        <div class="metric"><span class="metric-label">Novel Contribution</span><span class="metric-value">DWB precursor routing</span></div>
+        <div class="metric"><span class="metric-label">Status</span><span class="metric-value yellow">Design Phase</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ARITHMETIC VERIFICATION -->
+  <div class="section">
+    <h3>Arithmetic Verification (Table 3, SmolLM-360M / HellaSwag)</h3>
+
+    <div class="claim-row verified">
+      <h5>H1: 17.75% Latency Reduction vs Static 4-bit KV <span class="status verified">✓ VERIFIED</span></h5>
+      <p>Paper Table 3: Static 4-bit = 2.93 s/token, Ours = 2.41 s/token<br>
+      Calculation: (2.93 − 2.41) / 2.93 × 100 = <strong>17.75%</strong> — matches exactly</p>
+    </div>
+
+    <div class="claim-row verified">
+      <h5>H2: +7.60 Accuracy Points over Static 4-bit KV <span class="status verified">✓ VERIFIED</span></h5>
+      <p>Paper Table 3: Static 4-bit = 33.60%, Ours = 41.20%<br>
+      Calculation: 41.20 − 33.60 = <strong>7.60 points</strong> — matches exactly</p>
+    </div>
+
+    <div class="claim-row verified">
+      <h5>H3: Within 0.30 Points of FP16 <span class="status verified">✓ VERIFIED</span></h5>
+      <p>Paper Table 3: FP16 = 41.50%, Ours = 41.20%<br>
+      Calculation: 41.50 − 41.20 = <strong>0.30 points</strong> — matches exactly</p>
+    </div>
+
+    <p style="color:#a0a8c0; font-size:0.85em; margin-top:16px;">
+      ⚠ Arithmetic consistency ≠ empirical reproducibility. All three numbers follow from Table 3 internally.
+      GPU experiments required to verify the underlying accuracy and latency values independently.
+    </p>
+  </div>
+
+  <!-- TABLE 3 REPRODUCTION TARGET -->
+  <div class="section">
+    <h3>Reproduction Target — Table 3 (Full)</h3>
+    <table>
+      <thead><tr><th>Model</th><th>Method</th><th>HellaSwag Acc%</th><th>Latency s/tok</th><th>OBQA Acc%</th><th>ARC-C Acc%</th></tr></thead>
+      <tbody>
+        <tr><td class="bold">SmolLM-360M</td><td>FP16</td><td>41.50</td><td>3.50</td><td>31.00</td><td>32.00</td></tr>
+        <tr><td></td><td>Static 4-bit KV</td><td>33.60</td><td>2.93</td><td>30.40</td><td>30.00</td></tr>
+        <tr><td></td><td>Dynamic KV</td><td>29.90</td><td>3.21</td><td>22.00</td><td>23.50</td></tr>
+        <tr style="background:#0e2a1a"><td></td><td class="highlight">Ours (DWB)</td><td class="highlight">41.20</td><td class="highlight">2.41</td><td class="highlight">30.50</td><td class="highlight">31.50</td></tr>
+        <tr><td class="bold">SmolLM-135M</td><td>FP16</td><td>37.20</td><td>3.45</td><td>29.00</td><td>28.20</td></tr>
+        <tr style="background:#0e2a1a"><td></td><td class="highlight">Ours (DWB)</td><td class="highlight">36.90</td><td class="highlight">2.25</td><td class="highlight">28.60</td><td class="highlight">27.00</td></tr>
+        <tr><td class="bold">SmolLM-1.7B</td><td>FP16</td><td>49.00</td><td>2.15</td><td>33.00</td><td>33.50</td></tr>
+        <tr style="background:#0e2a1a"><td></td><td class="highlight">Ours (DWB)</td><td class="highlight">48.60</td><td class="highlight">1.58</td><td class="highlight">31.60</td><td class="highlight">33.00</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- TURBOQUANT PIPELINE -->
+  <div class="section">
+    <h3>TurboQuant Integration — Proposed Pipeline</h3>
+    <div class="pipeline">
+<span class="comment"># Novel pipeline: DWB importance ranking → TurboQuant compression</span>
+
+Token t arrives during autoregressive decoding
+  <span class="arrow">↓</span>
+Compute signals: [H_t (entropy), R_t (rarity), V_t (attn_var), C_t (confidence)]
+  <span class="arrow">↓</span>
+DWB MLP controller → predicted bit-width b̂_t ∈ {2, 4, 8, 16}
+  <span class="arrow">↓</span>
+Routing:
+  b̂_t = 16  <span class="arrow">→</span>  FP16 storage            <span class="comment">(critical tokens)</span>
+  b̂_t = 8   <span class="arrow">→</span>  INT8 scalar quant
+  b̂_t = 4   <span class="arrow">→</span>  INT4 scalar quant
+  b̂_t = 2   <span class="arrow">→</span>  TurboQuant (PolarQuant + QJL)  <span class="comment">← NEW</span>
+  <span class="arrow">↓</span>
+Adaptive KV cache stores (k̂_t, v̂_t) with heterogeneous precision
+    </div>
+    <p style="color:#a0a8c0; font-size:0.85em; margin-top:12px;">
+      Key insight: DWB's 2-bit tier currently uses naive scalar quantization.
+      TurboQuant's error-corrected vector quantization (QJL residual correction)
+      should produce lower reconstruction error at the same bit-budget.
+    </p>
+  </div>
+
+  <!-- BRANCHES -->
+  <div class="section">
+    <h3>GitHub Repository — LonghornSilicon</h3>
+    <div style="margin-bottom:12px">
+      <span style="font-family:monospace; color:#e94560">https://github.com/LonghornSilicon/dont-waste-bits</span>
+    </div>
+    <div class="branch-card">
+      <div class="branch-name">branch: main</div>
+      <h4>Independent Verification</h4>
+      <p>Reproduces Table 3 results for SmolLM-135M/360M/1.7B on HellaSwag, OBQA, ARC-C.
+      Arithmetic verification complete. Awaiting GPU experiments on NVIDIA Brev.</p>
+    </div>
+    <div class="branch-card">
+      <div class="branch-name">branch: turboquant-integration</div>
+      <h4>DWB + TurboQuant Novel Extension</h4>
+      <p>Designs and evaluates pipeline where DWB controller routes low-importance tokens
+      through TurboQuant vector quantization. Hypothesizes better accuracy at same compression.
+      Depends on main branch DWB baseline numbers.</p>
+    </div>
+  </div>
+
+  <!-- NEXT STEPS -->
+  <div class="section">
+    <h3>Next Steps</h3>
+    <ul class="next-steps">
+      <li>Provision RTX 4090 on NVIDIA Brev and run <code>research/src/brev_setup.sh</code></li>
+      <li>Run FP16 + static 4-bit baselines via <code>run_baselines.py --model smollm-360m</code></li>
+      <li>Run DWB method from original repo, compare to Table 3</li>
+      <li>Clone TurboQuant repo and integrate into <code>turboquant_pipeline.py</code></li>
+      <li>Run TQ-H1/H2/H3 experiments on turboquant-integration branch</li>
+      <li>Invoke ml-paper-writing skill once results are in</li>
+    </ul>
+  </div>
+
+</div>
+
+<div class="footer">
+  LonghornSilicon Research · Don't Waste Bits! Verification Project · 2026-04-19<br>
+  Cron loop active (job d556b0ac) — updates every 20 minutes
+</div>
+
+</body>
+</html>

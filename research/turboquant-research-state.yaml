@@ -1,0 +1,67 @@
+project: dwb-turboquant-integration
+created: "2026-04-19"
+branch: turboquant-integration
+
+research_question: >
+  Does using Don't Waste Bits! as a precursor token importance ranker
+  for TurboQuant improve accuracy vs uniform TurboQuant compression,
+  while maintaining or improving compression ratio?
+
+phase: BOOTSTRAP
+
+hypotheses:
+  TQ-H1:
+    slug: accuracy-recovery
+    claim: "DWB+TurboQuant > DWB alone on accuracy (better 2-bit tier via TQ)"
+    prediction: "+0.5 to +2.0 accuracy points vs DWB on HellaSwag"
+    status: UNTESTED
+    priority: HIGH
+
+  TQ-H2:
+    slug: compression-maintained
+    claim: "DWB+TurboQuant maintains compression ratio vs DWB alone"
+    prediction: "Average bits ≤ DWB alone"
+    status: UNTESTED
+    priority: HIGH
+
+  TQ-H3:
+    slug: reasoning-benefit
+    claim: "Benefit is larger on ARC-Challenge than HellaSwag"
+    prediction: "Improvement on ARC-C > improvement on HellaSwag"
+    status: UNTESTED
+    priority: MEDIUM
+
+baselines_needed:
+  - FP16 (from main branch)
+  - Static 4-bit KV (from main branch)
+  - DWB alone (from main branch)
+  - TurboQuant alone (uniform 3/2-bit)
+  - DWB + TurboQuant (this branch)
+
+pipeline_description: >
+  Token → DWB signals [H_t, R_t, V_t, C_t] → MLP controller → bit-width:
+    16-bit: FP16 (high importance)
+    8-bit:  INT8 scalar
+    4-bit:  INT4 scalar
+    2-bit:  TurboQuant vector quantization (PolarQuant + QJL correction)
+
+  Novel contribution: routing low-importance tokens through TurboQuant
+  instead of naive 2-bit scalar quantization.
+
+turboquant_repo: https://github.com/tonbistudio/turboquant-pytorch
+turboquant_notes: >
+  Using tonbistudio fork (not 0xSero original) — pure PyTorch, no vLLM.
+  Removed QJL (found to degrade softmax), uses asymmetric K/V allocation
+  + layer-adaptive precision + residual windowing (recent tokens in FP16).
+integration_file: research/src/turboquant_pipeline.py
+
+next_steps:
+  - Await DWB baseline numbers from main branch
+  - Clone turboquant-pytorch and study API
+  - Implement TurboQuantKV.quantize_key / quantize_value
+  - Add HuggingFace attention hooks for KV interception
+  - Run TQ-base (uniform TurboQuant) baseline
+  - Run DWB+TQ combined pipeline
+  - Compare TQ-H1/H2/H3
+
+depends_on_main_branch: true

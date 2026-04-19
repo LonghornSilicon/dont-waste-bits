@@ -1,97 +1,81 @@
-# Don't Waste Bits! — Independent Verification
+# Don't Waste Bits! + TurboQuant — Integration Research
 
-**Paper**: [arXiv:2604.04722](https://arxiv.org/abs/2604.04722) · *Don't Waste Bits! Adaptive KV-Cache Quantization for Lightweight On-Device LLMs*  
-**Original Authors**: Sayed Pedram Haeri Boroujeni, Niloufar Mehrabi, Patrick Woods, Gabriel Hillesheim, Abolfazl Razi (Clemson University)  
-**Accepted**: CVPR 2026 (original code releases June 3–7, 2026)
+**Branch**: `turboquant-integration`  
+**Base paper**: [arXiv:2604.04722](https://arxiv.org/abs/2604.04722) · *Don't Waste Bits! Adaptive KV-Cache Quantization*  
+**TurboQuant**: [Google Research, ICLR 2026](https://research.google/blog/turboquant-redefining-ai-efficiency-with-extreme-compression/)
 
----
-
-## What This Repo Does
-
-Independent reproduction of the paper's key claims from Table 3:
-
-| Claim | Paper Value | Model | Benchmark |
-|-------|------------|-------|-----------|
-| Latency reduction vs static 4-bit KV | **17.75%** | SmolLM-360M | HellaSwag |
-| Accuracy improvement vs static 4-bit KV | **+7.60 pp** | SmolLM-360M | HellaSwag |
-| Gap from FP16 inference | **≤ 0.30 pp** | SmolLM-360M | HellaSwag |
-
-Since the original code is not yet public, we re-implement the full method from the paper's equations and verify both baselines and the DWB adaptive method independently.
+> See the `main` branch for independent verification of the base paper's claims.
 
 ---
 
-## Method Summary
+## The Idea
 
-The paper proposes a lightweight MLP controller that assigns per-token KV-cache precision from {2, 4, 8, FP16} during autoregressive decoding. The controller is trained on four token-level signals:
+**Don't Waste Bits! (DWB)** learns which tokens are important and assigns them higher KV-cache precision. Its lowest tier (2-bit) currently uses naive scalar quantization.
 
-- **H_t** — entropy of the next-token distribution (Eq. 14)
-- **R_t** — token rarity / inverse frequency (Eq. 15)
-- **V_t** — attention variance across heads (Eq. 16)
-- **C_t** — model confidence (max softmax probability)
+**TurboQuant** compresses all KV tokens uniformly using vector quantization (PolarQuant + QJL correction) — achieving 3-bit keys / 2-bit values with no accuracy loss. But it treats all tokens equally.
 
-Training minimizes a combined loss (Eq. 28): cross-entropy + expected latency + quality penalty.
-
----
-
-## Repository Structure
+**This branch combines them**: DWB ranks token importance, then routes low-importance tokens through TurboQuant's principled vector quantization instead of naive 2-bit scalar quantization.
 
 ```
-dont-waste-bits/
-├── README.md
-├── 2604.04722v1.pdf              # Original paper
-└── research/
-    ├── research-state.yaml       # Central experiment state
-    ├── research-log.md           # Decision timeline
-    ├── findings.md               # Evolving synthesis
-    ├── literature/               # Survey notes
-    ├── src/
-    │   ├── dwb_implementation.py # Re-implementation from paper equations
-    │   ├── eval_hellaswag.py     # Direct HellaSwag evaluator
-    │   ├── run_baselines.py      # Baseline sweep script
-    │   └── brev_setup.sh         # NVIDIA Brev GPU setup
-    ├── data/                     # Experiment results (JSON)
-    ├── experiments/
-    │   ├── H1-latency-reduction/ # Protocol + results
-    │   ├── H2-accuracy-improvement/
-    │   └── H3-fp16-parity/
-    └── to_human/                 # Progress reports (HTML)
+Token t →  DWB controller signals [H_t, R_t, V_t, C_t]
+        →  MLP → bit-width ∈ {2, 4, 8, 16}
+
+Routing:
+  16-bit  →  FP16 storage              (critical tokens)
+   8-bit  →  INT8 scalar quantization
+   4-bit  →  INT4 scalar quantization
+   2-bit  →  TurboQuant vector quant   ← novel contribution
 ```
 
 ---
 
-## Hardware
+## Hypotheses
 
-| Experiment | Hardware | Notes |
-|-----------|----------|-------|
-| Accuracy (H2, H3) | CPU or any GPU | SmolLM fits in RAM |
-| Latency (H1) | **NVIDIA RTX 4090** | Must match paper hardware |
-
-GPU experiments run on **NVIDIA Brev** cloud. Paper used RTX 4090 (24 GB).
+| ID | Claim | Prediction |
+|----|-------|-----------|
+| TQ-H1 | DWB+TurboQuant > DWB alone on accuracy | +0.5–2.0 pp on HellaSwag |
+| TQ-H2 | Compression maintained or improved vs DWB alone | Avg bits ≤ DWB |
+| TQ-H3 | Larger benefit on ARC-Challenge than HellaSwag | More reasoning benefit |
 
 ---
 
-## Running
+## Why This Should Work
 
-```bash
-# Setup (GPU, on Brev)
-bash research/src/brev_setup.sh
+TurboQuant's QJL residual correction eliminates quantization bias that naive 2-bit scalar quantization introduces. For tokens DWB identifies as low-importance (where some error is tolerable), TurboQuant provides better-quality compression at the same bit budget.
 
-# Accuracy verification (CPU works)
-python research/src/eval_hellaswag.py --model smollm2-360m --condition fp16 --limit 500
-python research/src/eval_hellaswag.py --model smollm2-360m --condition static4bit --limit 500
-python research/src/eval_hellaswag.py --model smollm2-360m --condition dwb --limit 500
+**Key risk**: TurboQuant's rotation matrix is calibrated globally. Applying it to a subset of tokens may require per-token re-calibration. The `turboquant-pytorch` fork (which replaced QJL with asymmetric K/V allocation) may integrate more cleanly.
 
-# Full latency + accuracy (GPU required)
-python research/src/run_baselines.py --model smollm-360m --task hellaswag
-```
+---
+
+## TurboQuant Implementation
+
+Using [`tonbistudio/turboquant-pytorch`](https://github.com/tonbistudio/turboquant-pytorch) — pure PyTorch, no vLLM dependency:
+- Asymmetric K/V allocation (more bits for keys, fewer for values)
+- Layer-adaptive precision (protects first/last transformer layers)
+- Residual windowing: recent tokens stay in FP16
+
+Pipeline code: `research/src/turboquant_pipeline.py`
+
+---
+
+## Experiments Plan
+
+| Run | Description | Primary Metric |
+|-----|-------------|---------------|
+| TQ-base | TurboQuant alone (uniform 3/2-bit) | HellaSwag acc%, latency |
+| DWB-base | DWB alone (from main branch) | HellaSwag acc%, latency |
+| DWB+TQ | DWB controller + TQ at 2-bit tier | HellaSwag acc%, latency |
+| DWB+TQ-ablation | TQ at all tiers | HellaSwag acc%, latency |
+
+All on SmolLM-360M. Expand to ARC-C and OBQA after primary results.
 
 ---
 
 ## Status
 
-- [x] Arithmetic verification — all 3 claims internally consistent with Table 3
-- [x] Re-implementation of DWB method from paper equations
-- [ ] FP16 baseline accuracy — **running** (CPU, 300 samples)
-- [ ] Static 4-bit baseline accuracy
-- [ ] DWB adaptive accuracy
-- [ ] Latency experiments (needs Brev RTX 4090)
+- [x] Pipeline architecture designed (`turboquant_pipeline.py`)
+- [x] Research protocols locked
+- [ ] TurboQuant PyTorch integration (attention hooks)
+- [ ] DWB baseline numbers from `main` branch
+- [ ] TQ-H1/H2/H3 experiments
+- [ ] Paper
