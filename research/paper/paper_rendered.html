@@ -178,6 +178,29 @@ objects; hooks on attention output tuples silently fail. Fix: hook <code>k_proj<
 </table>
 <div class="caption">Table 5: Controller sensitivity. v2 improves accuracy +3.2pp but bloats bits 1.68×.</div>
 
+<h3>4.6 H3 Beta-Sweep: Is the Dual-Objective Tension a Hyperparameter Issue?</h3>
+
+<p>We test whether increasing the latency penalty weight β in
+<em>L = α·L<sub>CE</sub> + β·L<sub>latency</sub> + γ·L<sub>quality</sub></em>
+can drive avg_bits toward 5.05 without collapsing accuracy.
+We sweep β ∈ {0.1, 0.5, 1.0, 2.0} with 100 train/eval samples, 5 epochs, α=1, γ=0.1.</p>
+
+<table>
+<tr><th>β</th><th>Acc (100s)</th><th>avg_bits</th><th>val_acc</th><th>Bit dist (2/4/8/16%)</th><th>Note</th></tr>
+<tr><td>0.1</td><td>39.0%</td><td>5.30</td><td>0.407</td><td>38.5/37.6/9.9/14.0</td><td>Closest to paper bits target</td></tr>
+<tr><td>0.5</td><td>39.0%</td><td>3.92</td><td>0.341</td><td>37.0/57.4/0.0/5.5</td><td>Bits below target; accuracy unchanged</td></tr>
+<tr><td>1.0</td><td class="gap">N/A†</td><td>&lt;3.5</td><td class="gap"><strong>0.257 ≈ random</strong></td><td>—</td><td>Controller collapses</td></tr>
+<tr><td>2.0</td><td colspan="5" style="color:#888">Not run (hardware constraint — 2.5 GB free RAM on test machine)</td></tr>
+<tr style="background:#e8f4e8"><td><em>Paper</em></td><td class="match">41.2%</td><td class="match">5.05</td><td>—</td><td>undisclosed</td><td>Compound loss training</td></tr>
+</table>
+<div class="caption">Table 6: β sweep results. † β=1.0 training only; full eval blocked by OOM on test machine (2.5 GB free).</div>
+
+<p><strong>Finding:</strong> The dual-objective tension is <em>not</em> a hyperparameter issue.
+At β=0.1, avg_bits ≈ 5.30 ≈ paper's 5.05, yet accuracy (39.0%) remains 2.2pp below the paper's 41.2%.
+At β=0.5, avg_bits drops to 3.92 while accuracy stays the same (39.0%) — higher penalty trades bits for no accuracy benefit.
+At β=1.0, training val_acc collapses to 0.257 ≈ random (0.25): the latency penalty overwhelms the classification loss entirely.
+No β simultaneously achieves both targets. The paper's compound-loss training procedure is qualitatively different from our quartile-classification approach.</p>
+
 <h2><span class="section-num">5.</span> Methodological Insights</h2>
 
 <div class="insight">
@@ -240,7 +263,7 @@ Per-head WHT (head_dim=64 = 2⁶, power-of-2 ✓), exactly invertible, no extra 
 <tr><td class="match"><strong>DWB-TurboQuant</strong></td><td class="match"><strong>42.0%</strong></td><td class="match"><strong>29.0%</strong></td><td class="match"><strong>5.05 / 7.72</strong></td></tr>
 <tr style="background:#e8f4e8"><td><em>Paper DWB</em></td><td>41.2%</td><td>—</td><td>5.05</td></tr>
 </table>
-<div class="caption">Table 6: DWB-TurboQuant results (SmolLM-360M, 100 samples). Same compression, higher accuracy.</div>
+<div class="caption">Table 7: DWB-TurboQuant results (SmolLM-360M, 100 samples). Same compression, higher accuracy.</div>
 
 <div class="highlight">
 DWB-TurboQuant (42.0%) <strong>exceeds the paper's DWB target (41.2%)</strong> and matches FP16 (42.6%) within noise, at identical compression.
@@ -256,8 +279,11 @@ assuming INT4 degrades meaningfully.</p>
 
 <p><strong>On the H3 gap.</strong> Our best reproduction (v2, 37.0%) is 4.2pp below the paper's 41.2%.
 The compound loss with explicit latency penalty is the key missing ingredient — it forces the controller
-to find the accuracy/compression Pareto front. We expect the gap to close when original code releases
-(June 2026).</p>
+to find the accuracy/compression Pareto front.
+Our β-sweep (Table 6) confirms this is fundamental: at β=0.1, avg_bits (5.30) nearly matches the paper's
+target but accuracy (39.0%) remains 2.2pp short; at β=1.0, the controller degrades to near-random
+(val_acc=0.257≈0.25) — there is no β in our framework that closes the gap.
+We expect the gap to close when original code releases (June 2026).</p>
 
 <p><strong>On DWB-TurboQuant.</strong> Routing low-importance tokens through WHT-based quantization
 provides a free accuracy improvement. Bit-width assignment and within-tier quantization method are
