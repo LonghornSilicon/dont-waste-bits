@@ -61,6 +61,9 @@
     <tr><td>Autoregressive INT4 (methodology check)</td><td>50</td><td>42.0%</td><td>—</td><td>—</td><td><span class="badge finding">AR lossless too</span></td></tr>
     <tr><td>FP16 — SmolLM-135M (H4)</td><td>100</td><td>40.0%</td><td>37.2%</td><td class="pp">+2.8pp</td><td><span class="badge confirmed">✅ H4 CONFIRMED</span></td></tr>
     <tr><td>int4_int3range — SmolLM-135M (H4)</td><td>100</td><td>32.0%</td><td>33.6%</td><td>−1.6pp</td><td><span class="badge confirmed">✅ CROSS-MODEL</span></td></tr>
+    <tr><td>FP16 — SmolLM-1.7B (H4)</td><td>50</td><td>50.0%</td><td>49.0%</td><td class="pp">+1.0pp</td><td><span class="badge confirmed">✅ H4 CONFIRMED</span></td></tr>
+    <tr class="highlight"><td><strong>Standard INT4 — SmolLM-1.7B (H4)</strong></td><td>50</td><td><strong>40.0%</strong></td><td><strong>41.1%</strong></td><td>−1.1pp</td><td><span class="badge confirmed">✅ MATCHES PAPER at 1.7B</span></td></tr>
+    <tr><td>int4_int3range — SmolLM-1.7B (H4)</td><td>50</td><td>32.0%</td><td>41.1%</td><td class="pp-neg">−9.1pp</td><td><span class="badge warning">⚠ Over-degrades at scale</span></td></tr>
     <tr><td>Scalar 2-bit (uniform)</td><td>100</td><td>22.0%</td><td>—</td><td class="pp-neg">−20.6pp</td><td><span class="badge finding">Catastrophic</span></td></tr>
     <tr><td>PolarQuant 3b/2b uniform (TQ-H1)</td><td>100</td><td>27.0%</td><td>—</td><td class="pp">+5pp vs scalar</td><td><span class="badge confirmed">✅ TQ-H1 CONFIRMED</span></td></tr>
     <tr class="highlight"><td>DWB-scalar (TQ-H2 baseline)</td><td>100</td><td>40.0%</td><td>41.2%</td><td>−1.2pp</td><td>Baseline</td></tr>
@@ -109,8 +112,18 @@
 </div>
 
 <div class="card green">
-  <h3>Finding 4 — Cross-model validation (SmolLM-135M)</h3>
-  <p>All core findings replicate on SmolLM-135M (100 samples): FP16=40.0% (paper: 37.2% ✅), standard INT4=39.0% (lossless ✅), int4_int3range=32.0% (paper: 33.6% ✅). The INT4 losslessness and int4_int3range paper-matching are model-size independent phenomena.</p>
+  <h3>Finding 4 — Cross-model validation: scale-dependent INT4 behavior ★ NEW</h3>
+  <p><strong>135M (100 samples)</strong>: FP16=40.0% (paper: 37.2% ✅), standard INT4=39.0% (lossless ✅), int4_int3range=32.0% (paper: 33.6% ✅).</p>
+  <p><strong>1.7B (50 samples) — KEY FINDING</strong>: The losslessness pattern reverses at scale.</p>
+  <table>
+    <thead><tr><th>Model</th><th>attn_heads</th><th>Std INT4</th><th>FP16</th><th>Gap</th><th>Pattern</th></tr></thead>
+    <tbody>
+      <tr><td>135M</td><td>15</td><td>39.0%</td><td>40.0%</td><td>1pp</td><td><span class="badge confirmed">Lossless</span></td></tr>
+      <tr><td>360M</td><td>15</td><td>41.2%</td><td>42.6%</td><td>1.4pp</td><td><span class="badge confirmed">Lossless</span></td></tr>
+      <tr class="highlight"><td><strong>1.7B</strong></td><td><strong>32</strong></td><td><strong>40.0%</strong></td><td><strong>50.0%</strong></td><td class="pp-neg"><strong>10pp</strong></td><td><span class="badge warning">Lossy — matches paper</span></td></tr>
+    </tbody>
+  </table>
+  <p>At 1.7B, standard INT4 = 40.0% matches the paper's 41.1% baseline. int4_int3range (32.0%) over-degrades. The INT4 losslessness mechanism (zero-mean cancellation) weakens at 1.7B — likely due to 32 vs 15 attention heads increasing activation variance and reducing cancellation effectiveness. <strong>Implication for H2</strong>: the paper's +7.6pp improvement claim is most valid at 1.7B, where standard INT4 genuinely degrades. The 1.7B result validates the core motivation for adaptive quantization.</p>
 </div>
 
 <div class="card green">
@@ -231,13 +244,13 @@ Routing:
 <table>
   <thead><tr><th>Branch</th><th>Latest Commit</th><th>Status</th></tr></thead>
   <tbody>
-    <tr><td><code>main</code></td><td><code>502b74a</code> — paper outline updated with all results</td><td><span class="badge confirmed">✅ COMPLETE</span></td></tr>
-    <tr><td><code>turboquant-integration</code></td><td><code>1567b23</code> — TQ-H2 CONFIRMED</td><td><span class="badge confirmed">✅ COMPLETE</span></td></tr>
+    <tr><td><code>main</code></td><td><code>bbc77e7</code> — H4 1.7B scale-dependent INT4 confirmed</td><td><span class="badge confirmed">✅ COMPLETE</span></td></tr>
+    <tr><td><code>turboquant-integration</code></td><td><code>75a56f5</code> — TQ-H1/H2/H3 all confirmed + 1.7B</td><td><span class="badge confirmed">✅ COMPLETE</span></td></tr>
   </tbody>
 </table>
 
 <footer>
-  Generated 2026-04-19 · All CPU accuracy experiments concluded · LonghornSilicon/dont-waste-bits
+  Generated 2026-04-19 · All CPU accuracy experiments concluded (135M + 360M + 1.7B) · LonghornSilicon/dont-waste-bits
 </footer>
 
 </body>
