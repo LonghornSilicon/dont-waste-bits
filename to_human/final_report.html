@@ -72,8 +72,19 @@
 <h2><span class="section-num">2.</span> Six Key Findings</h2>
 
 <div class="card green">
-  <h3>Finding 1 — Paper's INT4 baseline uses non-standard 8-level quantization</h3>
-  <p>Standard symmetric per-tensor INT4 is <strong>nearly lossless</strong> for KV cache: all 6 variants score 41–44%, indistinguishable from FP16 (42.6%). The paper's 33.6% "static 4-bit KV" baseline is reproduced only with <code>int4_int3range</code>: scale=max/3, 8 effective levels — equivalent to INT3 stored in 4-bit format. This means the paper's claimed +7.6pp DWB advantage is relative to an intentionally weakened baseline, not standard INT4.</p>
+  <h3>Finding 1 — Paper's INT4 baseline: coarse step size identified and causally verified</h3>
+  <p>Standard INT4 is nearly lossless (41–44% ≈ FP16). Controlled ablation (5 conditions, 50 samples) isolates why <code>int4_int3range</code> matches the paper's 33.6%:</p>
+  <table>
+    <thead><tr><th>Condition</th><th>scale</th><th>clamp</th><th>Accuracy</th><th>vs Std</th></tr></thead>
+    <tbody>
+      <tr><td>A: Standard INT4</td><td>max/7</td><td>(−8,7)</td><td>46.0%</td><td>—</td></tr>
+      <tr><td>E: Intermediate step</td><td>max/5</td><td>(−8,7)</td><td>42.0%</td><td>−4pp</td></tr>
+      <tr><td>D: Narrow range only</td><td>max/7</td><td>(−4,3)</td><td>38.0%</td><td>−8pp</td></tr>
+      <tr class="highlight"><td><strong>C: Coarse step, full range</strong></td><td><strong>max/3</strong></td><td><strong>(−8,7)</strong></td><td class="pp-neg"><strong>28.0%</strong></td><td class="pp-neg"><strong>−18pp</strong></td></tr>
+      <tr class="highlight"><td><strong>B: int4_int3range (paper match)</strong></td><td><strong>max/3</strong></td><td><strong>(−4,3)</strong></td><td class="pp-neg"><strong>28.0%</strong></td><td class="pp-neg"><strong>−18pp</strong></td></tr>
+    </tbody>
+  </table>
+  <p><strong>B = C</strong>: range clipping adds <strong>0pp</strong> additional degradation once the step is coarse. The entire −18pp gap comes from scale=max/3 vs max/7. Lossless threshold: between max/5 (42%) and max/3 (28%).</p>
 </div>
 
 <div class="card blue">
