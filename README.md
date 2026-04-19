@@ -25,7 +25,7 @@ we re-implement the full method from paper equations and document critical metho
 | FP16 baseline (500 samples) | 41.50% | **42.6%** | ✅ CONFIRMED (Δ=+1.1pp, within noise) |
 | Static INT4 KV (standard) | 33.60% | **41.2–44.5%** | ⚠️ CANNOT REPRODUCE standard INT4 |
 | Static INT4 KV (int3range) | 33.60% | **33.0%** | ✅ MATCHES with 8-level INT4 |
-| DWB adaptive | 41.20% | **38.0–40.0%** | ~✅ Within noise (H3 consistent, 200 samp) |
+| DWB adaptive | 41.20% | **33.8%** (500 samp, CI±4.4pp) | ⚠️ IMPL_GAP — controller quality (7.4pp > CI) |
 | SmolLM-135M: FP16 | 37.20% | **40.0%** | ✅ H4 CONFIRMED |
 | SmolLM-135M: int4_int3range | 33.60% | **32.0%** | ✅ H4 CONFIRMED cross-model |
 | SmolLM-1.7B: FP16 | 49.00% | **50.0%** | ✅ H4 CONFIRMED |
@@ -43,7 +43,8 @@ we re-implement the full method from paper equations and document critical metho
 | **KV int4_int3range (8 levels)** | 100 | **33.0%** | 33.6% | **-0.6pp ✅** |
 | KV-2bit | 200 | 25.0% | — | -17pp (hooks confirmed) |
 | DWB adaptive | 100 | 40.0% | 41.2% | -1.2pp |
-| DWB adaptive | 200 | **38.0%** | 41.2% | -3.2pp (within ±6.7pp CI) |
+| DWB adaptive | 200 | 38.0% | 41.2% | -3.2pp |
+| **DWB adaptive (definitive)** | **500** | **33.8%** | 41.2% | **-7.4pp ⚠️ IMPL_GAP >CI±4.4pp** |
 | KV-4bit sym per-tensor (AR) | 50 | 42.0% | 33.6% | +8.4pp (AR doesn't explain gap) |
 | **SmolLM-135M FP16** | 100 | **40.0%** | 37.2% | **+2.8pp ✅ H4** |
 | **SmolLM-135M int4_int3range** | 100 | **32.0%** | 33.6% | **-1.6pp ✅ H4 cross-model** |
@@ -204,11 +205,11 @@ python research/src/analyze_int4_error_1b7.py
 - [x] Standard INT4 losslessness documented (Finding 4) — all 6 variants ≈ FP16
 - [x] Paper's INT4 baseline reproduced — `int4_int3range` = 33.0% ≈ 33.6% (Finding 5)
 - [x] AR methodology ruled out — INT4 still 42% autoregressively (Finding 5 strengthened)
-- [x] DWB controller trained and evaluated — H3 consistent, 38–40% vs paper's 41.2%
+- [x] DWB 500-samp definitive — H3 IMPL_GAP: 33.8% vs paper 41.2% (gap -7.4pp > CI±4.4pp)
 - [x] H4 cross-model validation — SmolLM-135M confirms all findings ✓
 - [x] SmolLM-1.7B: standard INT4 = 40.0% matches paper's 41.1% ✓ (scale-dependent losslessness)
 - [x] Mechanistic verification — eff_residual threshold 8.1% (360M) vs 12.4% (1.7B) confirmed
 - [x] Controller behavior analysis — C_t (d=4.55) dominates; R_t (d=0.52) near-uninformative
-- [x] DWB 500-samp run — H3 definitive with CI±4.4pp (in progress)
+- [x] DWB 500-samp run — H3 definitive CI±4.4pp: 33.8%, IMPL_GAP confirmed
 - [ ] Latency experiments (H1) — RTX 4090 required
 - [ ] Academic paper writeup — install academic-research-paper-writer from mcpmarket.com
