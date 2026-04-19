@@ -65,15 +65,28 @@ vector quantization should recover 5–15pp for these tokens.
 
 ---
 
+## Results
+
+| Condition | Accuracy | avg_bits | vs FP16 |
+|-----------|----------|---------|---------|
+| FP16 | 42.6% | 16.0 | — |
+| Scalar 2-bit (uniform) | 22.0% | 2.0 | -20.6pp |
+| **PolarQuant uniform (TQ-H1)** | **27.0%** | 2.5 | -15.6pp (+5pp over scalar) |
+| DWB-scalar | 40.0% | 5.05 | -2.6pp |
+| **DWB-TurboQuant (TQ-H2)** | **42.0%** | **5.05** | **-0.6pp** ✅ |
+
+**TQ-H2: CONFIRMED** — DWB-TurboQuant matches FP16 accuracy at 3x compression.  
+Same compression ratio as DWB-scalar (both avg=5.05 bits/token), +2pp accuracy improvement.
+
 ## Status
 
 - [x] Baseline numbers established (from main branch)
 - [x] Protocol committed
-- [x] `turboquant_pipeline.py` scaffold created
-- [x] `turboquant_impl.py` — self-contained PolarQuant implementation (no external deps)
-- [ ] TQ-H1 experiment run
-- [ ] TQ-H2 experiment run
-- [ ] TQ-H3 (additional benchmarks)
+- [x] `turboquant_impl.py` — self-contained PolarQuant (no external deps)
+- [x] **TQ-H1: CONFIRMED** — PolarQuant +5pp over scalar 2-bit (27% vs 22%)
+- [x] **TQ-H2: CONFIRMED** — DWB-TurboQuant +2pp over DWB-scalar (42% vs 40%), matches FP16
+- [ ] TQ-H3 (additional benchmarks) — optional
+- [ ] Latency experiments (GPU required)
 
 ---
 

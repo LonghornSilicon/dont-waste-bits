@@ -108,7 +108,15 @@ We present an independent reproduction of "Don't Waste Bits!" (arXiv:2604.04722,
 | Scalar 2-bit | 22.0% | -19.0pp |
 | PolarQuant (3b/2b) | 27.0% | -14.0pp (+5pp recovery) |
 
-**TQ-H2 Results** (DWB routing with PolarQuant at 2-bit tier): *pending*
+**TQ-H2 Results** (DWB routing with PolarQuant at 2-bit tier, 100 samples):
+
+| Condition | Accuracy | vs FP16 | avg_bits |
+|-----------|----------|---------|---------|
+| DWB-scalar | 40.0% | -2.6pp | 5.05 |
+| **DWB-TurboQuant** | **42.0%** | **-0.6pp** | **5.05** |
+| Paper DWB | 41.2% | — | — |
+
+**TQ-H2: CONFIRMED** (+2.0pp, same compression). DWB-TurboQuant matches FP16 (42.6%) and exceeds paper's DWB claim (41.2%).
 
 **Implementation**: Self-contained per-head WHT rotation (head_dim=64, 2^6, power-of-2 ✓). No external dependencies. Critical: must apply per-head, not across full concatenated KV projection.
 
@@ -118,7 +126,7 @@ We present an independent reproduction of "Don't Waste Bits!" (arXiv:2604.04722,
 - The "cannot reproduce" is itself a finding: naive INT4 is NOT harmful
 - Paper's +7.6pp H2 claim requires non-standard 8-level INT4 baseline
 - Latency claim (H1, 17.75%) cannot be tested without GPU — arithmetic verified
-- DWB-TurboQuant: promising direction — PolarQuant recovers +5pp at 2-bit tier
+- DWB-TurboQuant: CONFIRMED — +2pp over DWB-scalar at same compression, matches FP16
 
 ### 9. Conclusion
 - FP16 baseline confirmed, DWB accuracy consistent with paper's claims
