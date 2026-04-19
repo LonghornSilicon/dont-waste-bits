@@ -1,0 +1,83 @@
+project: dont-waste-bits-verification
+created: "2026-04-19"
+last_updated: "2026-04-19"
+
+research_question: >
+  Can we independently reproduce the claims of "Don't Waste Bits! Adaptive KV-Cache
+  Quantization for Lightweight On-Device LLMs" (arXiv:2604.04722)?
+  Specifically: (H1) 17.75% latency reduction, (H2) +7.60 accuracy points over
+  static 4-bit KV, (H3) within 0.30 points of FP16 — all on SmolLM-360M / HellaSwag.
+
+phase: BOOTSTRAP  # BOOTSTRAP | INNER_LOOP | OUTER_LOOP | CONCLUDED
+
+hypotheses:
+  H1:
+    slug: H1-latency-reduction
+    claim: "17.75% decoding latency reduction vs static 4-bit KV (SmolLM-360M, HellaSwag)"
+    arithmetic_check: "(2.93 - 2.41) / 2.93 * 100 = 17.75% — VERIFIED from paper Table 3"
+    status: ARITHMETIC_VERIFIED  # UNTESTED | ARITHMETIC_VERIFIED | RUNNING | CONFIRMED | REFUTED
+    prediction: Reproduces within ±2% of reported values
+    priority: HIGH
+
+  H2:
+    slug: H2-accuracy-improvement
+    claim: "+7.60 accuracy points over static 4-bit KV (SmolLM-360M, HellaSwag)"
+    arithmetic_check: "41.20 - 33.60 = 7.60 — VERIFIED from paper Table 3"
+    status: ARITHMETIC_VERIFIED
+    prediction: Reproduces within ±1 accuracy point
+    priority: HIGH
+
+  H3:
+    slug: H3-fp16-parity
+    claim: "Within 0.30 points of FP16 (SmolLM-360M, HellaSwag)"
+    arithmetic_check: "41.50 - 41.20 = 0.30 — VERIFIED from paper Table 3"
+    status: ARITHMETIC_VERIFIED
+    prediction: Reproduces; gap may vary due to random seed
+    priority: HIGH
+
+  H4:
+    slug: H4-additional-models
+    claim: "Results hold across SmolLM-135M and SmolLM-1.7B"
+    status: UNTESTED
+    priority: MEDIUM
+
+paper_numbers_from_table3:
+  SmolLM_360M_HellaSwag:
+    FP16_accuracy: 41.50
+    FP16_latency_s_per_token: 3.50
+    Static_4bit_accuracy: 33.60
+    Static_4bit_latency: 2.93
+    DynamicKV_accuracy: 29.90
+    DynamicKV_latency: 3.21
+    Ours_accuracy: 41.20
+    Ours_latency: 2.41
+  SmolLM_135M_HellaSwag:
+    FP16_accuracy: 37.20
+    FP16_latency: 3.45
+    Static_4bit_accuracy: 33.60
+    Static_4bit_latency: 2.93
+    Ours_accuracy: 36.90
+    Ours_latency: 2.25
+  SmolLM_1_7B_HellaSwag:
+    FP16_accuracy: 49.00
+    FP16_latency: 2.15
+    Static_4bit_accuracy: 41.10
+    Static_4bit_latency: 1.89
+    Ours_accuracy: 48.60
+    Ours_latency: 1.58
+
+next_steps:
+  - Clone original repo and inspect code
+  - Set up Brev GPU environment (RTX 4090)
+  - Run FP16 baseline on HellaSwag (SmolLM-360M) — establish baseline
+  - Run static 4-bit KV baseline
+  - Run Don't Waste Bits! method
+  - Compare against paper Table 3
+
+blockers:
+  - Need GPU (RTX 4090 on NVIDIA Brev) — user confirmed available
+  - Need to verify original repo code is runnable
+
+original_repo: https://github.com/SayedPedramHaeri/Dont-Waste-Bits
+our_repo: https://github.com/LonghornSilicon/dont-waste-bits
+hardware_required: "NVIDIA RTX 4090 (24GB) — same as original paper"
