@@ -270,7 +270,7 @@ final_status:
   paper_writeup: COMPLETE  # research/paper/main.tex + refs.bib + paper_rendered.html (commit a775006)
   github: https://github.com/LonghornSilicon/dont-waste-bits
   git_heads:
-    main: a775006
+    main: cc51aa6
     turboquant-integration: 9c15f3d
   branches:
     main: verification + ablation + 1.7B mechanistic + paper
