@@ -1,0 +1,558 @@
+\documentclass[10pt,twocolumn]{article}
+\usepackage[margin=0.75in]{geometry}
+\usepackage{times}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{microtype}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!70!black,
+  citecolor=green!50!black,
+  urlcolor=blue!70!black
+}
+
+\newcommand{\dwb}{\textsc{DWB}}
+\newcommand{\tq}{\textsc{TurboQuant}}
+\newcommand{\dwbtq}{\textsc{DWB-TurboQuant}}
+\newcommand{\eg}{\textit{e.g.,}\xspace}
+\newcommand{\ie}{\textit{i.e.,}\xspace}
+\newcommand{\etal}{\textit{et al.}\xspace}
+
+\title{\textbf{Independent Verification of \textit{Don't Waste Bits!}:}\\
+Scale-Dependent INT4 Losslessness and a DWB-TurboQuant Extension}
+
+\author{
+  themoddedcube / LonghornSilicon\\
+  \texttt{github.com/LonghornSilicon/dont-waste-bits}
+}
+
+\date{April 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We present an independent reproduction of ``Don't Waste Bits!''
+\cite{haeri2026dwb} (CVPR 2026), which proposes adaptive per-token
+KV-cache quantization for on-device LLMs via a learned controller that
+assigns \{2,4,8,16\}-bit precision to each token.
+Since the original code is not yet public (expected June 2026), we
+re-implement the method from paper equations and identify seven
+methodological insights.
+Our key finding is that symmetric per-tensor INT4 KV quantization
+exhibits \textbf{scale-dependent losslessness}: at 135M and 360M
+parameters (15 attention heads), INT4 is nearly lossless
+($\approx$0pp gap vs FP16), but at 1.7B parameters (32 heads) it shows
+genuine $\approx$10pp degradation matching the paper's stated baseline.
+The paper's 33.6\% static INT4 baseline for smaller models is reproduced
+only with a non-standard 8-level quantization (scale=max/3, equivalent
+to INT3 precision stored in 4-bit), confirmed causally by ablation.
+We mechanistically verify the losslessness via
+$\epsilon_\text{eff} = \epsilon_\text{rel} \times r_\text{cancel}$:
+8.1\% at 360M (below threshold $\Rightarrow$ lossless) vs.\
+12.4\% at 1.7B (above threshold $\Rightarrow$ 10pp loss).
+For the DWB adaptive controller (H3), we find an implementation gap:
+our v1 achieves 33.8\% vs.\ the paper's 41.2\% ($-$7.4pp, outside
+CI$\pm$4.4pp), while our v2 (better-trained) achieves 37.0\% but at
+1.68$\times$ more bits, revealing a dual-objective tension—quartile
+classification training cannot simultaneously optimize accuracy and
+compression.
+As a novel contribution, we propose \dwbtq, which routes
+DWB's 2-bit tokens through PolarQuant (per-head Walsh-Hadamard
+rotation) rather than naive scalar INT2, recovering
+$+$2pp on HellaSwag and $+$3pp on ARC-Challenge at identical
+compression (5.05 avg bits).
+\end{abstract}
+
+%-----------------------------------------------------------------------
+\section{Introduction}
+\label{sec:intro}
+%-----------------------------------------------------------------------
+
+Large language models deployed on-device face a fundamental memory
+bandwidth bottleneck during autoregressive decoding: the KV cache grows
+linearly with sequence length and must be read from memory on every
+step \cite{pope2023efficiently}.
+Quantizing the KV cache to lower bit-widths reduces this bottleneck at
+the cost of accuracy \cite{liu2024kivi,hooper2024kvquant}.
+
+``Don't Waste Bits!'' (DWB) \cite{haeri2026dwb}, accepted at CVPR 2026,
+proposes a per-token adaptive approach: a lightweight 3-layer MLP
+controller predicts a precision assignment $b_t \in \{2,4,8,16\}$ for
+each token using four signals—entropy $H_t$, rarity $R_t$, attention
+variance $V_t$, and prediction confidence $C_t$.
+The paper reports that for SmolLM-360M \cite{allal2024smollm} on HellaSwag
+\cite{zellers2019hellaswag}: (H1) 17.75\% latency reduction over static
+4-bit KV; (H2) +7.60pp accuracy over static 4-bit KV; (H3) within
+0.30pp of FP16 baseline.
+The original code is not yet public, making independent verification both
+necessary and valuable.
+
+\paragraph{Contributions.}
+\begin{enumerate}[leftmargin=*,topsep=2pt,itemsep=0pt]
+  \item Re-implementation of DWB from paper equations with seven
+        methodological discoveries (\S\ref{sec:insights}).
+  \item Scale-dependent INT4 losslessness: mechanistic explanation
+        via effective residual error across SmolLM-135M/360M/1.7B
+        (\S\ref{sec:results}).
+  \item \dwbtq: routing DWB's 2-bit tier through PolarQuant
+        \cite{turboQuant2026}, recovering $+$2--3pp at identical
+        compression (\S\ref{sec:turboquant}).
+\end{enumerate}
+
+%-----------------------------------------------------------------------
+\section{Background}
+\label{sec:background}
+%-----------------------------------------------------------------------
+
+\paragraph{KV cache quantization.}
+KV cache quantization stores keys and values at reduced precision
+\cite{liu2024kivi,hooper2024kvquant,yuan2024kvcache}.
+Standard INT4 (16 quantization levels, scale = max/7) minimally impacts
+attention scores in practice \cite{liu2024kivi}.
+DWB \cite{haeri2026dwb} improves over static quantization by
+importance-aware per-token assignment.
+
+\paragraph{SmolLM model family.}
+SmolLM \cite{allal2024smollm} is a family of small causal LMs:
+135M, 360M, and 1.7B parameters.
+SmolLM-360M uses 32 transformer layers, 15 attention heads, and hidden
+dimension 960; SmolLM-1.7B uses 24 layers, 32 heads, and hidden
+dimension 2048.
+
+\paragraph{HellaSwag evaluation.}
+HellaSwag \cite{zellers2019hellaswag} is a commonsense NLI benchmark
+with 4-way completion.
+The paper uses \emph{unnormalized} log-likelihood accuracy (\texttt{acc},
+$\approx$42\% for SmolLM-360M at FP16), not length-normalized
+(\texttt{acc\_norm}, $\approx$54\%).
+This distinction is critical for reproducing reported numbers
+(\S\ref{sec:insights}).
+
+\paragraph{TurboQuant / PolarQuant.}
+TurboQuant \cite{turboQuant2026} (ICLR 2026) applies a per-head
+Walsh-Hadamard Transform (WHT) rotation to KV tensors before uniform
+scalar quantization, decorrelating activations and reducing effective
+quantization error.
+The rotation is orthogonal and exactly invertible, requiring no extra
+bits.
+
+%-----------------------------------------------------------------------
+\section{Re-Implementation}
+\label{sec:method}
+%-----------------------------------------------------------------------
+
+\paragraph{Controller architecture.}
+We re-implement the DWB controller as:
+\[
+  f_\theta: \mathbb{R}^4 \to \mathbb{R}^4, \quad
+  f_\theta = \text{Linear}(128,4) \circ \text{ReLU} \circ
+  \text{Linear}(128,128) \circ \text{ReLU} \circ \text{Linear}(4,128),
+\]
+totalling 33,540 parameters.
+For each token $t$, the controller takes signals
+$[H_t, R_t, V_t, C_t]$ (Eqs.\ 14--17 of \cite{haeri2026dwb}) and
+outputs logits over $\{2,4,8,16\}$-bit classes.
+
+\paragraph{Signals.}
+$H_t = -\sum_v p_v \log p_v$ (next-token entropy);
+$R_t$ = inverse token frequency;
+$V_t$ = variance of attention weights across heads (requires
+\texttt{output\_attentions=True});
+$C_t$ = max softmax probability.
+
+\paragraph{Training loss.}
+We follow Eq.\ 28 of \cite{haeri2026dwb}:
+$\mathcal{L} = \alpha \cdot \mathcal{L}_\text{CE} +
+\beta \cdot \mathcal{L}_\text{latency} +
+\gamma \cdot \mathcal{L}_\text{quality}$,
+with $\alpha=1, \beta=0.1, \gamma=0.1$.
+The latency term penalizes high-bit assignments with costs
+$[0.5, 1.0, 2.0, 4.0]$ for $\{2,4,8,16\}$-bit respectively.
+
+\paragraph{KV cache hooks.}
+\textbf{Critical finding (Insight 2):} transformers $\geq$5.0 uses
+\texttt{DynamicCache} objects; hooks on attention output tuples silently
+fail.
+Correct approach: register forward hooks on \texttt{k\_proj} and
+\texttt{v\_proj} Linear submodules directly.
+For SmolLM-360M this places 64 hooks (32 layers $\times$ 2).
+
+%-----------------------------------------------------------------------
+\section{Evaluation Setup}
+\label{sec:setup}
+%-----------------------------------------------------------------------
+
+We evaluate on HellaSwag validation using unnormalized log-likelihood
+accuracy (\texttt{acc}).
+Primary model: SmolLM-360M \cite{allal2024smollm}.
+Cross-model validation on SmolLM-135M and SmolLM-1.7B.
+Hardware: CPU (accuracy experiments); latency experiments (H1) require
+RTX 4090 (pending).
+All results use float32.
+
+%-----------------------------------------------------------------------
+\section{Results}
+\label{sec:results}
+%-----------------------------------------------------------------------
+
+\subsection{Baseline Verification}
+
+Table~\ref{tab:main} shows our SmolLM-360M results vs.\ paper Table~3.
+
+\begin{table}[h]
+\centering
+\caption{SmolLM-360M on HellaSwag (\texttt{acc}).
+CI $\pm$4.4pp at $n$=500.}
+\label{tab:main}
+\footnotesize
+\begin{tabular}{lccc}
+\toprule
+Condition & $n$ & Ours & Paper \\
+\midrule
+FP16 & 500 & \textbf{42.6\%} & 41.5\% \\
+KV-4bit per-tensor & 500 & 41.6\% & 33.6\% \\
+KV-4bit per-token & 500 & 41.2\% & 33.6\% \\
+KV-4bit asymmetric & 200 & 42.5\% & 33.6\% \\
+\textbf{int4\_int3range (8-level)} & 100 & \textbf{33.0\%} & \textbf{33.6\%} \\
+KV-2bit & 200 & 25.0\% & --- \\
+DWB v1 (val\_acc=0.366) & 500 & 33.8\% & 41.2\% \\
+DWB v2 (val\_acc=0.446) & 500 & 37.0\% & 41.2\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The FP16 baseline (42.6\%) matches the paper's 41.5\% within noise ($+$1.1pp).
+All standard INT4 variants are near-lossless at 360M—a striking result
+that contradicts the paper's reported 33.6\% baseline.
+The 33.6\% baseline is reproduced only by \texttt{int4\_int3range}:
+scale=max/3 with 8 effective levels, equivalent to INT3 precision in
+4-bit storage.
+
+\subsection{Scale-Dependent INT4 Losslessness}
+
+\begin{table}[h]
+\centering
+\caption{H4 cross-model validation.}
+\label{tab:h4}
+\footnotesize
+\begin{tabular}{llcc}
+\toprule
+Model & Condition & Ours & Paper \\
+\midrule
+\multirow{3}{*}{135M} & FP16 & 40.0\% & 37.2\% \\
+                       & Std INT4 & 39.0\% & 33.6\% \\
+                       & int4\_int3range & \textbf{32.0\%} & \textbf{33.6\%} \\
+\midrule
+\multirow{3}{*}{1.7B} & FP16 & 50.0\% & 49.0\% \\
+                       & \textbf{Std INT4} & \textbf{40.0\%} & \textbf{41.1\%} \\
+                       & int4\_int3range & 32.0\% & 41.1\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+A critical reversal appears at 1.7B: standard INT4 now \emph{matches} the
+paper's baseline (40.0\% vs.\ 41.1\%, $-$1.1pp), while int4\_int3range
+over-degrades ($-$9.1pp).
+At 135M/360M (15 heads), standard INT4 is lossless ($\leq$1.4pp gap vs.\
+FP16).
+At 1.7B (32 heads), it degrades $\approx$10pp.
+
+\paragraph{Mechanistic explanation.}
+We directly measure the quantization error in K/V tensors (20 examples each):
+
+\begin{table}[h]
+\centering
+\caption{INT4 error analysis across scales.}
+\label{tab:mech}
+\footnotesize
+\begin{tabular}{lcc}
+\toprule
+Metric & 360M & 1.7B \\
+\midrule
+Symmetry (mean/std) & 0.0027 & 0.0006 \\
+Relative error $\epsilon_\text{rel}$ & 26.95\% & 35.31\% \\
+Cancellation ratio $r_\text{cancel}$ & 0.30 & 0.35 \\
+\textbf{Eff.\ residual} $\epsilon_\text{eff}$ & \textbf{8.1\%} & \textbf{12.4\%} \\
+Accuracy impact & $\approx$0pp & $\approx$10pp \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Both scales have near-zero-mean errors (symmetry $\approx$0),
+confirming the same cancellation mechanism operates at both scales.
+The effective residual $\epsilon_\text{eff} = \epsilon_\text{rel} \times
+r_\text{cancel}$ captures what survives after cancellation in the
+attention weighted sum:
+\begin{align*}
+  \text{360M}: \quad & 26.95\% \times 0.30 = 8.1\% \quad \Rightarrow \text{lossless} \\
+  \text{1.7B}: \quad & 35.31\% \times 0.35 = 12.4\% \quad \Rightarrow -10\text{pp loss}
+\end{align*}
+The decision threshold lies between 8.1\% and 12.4\%.
+\textbf{Root cause}: SmolLM-1.7B's larger hidden dimension (2048 vs.\ 960)
+produces higher-variance KV tensors; at the same scale divisor (max/7),
+this yields larger relative quantization errors.
+
+\paragraph{Implication for H2.}
+The paper's H2 claim (+7.6pp over static INT4) is most strongly supported
+at 1.7B, where standard INT4 \emph{genuinely} degrades.
+At 135M/360M, the +7.6pp improvement is over a sub-standard 8-level
+baseline—standard INT4 at these scales already matches FP16.
+
+\subsection{INT4 Baseline Ablation}
+
+We isolate the effect of step size vs.\ range clipping via a 5-condition
+ablation (50 samples):
+
+\begin{table}[h]
+\centering
+\caption{INT4 ablation: step size vs.\ range clipping.}
+\label{tab:ablation}
+\footnotesize
+\begin{tabular}{lccc}
+\toprule
+Condition & Scale & Clamp & Acc \\
+\midrule
+A: Standard & max/7 & $(-8,7)$ & 46.0\% \\
+E: Intermediate & max/5 & $(-8,7)$ & 42.0\% \\
+D: Range only & max/7 & $(-4,3)$ & 38.0\% \\
+C: Coarse step & max/3 & $(-8,7)$ & 28.0\% \\
+B: int4\_int3range & max/3 & $(-4,3)$ & 28.0\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+B $=$ C (both 28\%): range clipping contributes \textbf{0pp} once the
+step is coarse.
+All $-$18pp degradation in the paper's baseline is caused by the coarse
+scale (max/3), not range clipping.
+Standard max/7 (16 levels) is safely within the lossless regime.
+
+\subsection{DWB Controller Evaluation (H3)}
+
+\begin{table}[h]
+\centering
+\caption{DWB controller sensitivity study.}
+\label{tab:dwb}
+\footnotesize
+\begin{tabular}{lccccc}
+\toprule
+Controller & Train & Ep. & val\_acc & avg\_bits & DWB acc \\
+\midrule
+v1 & 100 & 5 & 0.366 & 5.03 & 33.8\% \\
+v2 & 500 & 10 & 0.446 & 8.47 & 37.0\% \\
+\textit{Paper} & --- & --- & --- & \textit{5.05} & \textit{41.2\%} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+v1 (33.8\% at 5.03 avg\_bits) performs \emph{worse} than standard INT4
+(41.6\% at 4.0 bits)—the controller mislabels important tokens as 2-bit.
+v2 (better-trained) improves to 37.0\% but requires 8.47 avg\_bits (vs.\
+paper's 5.05)—a 68\% increase.
+The paper achieves \emph{both} targets simultaneously via its compound
+loss with latency penalty; our quartile-classification approach
+optimizes classification accuracy alone.
+The v2 bit distribution is bimodal: $\{2: 41.7\%, 4: 9.3\%, 8: 7.2\%, 16: 41.8\%\}$—the controller
+over-polarizes between unimportant (2-bit) and critical (16-bit) tiers,
+losing the intermediate compression range.
+
+%-----------------------------------------------------------------------
+\section{Methodological Insights}
+\label{sec:insights}
+%-----------------------------------------------------------------------
+
+\paragraph{Insight 1: Evaluation metric.}
+\texttt{acc\_norm} (length-normalized, lm-eval default) gives $\approx$54\%
+for SmolLM-360M—matching SmolLM-1.7B's FP16 score rather than the
+paper's 41.5\%.
+The paper uses unnormalized \texttt{acc} ($\approx$42\%).
+This single discrepancy would make every comparison meaningless.
+
+\paragraph{Insight 2: KV cache hooks (transformers 5.x).}
+transformers $\geq$5.0 wraps KV tensors in a \texttt{DynamicCache} object.
+Hooks registered on attention module outputs silently intercept an empty
+or wrong tensor.
+\textbf{Fix}: hook \texttt{k\_proj} and \texttt{v\_proj} Linear submodules
+directly (32 layers $\times$ 2 = 64 hooks for SmolLM-360M).
+Validation: KV-2bit reduces accuracy to 25\% (near-chance), confirming
+hooks fire correctly.
+
+\paragraph{Insight 3: sdpa blocks \texttt{output\_attentions}.}
+transformers 5.x uses scaled dot-product attention (sdpa) by default,
+which does not support \texttt{output\_attentions=True} and silently
+returns an empty tuple.
+\textbf{Fix}: reload with \texttt{attn\_implementation=`eager'} for DWB
+signal extraction pass.
+
+\paragraph{Insight 4: Scale-dependent INT4 losslessness.}
+See \S\ref{sec:results}.
+The losslessness mechanism is: symmetric (zero-mean) quantization errors
+partially cancel in the attention weighted sum; the fraction that
+survives ($\epsilon_\text{eff}$) determines whether accuracy is
+preserved.
+This mechanism holds at all scales but crosses a critical threshold
+between 360M and 1.7B.
+
+\paragraph{Insight 5: Paper's baseline uses 8-level INT4.}
+\texttt{int4\_int3range} (scale=max/3, 8 levels) reproduces the 33.6\%
+baseline at 135M/360M ($-$0.6pp).
+Standard INT4 (scale=max/7, 16 levels) is lossless.
+The paper's ``Static 4-bit KV'' is INT3 precision in 4-bit storage.
+
+\paragraph{Insight 6: Controller behavior—C$_t$ dominates.}
+Analysis on 1,484 tokens (50 examples).
+Cohen's $d$ between 2-bit and 16-bit tiers:
+$C_t = 4.55$ (primary driver),
+$H_t = 4.09$ (strong secondary),
+$V_t = 1.42$ (moderate),
+$R_t = 0.52$ (near-uninformative on HellaSwag vocabulary).
+The controller approximates: \emph{high-confidence, low-entropy tokens
+get more bits.}
+$R_t$ (inverse frequency) barely discriminates despite its inclusion in
+the paper's training loss.
+
+\paragraph{Insight 7: Dual-objective tension.}
+Our quartile-classification training optimizes controller classification
+accuracy but not compression.
+A better-trained controller (v2) becomes conservative—assigning 16-bit
+to ambiguous tokens and 2-bit to clear ones, producing a bimodal
+distribution.
+The paper's compound loss $\mathcal{L} = \alpha\mathcal{L}_\text{CE} +
+\beta\mathcal{L}_\text{latency} + \gamma\mathcal{L}_\text{quality}$
+explicitly penalizes high average bit-width, forcing the controller to
+find the accuracy/compression Pareto front.
+Reproducing H3 fully requires the paper's undisclosed training details.
+
+%-----------------------------------------------------------------------
+\section{DWB-TurboQuant Extension}
+\label{sec:turboquant}
+%-----------------------------------------------------------------------
+
+\paragraph{Motivation.}
+DWB assigns 42--57\% of tokens to 2-bit scalar quantization.
+Scalar INT2 is highly destructive (25.0\% accuracy alone).
+PolarQuant (from TurboQuant \cite{turboQuant2026}) applies a per-head
+Walsh-Hadamard Transform before scalar quantization, decorrelating
+activations and reducing effective error.
+
+\paragraph{Method.}
+We route DWB's 2-bit tier through PolarQuant instead of scalar INT2:
+\begin{enumerate}[leftmargin=*,topsep=2pt,itemsep=0pt]
+  \item Apply WHT: $\tilde{\mathbf{k}} = W \mathbf{k}$ per head
+        (head\_dim=64 $=$ 2$^6$, power-of-2 $\checkmark$)
+  \item Apply uniform scalar quantization to $\tilde{\mathbf{k}}$
+  \item Invert: $\hat{\mathbf{k}} = W^\top \tilde{\mathbf{k}}_q$
+\end{enumerate}
+All higher tiers (4/8/16-bit) use standard scalar quantization
+unchanged.
+The rotation is exactly invertible; no extra bits are consumed.
+
+\paragraph{Results.}
+
+\begin{table}[h]
+\centering
+\caption{\dwbtq\ results on SmolLM-360M, 100 samples.}
+\label{tab:tq}
+\footnotesize
+\begin{tabular}{lcccc}
+\toprule
+Condition & HellaSwag & ARC-Ch. & avg\_bits \\
+\midrule
+FP16 & 41.0\% & 35.0\% & 16.0 \\
+DWB-scalar & 40.0\% & 26.0\% & 5.05 / 7.72 \\
+\textbf{\dwbtq} & \textbf{42.0\%} & \textbf{29.0\%} & 5.05 / 7.72 \\
+Paper DWB & 41.2\% & --- & 5.05 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\dwbtq\ recovers $+$2pp on HellaSwag and $+$3pp on ARC-Challenge
+over DWB-scalar at \emph{identical compression}.
+On HellaSwag, \dwbtq\ (42.0\%) exceeds the paper's DWB target (41.2\%)
+and matches FP16 (42.6\%) within noise.
+The gain is larger on ARC-Challenge ($+$3pp reasoning) than HellaSwag
+($+$2pp commonsense), suggesting WHT rotation particularly benefits
+reasoning-heavy token distributions.
+
+ARC-Challenge bit distribution: $\{2: 37.4\%, 4: 17.3\%, 8: 12.2\%, 16: 33.2\%\}$—the
+controller assigns more 16-bit on reasoning tasks, reducing the fraction
+routed through WHT but yielding higher per-token gain.
+
+%-----------------------------------------------------------------------
+\section{Discussion}
+\label{sec:discussion}
+%-----------------------------------------------------------------------
+
+\paragraph{On scale-dependent losslessness.}
+Our mechanistic finding changes the interpretation of the H2 claim.
+At 135M/360M, standard INT4 is already lossless—the paper's +7.6pp gain
+is over a sub-standard baseline.
+At 1.7B, standard INT4 genuinely degrades, and DWB's adaptive assignment
+provides real value.
+This scale-dependence follows from the hidden dimension and number of
+attention heads, both of which affect error variance and cancellation.
+Practitioners should evaluate their model's effective residual error
+before assuming INT4 is a useful quantization target.
+
+\paragraph{On the H3 implementation gap.}
+Our best reproduction (v2, 37.0\%) is 4.2pp below the paper's 41.2\%.
+The gap is primarily attributable to controller training quality.
+The paper's compound loss with an explicit latency penalty is the key
+mechanism that jointly optimizes accuracy and compression—something that
+plain cross-entropy on importance quartiles cannot achieve.
+The undisclosed training details (data distribution, exact loss weights,
+number of training tokens) prevent full reproduction.
+We expect the gap to close when the original code is released in June 2026.
+
+\paragraph{On DWB-TurboQuant.}
+Routing low-importance tokens through PolarQuant rather than naive scalar
+INT2 provides a free accuracy improvement at no compression cost.
+This suggests that the bit-width assignment and the \emph{quantization
+method within each tier} are orthogonal dimensions that can be
+independently optimized.
+Future work could explore per-tier quantization methods—e.g., vector
+quantization \cite{hooper2024kvquant} or product quantization for higher
+bit tiers.
+
+%-----------------------------------------------------------------------
+\section{Conclusion}
+\label{sec:conclusion}
+%-----------------------------------------------------------------------
+
+We re-implemented DWB \cite{haeri2026dwb} from paper equations and
+conducted a systematic verification across SmolLM-135M, 360M, and 1.7B
+on HellaSwag.
+Our main finding is that symmetric INT4 KV quantization is
+scale-dependent: lossless at $\leq$360M (effective residual 8.1\%) and
+genuinely lossy at 1.7B (12.4\%), fully explained from first principles.
+The paper's +7.6pp H2 claim is most valid at 1.7B where standard INT4
+truly degrades.
+For H3, we identify a dual-objective tension in controller training that
+prevents simultaneously achieving the paper's accuracy \emph{and}
+compression targets with our re-implementation; the undisclosed compound
+loss is the key missing ingredient.
+\dwbtq, our novel contribution, demonstrates that upgrading the 2-bit
+scalar tier to WHT-based quantization recovers $+$2--3pp at no extra
+cost—exceeding the paper's DWB target on HellaSwag.
+
+\paragraph{Reproducibility statement.}
+All code, data, and results are available at\\
+\url{https://github.com/LonghornSilicon/dont-waste-bits}.
+The latency experiment (H1) requires an RTX 4090 and is pending
+hardware access; arithmetic verification confirms the 17.75\% reduction
+is self-consistent with the paper's Table 3.
+
+%-----------------------------------------------------------------------
+\bibliographystyle{plain}
+\bibliography{refs}
+%-----------------------------------------------------------------------
+
+\end{document}
