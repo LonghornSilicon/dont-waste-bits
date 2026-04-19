@@ -42,7 +42,7 @@
 <p class="meta">arXiv:2604.04722 · CVPR 2026 · SmolLM-360M on HellaSwag · All CPU experiments concluded 2026-04-19</p>
 
 <div style="margin: 28px 0;">
-  <div class="stat"><span class="val">✓ 6</span><span class="lab">hypotheses tested</span></div>
+  <div class="stat"><span class="val">✓ 6+</span><span class="lab">hypotheses + insights</span></div>
   <div class="stat"><span class="val">✓ 2</span><span class="lab">branches complete</span></div>
   <div class="stat"><span class="val">+2–3pp</span><span class="lab">DWB-TurboQuant over DWB-scalar</span></div>
   <div class="stat"><span class="val">42.0%</span><span class="lab">DWB-TQ ≈ FP16 (42.6%)</span></div>
@@ -69,7 +69,7 @@
 </table>
 
 <!-- ─────────────────── SECTION 2: HEADLINE FINDINGS ─────────────────── -->
-<h2><span class="section-num">2.</span> Five Key Findings</h2>
+<h2><span class="section-num">2.</span> Six Key Findings</h2>
 
 <div class="card green">
   <h3>Finding 1 — Paper's INT4 baseline uses non-standard 8-level quantization</h3>
@@ -92,8 +92,23 @@
 </div>
 
 <div class="card green">
-  <h3>Finding 5 — DWB-TurboQuant: PolarQuant at the 2-bit tier recovers +2pp</h3>
-  <p>DWB-TurboQuant routes DWB's 2-bit token assignments (57.3% of tokens) through PolarQuant (per-head Walsh-Hadamard rotation + scalar quantization) instead of naive INT2. Result: 42.0% vs DWB-scalar 40.0% at <em>identical compression</em> (avg_bits=5.05 both). DWB-TurboQuant matches FP16 (42.6%) and exceeds paper's DWB claim (41.2%). Novel contribution: first integration of importance-aware routing with principled vector quantization for KV cache.</p>
+  <h3>Finding 5 — DWB-TurboQuant: PolarQuant at the 2-bit tier recovers +2–3pp</h3>
+  <p>DWB-TurboQuant routes DWB's 2-bit token assignments (57.3% of tokens) through PolarQuant (per-head Walsh-Hadamard rotation + scalar quantization) instead of naive INT2. Result: 42.0% vs DWB-scalar 40.0% at <em>identical compression</em> (avg_bits=5.05 both) on HellaSwag. On ARC-Challenge: 29.0% vs 26.0% (+3.0pp). DWB-TurboQuant matches FP16 (42.6%) on HellaSwag and exceeds paper's DWB claim (41.2%).</p>
+</div>
+
+<div class="card blue">
+  <h3>Finding 6 — Controller relies on confidence (C_t), not rarity ★ NEW</h3>
+  <p>Controller behavior analysis on 1,484 tokens (50 examples). Signal discriminability between 2-bit and 16-bit tiers (Cohen's d):</p>
+  <table>
+    <thead><tr><th>Signal</th><th>2-bit mean</th><th>16-bit mean</th><th>Cohen's d</th><th>Role</th></tr></thead>
+    <tbody>
+      <tr class="highlight"><td>C_t (confidence)</td><td>0.174</td><td>0.769</td><td class="pp"><strong>4.55 ★</strong></td><td>Strongest driver — high C_t → 16-bit</td></tr>
+      <tr class="highlight"><td>H_t (entropy)</td><td>4.97</td><td>1.18</td><td class="pp"><strong>4.09</strong></td><td>High entropy → 2-bit (uncertain positions)</td></tr>
+      <tr><td>R_t (rarity)</td><td>0.985</td><td>0.992</td><td>0.52</td><td>Barely discriminative — near-uniform</td></tr>
+    </tbody>
+  </table>
+  <p><strong>Token examples</strong>: 2-bit = <code>"."</code>, <code>":"</code>, <code>"a"</code>, <code>"the"</code>, <code>"and"</code> (function words/punctuation); 16-bit = <code>"cheer"</code>, <code>"knife"</code>, <code>"ice"</code> (rare content words).<br>
+  <strong>Implication</strong>: the rarity signal (paper Eq. 15) adds minimal value on HellaSwag. The controller's behavior is dominated by the interplay of entropy and confidence — positions where the model is highly certain <em>about which token this is</em> (high C_t) and certain <em>about what comes next</em> (low H_t) are preserved at 16-bit.</p>
 </div>
 
 <!-- ─────────────────── SECTION 3: TURBOQUANT DETAIL ─────────────────── -->
