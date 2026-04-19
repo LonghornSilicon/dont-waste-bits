@@ -58,7 +58,7 @@ QUALITY_SCORES = torch.tensor([
 
 OUTPUT_DIR  = Path(__file__).parent.parent / "results"
 OUTPUT_DIR.mkdir(exist_ok=True)
-CACHE_PATH  = Path(__file__).parents[3] / "phase1-gumbel" / "results" / "phase1_kv_cache.pt"
+CACHE_PATH  = Path(__file__).parents[2] / "phase1-gumbel" / "results" / "phase1_kv_cache.pt"
 RESULT_PATH = OUTPUT_DIR / "phase4_binary_results.json"
 
 sys.path.insert(0, str(Path(__file__).parents[4] / "src"))
