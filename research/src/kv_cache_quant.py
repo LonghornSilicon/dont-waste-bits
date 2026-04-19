@@ -92,10 +92,45 @@ def quantize_int8_per_token(x: torch.Tensor) -> torch.Tensor:
     return (x / scale).round().clamp(-128, 127) * scale
 
 
+def quantize_int4_asymmetric(x: torch.Tensor) -> torch.Tensor:
+    """INT4 asymmetric quantization — uses full 0-15 unsigned range.
+
+    More aggressive than symmetric [-8,7] because it maps to the actual
+    range [min, max] of the tensor, reducing unused range. This matches
+    how many practical INT4 implementations work.
+    """
+    x_min = x.min()
+    x_max = x.max()
+    scale = (x_max - x_min) / 15.0
+    if scale == 0:
+        return x
+    zero_point = (-x_min / scale).round().clamp(0, 15)
+    q = ((x / scale) + zero_point).round().clamp(0, 15)
+    return (q - zero_point) * scale
+
+
+def quantize_int4_per_token_asymmetric(x: torch.Tensor) -> torch.Tensor:
+    """Per-token asymmetric INT4 quantization."""
+    if x.dim() == 3:
+        result = x.clone()
+        for t in range(x.shape[1]):
+            tok = x[:, t, :]
+            x_min, x_max = tok.min(), tok.max()
+            scale = (x_max - x_min) / 15.0
+            if scale > 0:
+                zp = (-x_min / scale).round().clamp(0, 15)
+                q = ((tok / scale) + zp).round().clamp(0, 15)
+                result[:, t, :] = (q - zp) * scale
+        return result
+    return quantize_int4_asymmetric(x)
+
+
 _QUANT_FNS = {
     "fp16": lambda x: x,
-    "static4bit": quantize_int4,           # per-tensor (conservative)
-    "static4bit_per_token": quantize_int4_per_token,  # per-token (realistic)
+    "static4bit": quantize_int4,                               # symmetric per-tensor
+    "static4bit_per_token": quantize_int4_per_token,           # symmetric per-token
+    "static4bit_asym": quantize_int4_asymmetric,               # asymmetric per-tensor
+    "static4bit_per_token_asym": quantize_int4_per_token_asymmetric,  # asymmetric per-token
     "static8bit": quantize_int8,
     "static8bit_per_token": quantize_int8_per_token,
     "static2bit": quantize_int2,
