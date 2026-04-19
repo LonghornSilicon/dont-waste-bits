@@ -143,9 +143,25 @@ def main():
     ]
 
     results = []
+    # Load any previously saved partial results to allow resuming
+    partial_path = OUTPUT_DIR / "beta_sweep_partial.json"
+    if partial_path.exists():
+        with open(partial_path) as f:
+            results = json.load(f)
+        done_betas = {r['beta'] for r in results}
+        print(f"  Resuming — already done: {done_betas}", flush=True)
+    else:
+        done_betas = set()
+
     for beta in BETAS:
+        if beta in done_betas:
+            print(f"  Skipping beta={beta} (already done)", flush=True)
+            continue
         r = run_beta(model, tokenizer, train_texts, eval_ds, beta)
         results.append(r)
+        # Save partial after each beta so restarts don't lose progress
+        with open(partial_path, "w") as f:
+            json.dump(results, f, indent=2)
         print(f"\n  Cumulative: {[(r['beta'], r['accuracy'], r['avg_bits']) for r in results]}", flush=True)
 
     print("\n=== BETA SWEEP COMPLETE ===", flush=True)

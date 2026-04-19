@@ -1,0 +1,37 @@
+[
+  {
+    "beta": 0.1,
+    "accuracy": 39.0,
+    "avg_bits": 5.302465023317788,
+    "val_acc": 0.407,
+    "bit_dist_pct": {
+      "2": 38.5,
+      "4": 37.6,
+      "8": 9.9,
+      "16": 14.0
+    },
+    "elapsed_s": null
+  },
+  {
+    "beta": 0.5,
+    "accuracy": 37.0,
+    "avg_bits": 3.0646235842771485,
+    "val_acc": 0.341,
+    "bit_dist_pct": {
+      "2": 79.9,
+      "4": 14.5,
+      "16": 5.5
+    },
+    "elapsed_s": null
+  },
+  {
+    "beta": 1.0,
+    "accuracy": 32.0,
+    "avg_bits": 2.0,
+    "val_acc": 0.24207012355327606,
+    "bit_dist_pct": {
+      "2": 100.0
+    },
+    "elapsed_s": 579.0
+  }
+]

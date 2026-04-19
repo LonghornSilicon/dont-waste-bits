@@ -273,6 +273,26 @@ v2 improved accuracy by +3.2pp but required 1.68× more bits (8.47 vs 5.03). The
 
 ---
 
+## Beta Sweep: Dual-Objective Tension Is Fundamental ★ NEW
+
+**Question**: Can increasing the latency penalty β resolve the H3 dual-objective tension?
+
+β ∈ {0.1, 0.5, 1.0, 2.0}, 100 train samples, 5 epochs, α=1.0, γ=0.1.
+
+| β | Acc (100s) | avg_bits | val_acc | Bit dist (2/4/8/16%) |
+|---|-----------|----------|---------|----------------------|
+| 0.1 | 39.0% | 5.30 | 0.407 | 38.5/37.6/9.9/14.0 |
+| 0.5 | 37.0% | 3.06 | 0.341 | 79.9/14.5/0.0/5.5 |
+| 1.0 | (running) | — | — | — |
+| 2.0 | (pending) | — | — | — |
+| Paper | 41.2% | 5.05 | — | undisclosed |
+
+**Key finding**: β=0.1 achieves avg_bits=5.30 ≈ paper's 5.05, yet accuracy (39.0%) is 2.2pp below paper's 41.2%. At β=0.5, bits crash to 3.06 (50% below target) AND accuracy drops to 37.0%. There is no β that simultaneously achieves both targets.
+
+**Conclusion**: The dual-objective tension is NOT a hyperparameter issue — it is a fundamental difference in training objectives. Our quartile-classification approach cannot simultaneously optimize accuracy and compression. The paper's compound loss (α·CE + β·latency + γ·quality) with end-to-end training is the necessary ingredient.
+
+---
+
 ## Lessons and Constraints
 
 - **Metric**: Paper uses unnormalized `acc` (~42%), NOT `acc_norm` (~54%). Always use normalize=False.

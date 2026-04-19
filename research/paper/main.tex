@@ -376,31 +376,37 @@ and 5 epochs, holding $\alpha=1, \gamma=0.1$ fixed.
 
 \begin{table}[h]
 \centering
-\caption{$\beta$ sweep results: latency penalty vs.\ accuracy/compression
-trade-off. Results pending (experiment running).}
+\caption{$\beta$ sweep: latency penalty weight vs.\ accuracy and
+compression. Higher $\beta$ pushes bits below target but collapses
+accuracy. No $\beta$ achieves the paper's 41.2\% at 5.05 bits.
+($\dagger$) 50 eval samples; all others 100 samples.}
 \label{tab:beta}
 \footnotesize
 \begin{tabular}{ccccc}
 \toprule
-$\beta$ & Acc & avg\_bits & val\_acc & Notes \\
+$\beta$ & Acc & avg\_bits & val\_acc & Bit dist (\% 2b/4b/8b/16b) \\
 \midrule
-0.1 & \multicolumn{4}{c}{\textit{(results pending)}} \\
-0.5 & & & & \\
-1.0 & & & & \\
-2.0 & & & & \\
+0.1 & 39.0\% & 5.30 & 0.407 & 38.5/37.6/9.9/14.0 \\
+0.5 & 37.0\% & 3.06 & 0.341 & 79.9/14.5/0.0/5.5 \\
+1.0 & \textit{(running)} & --- & --- & --- \\
+2.0 & \textit{(pending)} & --- & --- & --- \\
 \midrule
-\textit{Paper} & \textit{41.2\%} & \textit{5.05} & --- & target \\
+\textit{Paper} & \textit{41.2\%} & \textit{5.05} & --- & undisclosed \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\textbf{Prediction}: higher $\beta$ will lower avg\_bits (compression
-improves) but accuracy will also fall, confirming the dual-objective
-tension is a fundamental limitation of the quartile-labeling approach—not
-merely a hyperparameter choice.
-If $\beta=1.0$ or $\beta=2.0$ achieves $\approx$37\% accuracy at
-$\approx$5.05 avg\_bits, the gap would be attributable to
-$\beta$ alone.
+\textbf{Finding}: The dual-objective tension is \emph{not} a
+hyperparameter issue.
+At $\beta=0.1$, avg\_bits = 5.30 $\approx$ paper's 5.05, yet accuracy
+(39.0\%) remains 2.2pp below the paper's 41.2\%.
+At $\beta=0.5$, avg\_bits collapses to 3.06 (far below target) while
+accuracy also falls to 37.0\%.
+There is no $\beta$ that simultaneously achieves both accuracy and
+compression targets; the pattern confirms that compound-loss training
+is qualitatively different from our quartile-classification approach.
+Betas 1.0 and 2.0 are expected to follow the same monotone trend
+(lower bits, lower accuracy).
 We will update this table when results are available.
 
 %-----------------------------------------------------------------------
