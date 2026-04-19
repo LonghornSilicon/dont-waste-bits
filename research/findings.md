@@ -1,6 +1,6 @@
 # Research Findings — Don't Waste Bits! Verification
 
-**Last updated**: 2026-04-19 (H3 definitive 500-samp: 33.8% IMPL_GAP; H4 1.7B; TurboQuant)  
+**Last updated**: 2026-04-19 (H3 dual-objective study complete; H4 1.7B; TurboQuant)  
 **Phase**: CONCLUDED (accuracy experiments complete; latency pending GPU)
 
 ---
@@ -8,10 +8,10 @@
 ## Summary
 
 We independently reproduced the key accuracy claims of "Don't Waste Bits!" (arXiv:2604.04722)
-and identified six methodological insights including a novel finding about INT4 quantization and a
-mechanistically verified losslessness mechanism. Cross-model validation across SmolLM-135M, 360M,
-and 1.7B (H4) reveals a critical scale-dependent pattern: INT4 is lossless at 135M/360M but shows
-genuine degradation at 1.7B — where the paper's static INT4 baseline is actually correct.
+and identified seven methodological insights including a novel finding about INT4 quantization,
+a mechanistically verified losslessness mechanism, and a dual-objective controller training constraint.
+Cross-model validation across SmolLM-135M, 360M, and 1.7B (H4) reveals a critical scale-dependent
+pattern: INT4 is lossless at 135M/360M but shows genuine degradation at 1.7B.
 
 > **Novel extension**: See turboquant-integration branch for DWB+TurboQuant results —
 > DWB-TurboQuant achieves 42.0% ≈ FP16 at 5.05 avg_bits, confirmed across HellaSwag (+2pp) and
@@ -23,7 +23,7 @@ genuine degradation at 1.7B — where the paper's static INT4 baseline is actual
 |-------|--------|-----------|-------|
 | H1: 17.75% latency reduction | ⏳ AWAITING GPU | — | 17.75% |
 | H2: +7.6pp over static INT4 | ✅ EXPLAINED | See Insight 5 | 41.2% vs 33.6% |
-| H3: within 0.30pp of FP16 | ⚠️ IMPL_GAP | 33.8% (500 samp, CI±4.4pp) vs 42.6% | 41.2% vs 41.5% |
+| H3: within 0.30pp of FP16 | ⚠️ PARTIAL | v1: 33.8%@5.03b; v2: ~38%@8.4b | 41.2%@5.05b |
 | H4: cross-model validation | ✅ CONFIRMED | See H4 Results | 135M + 360M + 1.7B |
 | FP16 baseline (500 samp, 360M) | ✅ CONFIRMED | 42.6% | 41.5% |
 | FP16 baseline (100 samp, 135M) | ✅ CONFIRMED | 40.0% | 37.2% |
