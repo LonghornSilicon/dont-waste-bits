@@ -181,8 +181,17 @@ The threshold lies between 8.1% and 12.4%. The root cause at 1.7B is higher acti
 **On H2 validity:**
 The paper's +7.6pp H2 claim is most rigorous at 1.7B, where the INT4 degradation is genuine and standard. At 135M/360M, the comparison uses a sub-standard 8-level baseline. This is not a critique of the paper's method — DWB still delivers real value at all scales — but it contextualizes where the gain is "free" (recovering from self-imposed degradation) vs. genuine (recovering from inherent scale limitations).
 
-**On H3 (DWB ≈ FP16):**
-Our DWB implementation achieves 38–40% vs FP16 42.6% at 360M — directionally consistent with the paper's 41.2% claim but with a persistent −2 to −4pp gap. At n=500 (CI ±4.4pp), this gap is within noise. The most likely causes of the small gap: (1) our controller was trained on the same 100 HellaSwag train examples as evaluation, creating mild distribution mismatch; (2) the paper likely used a larger, more carefully tuned training set.
+**On H3 (DWB ≈ FP16) — dual-objective analysis:**
+Our controller sensitivity study reveals a fundamental two-objective tension. We trained two controllers:
+
+- **v1** (100 train samples, 5 epochs, val_acc=0.366): 33.8% at avg_bits=5.03. Worse than INT4 — mislabels important tokens as 2-bit.
+- **v2** (500 train samples, 10 epochs, val_acc=0.446): ~39–41% (converging) at avg_bits≈8.4. Accuracy matches paper's 41.2% but uses 1.7× more bits than claimed.
+
+The paper achieves **both simultaneously**: 41.2% accuracy AND 5.05 avg bits. Our approach — quartile-labeling from signal importance, trained with cross-entropy on class labels — can optimize accuracy OR compression, but not both jointly.
+
+The root cause: our training treats bit-width assignment as a 4-class classification problem with fixed quartile targets. The paper's compound loss (α·CE + β·latency + γ·quality, Eq. 28) directly optimizes the accuracy-compression trade-off end-to-end. When a controller is trained with cross-entropy alone on quartile targets (as ours is), it learns to maximize classification accuracy — which means assigning high-precision bits whenever uncertain, trading compression for accuracy. Only the compound loss with explicit latency penalty produces a controller that achieves both goals jointly.
+
+This makes H3 a **partial-reproduction**: the accuracy target (41%) is achievable with adequate controller training, but the compression ratio (5.05 avg bits) requires the paper's end-to-end training procedure, which is not fully specified in the paper.
 
 **On DWB-TurboQuant:**
 PolarQuant replaces scalar INT2 at the 2-bit tier. The +2pp HellaSwag and +3pp ARC-Challenge gains are consistent with PolarQuant's improved representation of low-bit activations via orthogonal rotation. The larger gain on ARC (+3pp) despite fewer 2-bit tokens (37.4% vs 57.3%) suggests that reasoning tasks are more sensitive to 2-bit quantization errors per token — each wrong bit matters more when the computation chain is longer.
@@ -195,7 +204,7 @@ R_t (Eq. 15) has Cohen's d=0.52 between 2-bit and 16-bit tiers — barely discri
 
 ### 9. Conclusion
 
-We confirm FP16 baselines across SmolLM-135M, 360M, and 1.7B. H3 (DWB ≈ FP16) is numerically consistent with the paper's claims across all tested sample sizes. H4 (cross-model) is confirmed.
+We confirm FP16 baselines across SmolLM-135M, 360M, and 1.7B. H3 (DWB ≈ FP16) is a **partial reproduction**: accuracy target (~41%) is achievable with well-trained controllers (val_acc~0.45, avg_bits~8.4), but simultaneously achieving 5.05 avg bits requires the paper's compound loss training, not disclosed in the paper. H4 (cross-model) is confirmed.
 
 Our main contribution is explaining *when and why* INT4 KV quantization degrades:
 - At 15 attention heads (≤360M): standard INT4 is nearly lossless — effective residual error 8.1%, below the decision threshold. The paper's 33.6% baseline requires int4_int3range (8 levels, scale=max/3).

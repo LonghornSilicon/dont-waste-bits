@@ -1,0 +1,20 @@
+{
+  "accuracy": 33.800000000000004,
+  "correct": 169,
+  "total": 500,
+  "elapsed_s": 2598.4115328788757,
+  "bit_distribution_pct": {
+    "2": 47.9,
+    "4": 25.3,
+    "8": 15.4,
+    "16": 11.4
+  },
+  "avg_bits": 5.028217855442986,
+  "model": "smollm-360m",
+  "condition": "dwb",
+  "paper_target": 41.2,
+  "paper_fp16": 41.5,
+  "paper_kv4": 33.6,
+  "delta_from_paper": -7.4,
+  "date": "2026-04-19T13:17:08.046169"
+}

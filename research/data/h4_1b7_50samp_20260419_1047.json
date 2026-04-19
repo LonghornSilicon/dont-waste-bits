@@ -1,0 +1,31 @@
+{
+  "model": "smollm-1.7b",
+  "limit": 50,
+  "metric": "acc_unnorm",
+  "date": "2026-04-19T10:30:59.802780",
+  "paper": {
+    "fp16": 49.0,
+    "static4bit": 41.1,
+    "dwb": 48.6
+  },
+  "conditions": {
+    "fp16": {
+      "accuracy": 50.0,
+      "correct": 25,
+      "total": 50,
+      "elapsed_s": 326.3
+    },
+    "static4bit_pertensor": {
+      "accuracy": 40.0,
+      "correct": 20,
+      "total": 50,
+      "elapsed_s": 336.2
+    },
+    "int4_int3range": {
+      "accuracy": 32.0,
+      "correct": 16,
+      "total": 50,
+      "elapsed_s": 337.7
+    }
+  }
+}

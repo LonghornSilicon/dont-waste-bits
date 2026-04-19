@@ -1,0 +1,25 @@
+{
+  "model": "HuggingFaceTB/SmolLM-360M",
+  "limit": 50,
+  "date": "2026-04-19T09:54:50.606630",
+  "results": {
+    "A_standard_int4": 46.0,
+    "B_int4_int3range": 28.0,
+    "C_coarse_step_full_range": 28.0,
+    "D_normal_step_narrow_range": 38.0,
+    "E_intermediate_step": 42.0
+  },
+  "interpretation": {
+    "step_size_effect_pp": 18.0,
+    "range_clip_effect_pp": 0.0,
+    "total_degradation_pp": 18.0,
+    "conclusion": "Degradation driven entirely by coarse step size (scale=max/3). Range clipping adds 0pp additional degradation once step is coarse."
+  },
+  "conditions_explained": {
+    "A": "scale=max/7, clamp(-8,7) \u2014 standard INT4, 16 levels",
+    "B": "scale=max/3, clamp(-4,3) \u2014 int4_int3range, 8 levels",
+    "C": "scale=max/3, clamp(-8,7) \u2014 coarse step only",
+    "D": "scale=max/7, clamp(-4,3) \u2014 normal step, narrow range",
+    "E": "scale=max/5, clamp(-8,7) \u2014 intermediate step"
+  }
+}

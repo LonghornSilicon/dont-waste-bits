@@ -208,6 +208,8 @@ if __name__ == "__main__":
     parser.add_argument("--device", default="cpu")
     parser.add_argument("--controller_path", default=None)
     parser.add_argument("--train_samples", type=int, default=100)
+    parser.add_argument("--epochs", type=int, default=5)
+    parser.add_argument("--force_retrain", action="store_true")
     parser.add_argument("--output_dir", default="research/data")
     args = parser.parse_args()
 
@@ -228,20 +230,20 @@ if __name__ == "__main__":
 
     ctrl_path = Path(args.controller_path or f"{args.output_dir}/dwb_controller_{args.model}.pt")
 
-    if ctrl_path.exists():
+    if ctrl_path.exists() and not args.force_retrain:
         print(f"Loading controller from {ctrl_path}...", flush=True)
         controller = DWBController()
         controller.load_state_dict(torch.load(ctrl_path, map_location=args.device))
     else:
         from datasets import load_dataset
-        print(f"Training DWB controller ({args.train_samples} train examples)...", flush=True)
+        print(f"Training DWB controller ({args.train_samples} train examples, {args.epochs} epochs)...", flush=True)
         train_ds = load_dataset("Rowan/hellaswag", split="train").select(range(args.train_samples))
         train_texts = [
             ex["activity_label"] + ": " + ex["ctx_a"] + " " + ex["ctx_b"].capitalize()
             for ex in train_ds
         ]
         controller = train_controller(model, tokenizer, train_texts,
-                                      epochs=5, device=args.device)
+                                      epochs=args.epochs, device=args.device)
         ctrl_path.parent.mkdir(parents=True, exist_ok=True)
         torch.save(controller.state_dict(), ctrl_path)
         print(f"Controller saved to {ctrl_path}", flush=True)

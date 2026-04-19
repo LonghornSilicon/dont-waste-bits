@@ -1,6 +1,6 @@
 # Research Findings — Don't Waste Bits! Verification
 
-**Last updated**: 2026-04-19 (H3 definitive 500-samp: 33.8% IMPL_GAP; H4 1.7B; TurboQuant)  
+**Last updated**: 2026-04-19 (H3 v2 FINAL: 37.0%@8.47b; dual-objective tension confirmed; H4 1.7B; TurboQuant)  
 **Phase**: CONCLUDED (accuracy experiments complete; latency pending GPU)
 
 ---
@@ -8,10 +8,10 @@
 ## Summary
 
 We independently reproduced the key accuracy claims of "Don't Waste Bits!" (arXiv:2604.04722)
-and identified six methodological insights including a novel finding about INT4 quantization and a
-mechanistically verified losslessness mechanism. Cross-model validation across SmolLM-135M, 360M,
-and 1.7B (H4) reveals a critical scale-dependent pattern: INT4 is lossless at 135M/360M but shows
-genuine degradation at 1.7B — where the paper's static INT4 baseline is actually correct.
+and identified seven methodological insights including a novel finding about INT4 quantization,
+a mechanistically verified losslessness mechanism, and a dual-objective controller training constraint.
+Cross-model validation across SmolLM-135M, 360M, and 1.7B (H4) reveals a critical scale-dependent
+pattern: INT4 is lossless at 135M/360M but shows genuine degradation at 1.7B.
 
 > **Novel extension**: See turboquant-integration branch for DWB+TurboQuant results —
 > DWB-TurboQuant achieves 42.0% ≈ FP16 at 5.05 avg_bits, confirmed across HellaSwag (+2pp) and
@@ -23,7 +23,7 @@ genuine degradation at 1.7B — where the paper's static INT4 baseline is actual
 |-------|--------|-----------|-------|
 | H1: 17.75% latency reduction | ⏳ AWAITING GPU | — | 17.75% |
 | H2: +7.6pp over static INT4 | ✅ EXPLAINED | See Insight 5 | 41.2% vs 33.6% |
-| H3: within 0.30pp of FP16 | ⚠️ IMPL_GAP | 33.8% (500 samp, CI±4.4pp) vs 42.6% | 41.2% vs 41.5% |
+| H3: within 0.30pp of FP16 | ⚠️ PARTIAL | v1: 33.8%@5.03b; v2: 37.0%@8.47b | 41.2%@5.05b |
 | H4: cross-model validation | ✅ CONFIRMED | See H4 Results | 135M + 360M + 1.7B |
 | FP16 baseline (500 samp, 360M) | ✅ CONFIRMED | 42.6% | 41.5% |
 | FP16 baseline (100 samp, 135M) | ✅ CONFIRMED | 40.0% | 37.2% |
@@ -222,9 +222,25 @@ Reproducing the paper's 41.2% requires controller training data/procedure not di
 
 | Run | N | DWB | FP16 | Delta | CI | Status |
 |-----|---|-----|------|-------|----|--------|
-| dwb_100 | 100 | 40.0% | 42.6% | -2.6pp | ±10pp | Within noise |
-| dwb_200 | 200 | 38.0% | 42.6% | -4.6pp | ±6.7pp | Within noise |
-| Paper | — | 41.2% | 41.5% | -0.3pp | — | Target |
+| dwb_100 (val_acc=0.456) | 100 | 40.0% | 42.6% | -2.6pp | ±10pp | Within noise |
+| dwb_200 (val_acc=0.366) | 200 | 38.0% | 42.6% | -4.6pp | ±6.7pp | Within noise |
+| dwb_500 (val_acc=0.366) | 500 | 33.8% | 42.6% | -8.8pp | ±4.4pp | **IMPL_GAP** |
+| dwb_v2_500 (val_acc=0.446, avg=8.47b) | 500 | **37.0%** | 42.6% | -5.6pp | ±4.4pp | ⚠️ DUAL-OBJ TENSION |
+| Paper | — | 41.2% | 41.5% | -0.3pp | — | Target (5.05 avg bits) |
+
+**Controller sensitivity finding** ★: Better-trained controller (v2, val_acc=0.446) gives **37.0%** (500 samp) at avg_bits=8.47 vs paper's 41.2% at 5.05 bits. Bit distribution bimodal: {2: 41.7%, 4: 9.3%, 8: 7.2%, 16: 41.8%} — the controller splits tokens into "unimportant" (2-bit, 42%) and "critical" (16-bit, 42%) with little middle ground.
+
+The controller becomes "conservative" — assigning high precision to most ambiguous tokens rather than finding the efficient middle ground. This reveals a **two-objective tension**: our quartile-labeling approach trains for classification accuracy alone, not for the paper's compound loss (α·CE + β·latency + γ·quality). A well-trained DWB controller must simultaneously achieve good accuracy AND maintain ~5.05 avg bits — this requires end-to-end training with the full compound loss, not just quartile classification.
+
+**v1 vs v2 comparison:**
+
+| Controller | Train samp | Epochs | val_acc | avg_bits | DWB acc (500 samp) | vs Paper |
+|------------|-----------|--------|---------|----------|--------------------|---------|
+| v1 | 100 | 5 | 0.366 | 5.03 | 33.8% | -7.4pp |
+| v2 | 500 | 10 | 0.446 | 8.47 | **37.0%** | **-4.2pp** |
+| Paper | — | — | — | 5.05 | 41.2% | target |
+
+v2 improved accuracy by +3.2pp but required 1.68× more bits (8.47 vs 5.03). The paper achieves BOTH: 41.2% at only 5.05 bits. Closing H3 fully requires the paper's undisclosed compound-loss training procedure.
 
 ---
 
