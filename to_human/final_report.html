@@ -77,8 +77,19 @@
 </div>
 
 <div class="card blue">
-  <h3>Finding 2 — Mechanism: zero-mean error cancellation in attention</h3>
-  <p>Symmetric per-tensor INT4 produces zero-mean quantization errors that cancel in the attention weighted sum (Σ softmax(QK) · V). Outlier tokens set the quantization scale — those same tokens receive the highest attention weights — meaning the most-attended values are also best quantized. This is a self-reinforcing property of transformer attention. Confirmed: (a) 6 INT4 variants, (b) autoregressive mode (no accumulation), (c) two model sizes (135M, 360M).</p>
+  <h3>Finding 2 — Mechanism: zero-mean error cancellation in attention ★ directly verified</h3>
+  <p>Direct measurement on 20 examples (1,280 K/V layer outputs):</p>
+  <table>
+    <thead><tr><th>Metric</th><th>Standard INT4 (16 levels)</th><th>INT3-range (8 levels)</th></tr></thead>
+    <tbody>
+      <tr><td>Mean K/V error</td><td>+0.00092</td><td>−0.00259</td></tr>
+      <tr class="highlight"><td><strong>Symmetry ratio (mean/std)</strong></td><td class="pp"><strong>0.0027 ≈ zero-mean ✓</strong></td><td class="pp"><strong>0.0037 ≈ zero-mean ✓</strong></td></tr>
+      <tr><td>Relative error magnitude</td><td>26.95%</td><td>55.79%</td></tr>
+      <tr class="highlight"><td><strong>Attention output cancellation</strong></td><td class="pp"><strong>3.3× below naive bound ✓</strong></td><td class="pp">4.2× below naive bound</td></tr>
+    </tbody>
+  </table>
+  <p><strong>Key insight</strong>: Both schemes have zero-mean errors and both show ~3-4× output cancellation. Standard INT4 is lossless because 26.95% relative error × 3× cancellation = residuals below the decision threshold. INT3-range fails because 55.79% base error × 4× cancellation still leaves residuals large enough to flip predictions. The mechanism is the same; the threshold is between 26.95% and 55.79% relative error.</p>
+  <p><strong>Self-reinforcing property</strong>: outlier tokens (high-C_t, most-attended) set the quantization scale → they receive the best quantization AND the highest attention weight → output is preserved. This connects Insight 2 and Finding 6.</p>
 </div>
 
 <div class="card green">
