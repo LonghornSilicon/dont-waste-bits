@@ -243,6 +243,7 @@ critical_findings:
   - "Beta sweep confirms dual-objective tension: beta=0.1 → 39.0%@5.30b; beta=0.5 → 37.0%@3.06b. No beta achieves 41.2%@5.05b."
   - "int4_int3range (scale=max/3, 8 levels) reproduces 135M/360M baseline; coarse step causes all -18pp (ablation)"
   - "DWB-TurboQuant: +2pp HellaSwag, +3pp ARC-Challenge at identical 5.05 avg_bits"
+  - "DWB-TurboQuant BoolQ: -20pp regression (41% vs DWB-scalar 61%) — WHT gains are task-specific, hurt closed-form yes/no QA"
 
 mechanistic_verification:
   smollm_360m:

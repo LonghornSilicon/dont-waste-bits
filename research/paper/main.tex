@@ -508,17 +508,19 @@ The rotation is exactly invertible; no extra bits are consumed.
 
 \begin{table}[h]
 \centering
-\caption{\dwbtq\ results on SmolLM-360M, 100 samples.}
+\caption{\dwbtq\ results on SmolLM-360M, 100 samples.
+avg\_bits shown as HellaSwag / ARC-Ch.\ / BoolQ (task-dependent due to
+different context distributions driving different controller assignments).}
 \label{tab:tq}
 \footnotesize
-\begin{tabular}{lcccc}
+\begin{tabular}{lccccc}
 \toprule
-Condition & HellaSwag & ARC-Ch. & avg\_bits \\
+Condition & HellaSwag & ARC-Ch. & BoolQ & avg\_bits \\
 \midrule
-FP16 & 41.0\% & 35.0\% & 16.0 \\
-DWB-scalar & 40.0\% & 26.0\% & 5.05 / 7.72 \\
-\textbf{\dwbtq} & \textbf{42.0\%} & \textbf{29.0\%} & 5.05 / 7.72 \\
-Paper DWB & 41.2\% & --- & 5.05 \\
+FP16 & 41.0\% & 35.0\% & 55.0\% & 16.0 \\
+DWB-scalar & 40.0\% & 26.0\% & \textbf{61.0\%} & 5.05 / 7.72 / 7.88 \\
+\textbf{\dwbtq} & \textbf{42.0\%} & \textbf{29.0\%} & 41.0\% & 5.05 / 7.72 / 7.88 \\
+Paper DWB & 41.2\% & --- & --- & 5.05 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -526,14 +528,24 @@ Paper DWB & 41.2\% & --- & 5.05 \\
 \dwbtq\ recovers $+$2pp on HellaSwag and $+$3pp on ARC-Challenge
 over DWB-scalar at \emph{identical compression}.
 On HellaSwag, \dwbtq\ (42.0\%) exceeds the paper's DWB target (41.2\%)
-and matches FP16 (42.6\%) within noise.
-The gain is larger on ARC-Challenge ($+$3pp reasoning) than HellaSwag
-($+$2pp commonsense), suggesting WHT rotation particularly benefits
-reasoning-heavy token distributions.
+and matches FP16 within noise.
 
-ARC-Challenge bit distribution: $\{2: 37.4\%, 4: 17.3\%, 8: 12.2\%, 16: 33.2\%\}$—the
-controller assigns more 16-bit on reasoning tasks, reducing the fraction
-routed through WHT but yielding higher per-token gain.
+\textbf{BoolQ caveat.}
+On BoolQ, \dwbtq\ drops to 41.0\%---a $-$20pp regression from DWB-scalar
+(61.0\%) and $-$14pp below FP16 (55.0\%).
+Notably, DWB-scalar \emph{outperforms} FP16 by $+$6pp on BoolQ, suggesting
+the quantization regularization effect benefits yes/no discrimination; the
+WHT rotation then reverses this gain.
+This finding establishes that \dwbtq's improvement is \emph{task-specific}:
+WHT-based decorrelation benefits open-ended generation tasks
+(commonsense, reasoning) but can hurt closed-form question answering.
+The mechanism likely relates to how quantization errors propagate into
+log-probability comparisons over very short continuations (``yes''/``no'')
+vs.\ longer phrase completions.
+At $n=100$ the BoolQ CI is $\pm 10$pp, so the DWB-scalar $+$6pp advantage
+over FP16 may be noise; the $-$20pp \dwbtq\ regression is harder to dismiss.
+
+ARC-Challenge bit distribution: $\{2: 37.4\%, 4: 17.3\%, 8: 12.2\%, 16: 33.2\%\}$.
 
 %-----------------------------------------------------------------------
 \section{Discussion}

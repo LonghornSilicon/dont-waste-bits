@@ -1,6 +1,6 @@
 # Research Findings — Don't Waste Bits! Verification
 
-**Last updated**: 2026-04-19 (H3 v2 FINAL: 37.0%@8.47b; dual-objective tension confirmed; H4 1.7B; TurboQuant)  
+**Last updated**: 2026-04-19 (beta-sweep COMPLETE; BoolQ TurboQuant caveat added; research concluded)  
 **Phase**: CONCLUDED (accuracy experiments complete; latency pending GPU)
 
 ---
@@ -13,9 +13,7 @@ a mechanistically verified losslessness mechanism, and a dual-objective controll
 Cross-model validation across SmolLM-135M, 360M, and 1.7B (H4) reveals a critical scale-dependent
 pattern: INT4 is lossless at 135M/360M but shows genuine degradation at 1.7B.
 
-> **Novel extension**: See turboquant-integration branch for DWB+TurboQuant results —
-> DWB-TurboQuant achieves 42.0% ≈ FP16 at 5.05 avg_bits, confirmed across HellaSwag (+2pp) and
-> ARC-Challenge (+3pp over DWB-scalar). All hypotheses TQ-H1, TQ-H2, TQ-H3 confirmed.
+> **Novel extension**: DWB-TurboQuant achieves 42.0% ≈ FP16 at 5.05 avg_bits (+2pp HellaSwag, +3pp ARC-Challenge vs DWB-scalar). **BoolQ caveat**: DWB-TurboQuant shows -20pp on BoolQ (41% vs 61% DWB-scalar). WHT rotation is task-specific — helps open-ended generation, hurts closed-form yes/no QA.
 
 **Status of claims:**
 
@@ -294,6 +292,27 @@ v2 improved accuracy by +3.2pp but required 1.68× more bits (8.47 vs 5.03). The
 - There is NO β that achieves both 41.2% accuracy AND 5.05 avg_bits. The collapse at β=1.0 proves that our training framework cannot interpolate between the two objectives — the loss landscape has no Pareto-optimal solution under quartile-classification training.
 
 **Conclusion**: The dual-objective tension is NOT a hyperparameter issue — it is a fundamental difference in training objectives. Our quartile-classification approach cannot simultaneously optimize accuracy and compression. The paper's compound loss (α·CE + β·latency + γ·quality) with end-to-end training is the necessary ingredient.
+
+---
+
+## DWB-TurboQuant: Task-Specific Gains ★ CAVEAT ADDED
+
+Full cross-benchmark results (SmolLM-360M, 100 samples each):
+
+| Condition | HellaSwag | ARC-Challenge | BoolQ | avg_bits |
+|-----------|-----------|---------------|-------|----------|
+| FP16 | 41.0% | 35.0% | 55.0% | 16.0 |
+| DWB-scalar | 40.0% | 26.0% | **61.0%** | 5.05/7.72/7.88 |
+| **DWB-TurboQuant** | **42.0%** | **29.0%** | 41.0% | 5.05/7.72/7.88 |
+| Paper DWB | 41.2% | — | — | 5.05 |
+
+**BoolQ finding**: DWB-TurboQuant shows -20pp regression vs DWB-scalar on BoolQ (41% vs 61%). DWB-scalar itself outperforms FP16 by +6pp on BoolQ (61% vs 55%) — KV quantization appears to regularize yes/no probability comparison. WHT rotation reverses this effect.
+
+**Interpretation**: WHT rotation is **task-specific** — it benefits open-ended generation tasks (HellaSwag commonsense, ARC-Challenge reasoning) but hurts closed-form yes/no QA. The mechanism likely relates to how quantization errors propagate into log-probability comparisons over short continuations ("yes"/"no") vs. longer phrase completions.
+
+Note: n=100 gives CI≈±10pp. The DWB-scalar +6pp over FP16 on BoolQ may be noise; the -20pp TurboQuant regression is harder to dismiss statistically.
+
+**Qualified conclusion**: DWB-TurboQuant is an improvement on generation/reasoning tasks at identical compression, but should not be used for closed-form QA without further investigation.
 
 ---
 

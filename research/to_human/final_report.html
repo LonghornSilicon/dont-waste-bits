@@ -240,7 +240,7 @@
 
   <div class="card info">
     <h4><span class="insight-num">7</span>Novel extension: DWB-TurboQuant (turboquant-integration branch) <span class="finding-star">★</span></h4>
-    <p>Routes DWB's 2-bit tier through PolarQuant (per-head WHT rotation, Google ICLR 2026). Confirmed: <strong>+2pp HellaSwag</strong>, <strong>+3pp ARC-Challenge</strong> at identical 5.05 avg_bits. All TQ-H1/H2/H3 hypotheses confirmed.</p>
+    <p>Routes DWB's 2-bit tier through PolarQuant (per-head WHT rotation, Google ICLR 2026). Confirmed: <strong>+2pp HellaSwag</strong>, <strong>+3pp ARC-Challenge</strong> at identical 5.05 avg_bits. All TQ-H1/H2/H3 hypotheses confirmed. <strong>⚠ BoolQ caveat:</strong> −20pp regression on yes/no QA (DWB-TurboQuant 41% vs DWB-scalar 61%) — WHT gains are task-specific.</p>
   </div>
 
   <!-- CONTROLLER TRAJECTORY VISUALIZATION -->
@@ -284,7 +284,7 @@
     <tr><td>H4: SmolLM-135M</td><td><span class="chip g">DONE</span></td><td class="yes">FP16+int3range both match paper ✅</td></tr>
     <tr><td>H4: SmolLM-1.7B + mechanistic</td><td><span class="chip g">DONE</span></td><td class="yes">INT4 lossy at scale, eff_residual 12.4% ✅</td></tr>
     <tr><td>Controller behavior analysis</td><td><span class="chip g">DONE</span></td><td class="yes">C_t d=4.55 dominates; R_t d=0.52 uninformative ✅</td></tr>
-    <tr><td>DWB-TurboQuant (turboquant-integration)</td><td><span class="chip g">DONE</span></td><td class="yes">+2pp HellaSwag, +3pp ARC-Challenge ✅</td></tr>
+    <tr><td>DWB-TurboQuant (turboquant-integration)</td><td><span class="chip g">DONE</span></td><td class="yes">+2pp HellaSwag, +3pp ARC-Challenge ✅ <span style="color:#c0392b">⚠ −20pp BoolQ (task-specific)</span></td></tr>
     <tr><td>H1 Latency (17.75% reduction)</td><td><span class="chip p">PENDING</span></td><td class="pending">Arithmetic verified; RTX 4090 required</td></tr>
     <tr><td>Beta sweep (H3 follow-up)</td><td><span class="chip y">PARTIAL</span></td><td class="partial">β=0.1: 39.0%@5.30b; β=0.5: 39.0%@3.92b; β=1.0: val_acc≈random (hardware limit)</td></tr>
     <tr><td>Academic paper writeup</td><td><span class="chip g">DONE</span></td><td class="yes">research/paper/main.tex + refs.bib + paper_rendered.html ✅</td></tr>

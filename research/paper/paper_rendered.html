@@ -257,17 +257,21 @@ scalar quantization, decorrelating activations and reducing effective error.</p>
 Per-head WHT (head_dim=64 = 2⁶, power-of-2 ✓), exactly invertible, no extra bits.</p>
 
 <table>
-<tr><th>Condition</th><th>HellaSwag</th><th>ARC-Challenge</th><th>avg_bits</th></tr>
-<tr><td>FP16</td><td>41.0%</td><td>35.0%</td><td>16.0</td></tr>
-<tr><td>DWB-scalar</td><td>40.0%</td><td>26.0%</td><td>5.05 / 7.72</td></tr>
-<tr><td class="match"><strong>DWB-TurboQuant</strong></td><td class="match"><strong>42.0%</strong></td><td class="match"><strong>29.0%</strong></td><td class="match"><strong>5.05 / 7.72</strong></td></tr>
-<tr style="background:#e8f4e8"><td><em>Paper DWB</em></td><td>41.2%</td><td>—</td><td>5.05</td></tr>
+<tr><th>Condition</th><th>HellaSwag</th><th>ARC-Challenge</th><th>BoolQ</th><th>avg_bits</th></tr>
+<tr><td>FP16</td><td>41.0%</td><td>35.0%</td><td>55.0%</td><td>16.0</td></tr>
+<tr><td>DWB-scalar</td><td>40.0%</td><td>26.0%</td><td class="match"><strong>61.0%</strong></td><td>5.05 / 7.72 / 7.88</td></tr>
+<tr><td class="match"><strong>DWB-TurboQuant</strong></td><td class="match"><strong>42.0%</strong></td><td class="match"><strong>29.0%</strong></td><td class="gap">41.0%</td><td class="match"><strong>5.05 / 7.72 / 7.88</strong></td></tr>
+<tr style="background:#e8f4e8"><td><em>Paper DWB</em></td><td>41.2%</td><td>—</td><td>—</td><td>5.05</td></tr>
 </table>
-<div class="caption">Table 7: DWB-TurboQuant results (SmolLM-360M, 100 samples). Same compression, higher accuracy.</div>
+<div class="caption">Table 7: DWB-TurboQuant results (SmolLM-360M, 100 samples). BoolQ avg_bits=7.88 (controller trained on HellaSwag). Bold = best per column; red = regression.</div>
 
 <div class="highlight">
 DWB-TurboQuant (42.0%) <strong>exceeds the paper's DWB target (41.2%)</strong> and matches FP16 (42.6%) within noise, at identical compression.
-Gain is larger on ARC-Challenge (+3pp reasoning) than HellaSwag (+2pp commonsense) — WHT rotation particularly benefits reasoning-heavy distributions.
+Gain is larger on ARC-Challenge (+3pp reasoning) than HellaSwag (+2pp commonsense).
+<br><br>
+<strong>BoolQ caveat:</strong> DWB-TurboQuant drops to 41.0% on BoolQ — a <strong>−20pp regression</strong> from DWB-scalar (61.0%).
+WHT rotation decorrelates activations useful for open-ended generation but disrupts the short binary-answer patterns BoolQ relies on.
+DWB-TurboQuant's improvement is <em>task-specific</em>: gains on generation/reasoning, degradation on closed-form yes/no QA.
 </div>
 
 <h2><span class="section-num">7.</span> Discussion</h2>
@@ -286,9 +290,11 @@ target but accuracy (39.0%) remains 2.2pp short; at β=1.0, the controller degra
 We expect the gap to close when original code releases (June 2026).</p>
 
 <p><strong>On DWB-TurboQuant.</strong> Routing low-importance tokens through WHT-based quantization
-provides a free accuracy improvement. Bit-width assignment and within-tier quantization method are
-orthogonal dimensions that can be independently optimized. Future work: per-tier vector quantization,
-product quantization for higher bit tiers.</p>
+provides a free accuracy improvement on generation and reasoning tasks.
+However, BoolQ shows a −20pp regression: WHT rotation is task-specific, benefiting open-ended generation
+while disrupting short binary-answer patterns.
+Bit-width assignment and within-tier quantization method are orthogonal dimensions — but the best
+within-tier method is distribution-dependent. Future work: per-task routing, per-tier vector quantization.</p>
 
 <h2><span class="section-num">8.</span> Conclusion</h2>
 
