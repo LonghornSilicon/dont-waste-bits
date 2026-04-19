@@ -110,8 +110,19 @@
 </div>
 
 <div class="card green">
-  <h3>Finding 3 — DWB H3: Implementation gap — controller quality critical ⚠</h3>
-  <p><strong>Definitive result (500 samples, CI±4.4pp): 33.8% vs paper's 41.2% — gap of −7.4pp exceeds CI.</strong> H3 is NOT reproduced by our implementation. Root cause: our controller val_acc=36.6% is insufficient. Standard INT4 (4.0 bits) gives 41.6%; our DWB (5.03 avg bits) gives only 33.8% — worse accuracy with MORE bits means the controller mislabels important tokens as low-priority (2-bit), degrading accuracy. Bit distribution: {2-bit: 47.9%, 4-bit: 25.3%, 8-bit: 15.4%, 16-bit: 11.4%}, avg=5.03 bits/token. Paper's controller training details not disclosed; reproducing 41.2% requires better controller training data/procedure.</p>
+  <h3>Finding 3 — DWB H3: Controller quality is the critical bottleneck ⚠</h3>
+  <p><strong>Definitive result (500 samples, CI±4.4pp): 33.8% vs paper's 41.2% — gap of −7.4pp exceeds CI.</strong> H3 is NOT reproduced by our v1 implementation (100 train samples, 5 epochs, val_acc=36.6%).</p>
+  <p><strong>Key diagnostic</strong>: Standard INT4 at 4.0 avg bits → <strong>41.6%</strong>. Our DWB at 5.03 avg bits → <strong>33.8%</strong>. Using MORE bits yields WORSE accuracy — the controller is mislabeling important tokens as 2-bit, actively degrading vs a static baseline.</p>
+  <p><strong>Controller sensitivity study (v2 — in progress)</strong>: Retrained with 500 train samples × 10 epochs. v2 val_acc reached <strong>0.489</strong> (best) vs v1's 0.366. Evaluation on 500 HellaSwag samples is running. Expected outcome: if val_acc~0.45 → ~40% accuracy (based on prior 45.6% val_acc run giving 40.0%).</p>
+  <table>
+    <thead><tr><th>Controller</th><th>Train samples</th><th>Epochs</th><th>Best val_acc</th><th>DWB acc (expected)</th></tr></thead>
+    <tbody>
+      <tr><td>v1</td><td>100</td><td>5</td><td>0.366</td><td>33.8% (measured)</td></tr>
+      <tr><td>Prior run</td><td>100</td><td>5</td><td>0.456</td><td>40.0% (measured, 100 samp)</td></tr>
+      <tr class="highlight"><td><strong>v2 (running)</strong></td><td><strong>500</strong></td><td><strong>10</strong></td><td><strong>0.489</strong></td><td><strong>~40%? (pending)</strong></td></tr>
+      <tr><td>Paper</td><td>?</td><td>?</td><td>?</td><td>41.2% (claimed)</td></tr>
+    </tbody>
+  </table>
 </div>
 
 <div class="card green">
