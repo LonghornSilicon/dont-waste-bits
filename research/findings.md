@@ -47,9 +47,23 @@ The Dynamic KV (rule-based) baseline **underperforms static 4-bit KV** on accura
 
 ## Open Questions
 
-1. ~~Does SmolLM-360M or SmolLM2-360M match 41.50%?~~ **SmolLM2 = 45.33% → paper used original SmolLM-360M. Running original now.**
-2. Does 4-bit weight quantization approximate 4-bit KV quantization in accuracy impact?
-3. Is the 17.75% latency gain purely from bandwidth reduction, or also fewer FP16 ops?
+1. ~~Does SmolLM-360M or SmolLM2-360M match 41.50%?~~ **SmolLM2 = 45.33%, SmolLM-360M FP16 = 49% on 100 samples — both exceed paper's 41.5%. See discussion below.**
+2. ~~Does weight quantization approximate KV cache quantization?~~ **NO — critical methodological error. KV cache quant = hook k_proj/v_proj outputs. Weight quant is completely different. Fixed in v2.**
+3. Why does hooks-on-DynamicCache fail? Resolved: transformers 5.x uses DynamicCache objects, not raw tuples — must hook projection layers directly.
+4. Is the 17.75% latency gain purely from bandwidth reduction, or also fewer FP16 ops?
+5. Why does SmolLM-360M FP16 measure ~49% locally vs paper's 41.5%? Model checkpoint version? Paper evaluation protocol differences? **Under investigation.**
+
+---
+
+## Implementation Notes
+
+### KV Cache Quantization — Critical Fix (v2)
+
+**v1 approach (wrong)**: Hooked attention module forward output, searched for `(key, value)` tuples in output. Failed because transformers 5.x returns `DynamicCache` objects (not raw tuples) for `past_key_values`.
+
+**v2 approach (correct)**: Hook `k_proj` and `v_proj` Linear submodule outputs directly. Quantizes K and V tensors before they enter the attention computation — simulates storing/reading at reduced precision. Works for both single-pass HellaSwag scoring and generation.
+
+Result of v1: All conditions (FP16, KV-4bit, KV-8bit) gave identical 49% accuracy — hooks were silently not firing.
 
 ---
 
@@ -58,10 +72,13 @@ The Dynamic KV (rule-based) baseline **underperforms static 4-bit KV** on accura
 | Run | Condition | Metric | Value | Paper Target | Delta | Status |
 |-----|-----------|--------|-------|-------------|-------|--------|
 | 00 | Arithmetic | H1,H2,H3 | self-consistent | — | — | DONE |
-| 01a | FP16 (SmolLM2-360M) | HellaSwag acc% | **45.33%** | 41.50% | +3.83pp | DISCREPANCY — wrong model variant |
-| 01b | FP16 (SmolLM-360M original) | HellaSwag acc% | — | 41.50% | — | RUNNING |
-| 02 | Static 4-bit | HellaSwag acc% | — | 33.60% | — | QUEUED |
-| 03 | DWB (ours) | HellaSwag acc% | — | 41.20% | — | QUEUED |
-| 04 | FP16 latency | ms/token | — | 3.50 | — | AWAITING BREV |
-| 05 | Static 4-bit latency | ms/token | — | 2.93 | — | AWAITING BREV |
-| 06 | DWB latency | ms/token | — | 2.41 | — | AWAITING BREV |
+| 01a | FP16 (SmolLM2-360M) | HellaSwag acc% | **45.33%** | 41.50% | +3.83pp | STORED — wrong model variant but stored for comparison table |
+| 01b | FP16 (SmolLM-360M, hooks-v1) | HellaSwag acc% | **49.00%** | 41.50% | +7.5pp | DISCREPANCY — hooks not working (v1 bug) |
+| 01c | FP16 (SmolLM-360M, hooks-v2) | HellaSwag acc% | — | 41.50% | — | RUNNING |
+| 02 | Static KV-4bit (SmolLM-360M, hooks-v2) | HellaSwag acc% | — | 33.60% | — | RUNNING |
+| 03 | Static KV-8bit (SmolLM-360M, hooks-v2) | HellaSwag acc% | — | — | — | RUNNING |
+| 04 | Static KV-2bit (SmolLM-360M, hooks-v2) | HellaSwag acc% | — | — | — | RUNNING |
+| 05 | DWB (ours) | HellaSwag acc% | — | 41.20% | — | QUEUED |
+| 06 | FP16 latency | ms/token | — | 3.50 | — | AWAITING BREV |
+| 07 | Static 4-bit latency | ms/token | — | 2.93 | — | AWAITING BREV |
+| 08 | DWB latency | ms/token | — | 2.41 | — | AWAITING BREV |

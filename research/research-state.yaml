@@ -8,32 +8,35 @@ research_question: >
   Specifically: (H1) 17.75% latency reduction, (H2) +7.60 accuracy points over
   static 4-bit KV, (H3) within 0.30 points of FP16 — all on SmolLM-360M / HellaSwag.
 
-phase: BOOTSTRAP  # BOOTSTRAP | INNER_LOOP | OUTER_LOOP | CONCLUDED
+phase: INNER_LOOP  # BOOTSTRAP | INNER_LOOP | OUTER_LOOP | CONCLUDED
 
 hypotheses:
   H1:
     slug: H1-latency-reduction
     claim: "17.75% decoding latency reduction vs static 4-bit KV (SmolLM-360M, HellaSwag)"
     arithmetic_check: "(2.93 - 2.41) / 2.93 * 100 = 17.75% — VERIFIED from paper Table 3"
-    status: ARITHMETIC_VERIFIED  # UNTESTED | ARITHMETIC_VERIFIED | RUNNING | CONFIRMED | REFUTED
+    status: AWAITING_BREV  # UNTESTED | ARITHMETIC_VERIFIED | RUNNING | CONFIRMED | REFUTED
     prediction: Reproduces within ±2% of reported values
     priority: HIGH
+    blocker: "RTX 4090 required on NVIDIA Brev"
 
   H2:
     slug: H2-accuracy-improvement
     claim: "+7.60 accuracy points over static 4-bit KV (SmolLM-360M, HellaSwag)"
     arithmetic_check: "41.20 - 33.60 = 7.60 — VERIFIED from paper Table 3"
-    status: ARITHMETIC_VERIFIED
+    status: RUNNING
     prediction: Reproduces within ±1 accuracy point
     priority: HIGH
+    current_run: "kv_quant_v2 — corrected hooks on k_proj/v_proj (100 samples, CPU)"
 
   H3:
     slug: H3-fp16-parity
     claim: "Within 0.30 points of FP16 (SmolLM-360M, HellaSwag)"
     arithmetic_check: "41.50 - 41.20 = 0.30 — VERIFIED from paper Table 3"
-    status: ARITHMETIC_VERIFIED
+    status: RUNNING
     prediction: Reproduces; gap may vary due to random seed
     priority: HIGH
+    current_run: "kv_quant_v2 — corrected hooks on k_proj/v_proj (100 samples, CPU)"
 
   H4:
     slug: H4-additional-models
@@ -66,17 +69,66 @@ paper_numbers_from_table3:
     Ours_accuracy: 48.60
     Ours_latency: 1.58
 
+experiments_complete:
+  - id: run_00
+    condition: arithmetic_check
+    result: PASSED
+    notes: All 3 claims self-consistent with Table 3
+
+  - id: run_01a
+    model: smollm2-360m
+    condition: fp16
+    accuracy: 45.33
+    paper_target: 41.50
+    delta: +3.83
+    samples: 300
+    status: STORED_FOR_COMPARISON
+    notes: Wrong model variant — SmolLM2 is improved over original SmolLM
+
+  - id: run_01b
+    model: smollm-360m
+    condition: fp16_kv4_kv8_hooks_v1
+    accuracy_fp16: 49.0
+    accuracy_kv4: 49.0
+    accuracy_kv8: 49.0
+    paper_target_fp16: 41.50
+    paper_target_kv4: 33.60
+    samples: 100
+    status: INVALID
+    notes: >
+      KV hooks not firing — transformers 5.x uses DynamicCache objects.
+      All conditions identical. Methodological fix in v2.
+
+experiments_running:
+  - id: run_01c_02_03_04
+    model: smollm-360m
+    conditions: [fp16, kv4bit, kv8bit, kv2bit]
+    samples: 100
+    implementation: kv_cache_quant.py v2 (k_proj/v_proj hooks)
+    started: "2026-04-19 ~04:30"
+    expected_complete: "~04:45"
+
+critical_findings:
+  - "Original code not released (CVPR June 2026) — re-implemented from equations"
+  - "KV cache quantization must hook k_proj/v_proj, NOT model weights or past_key_values"
+  - "transformers 5.x uses DynamicCache — tuple-hunting hooks silently fail"
+  - "SmolLM-360M FP16 baseline appears higher than paper's 41.5% — investigating"
+
+implementation:
+  kv_cache_quant_version: v2
+  approach: "Hook k_proj and v_proj Linear outputs directly"
+  models_tested: [smollm-360m, smollm2-360m]
+
 next_steps:
-  - Clone original repo and inspect code
-  - Set up Brev GPU environment (RTX 4090)
-  - Run FP16 baseline on HellaSwag (SmolLM-360M) — establish baseline
-  - Run static 4-bit KV baseline
-  - Run Don't Waste Bits! method
-  - Compare against paper Table 3
+  - Read corrected experiment results (run_01c_02_03_04)
+  - If FP16 still >> 41.5%, investigate: paper checkpoint version, lm-eval normalization
+  - Run DWB controller training + evaluation
+  - Commit all results, push to GitHub
+  - Set up Brev for latency experiments (H1)
 
 blockers:
-  - Need GPU (RTX 4090 on NVIDIA Brev) — user confirmed available
-  - Need to verify original repo code is runnable
+  - GPU (RTX 4090 on NVIDIA Brev) for latency measurement
+  - FP16 accuracy discrepancy under investigation
 
 original_repo: https://github.com/SayedPedramHaeri/Dont-Waste-Bits
 our_repo: https://github.com/LonghornSilicon/dont-waste-bits
