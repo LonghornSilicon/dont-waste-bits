@@ -222,9 +222,13 @@ Reproducing the paper's 41.2% requires controller training data/procedure not di
 
 | Run | N | DWB | FP16 | Delta | CI | Status |
 |-----|---|-----|------|-------|----|--------|
-| dwb_100 | 100 | 40.0% | 42.6% | -2.6pp | ±10pp | Within noise |
-| dwb_200 | 200 | 38.0% | 42.6% | -4.6pp | ±6.7pp | Within noise |
-| Paper | — | 41.2% | 41.5% | -0.3pp | — | Target |
+| dwb_100 (val_acc=0.456) | 100 | 40.0% | 42.6% | -2.6pp | ±10pp | Within noise |
+| dwb_200 (val_acc=0.366) | 200 | 38.0% | 42.6% | -4.6pp | ±6.7pp | Within noise |
+| dwb_500 (val_acc=0.366) | 500 | 33.8% | 42.6% | -8.8pp | ±4.4pp | **IMPL_GAP** |
+| dwb_v2_500 (val_acc=0.446, avg=8.70b) | 500 | TBD | 42.6% | — | ±4.4pp | Running |
+| Paper | — | 41.2% | 41.5% | -0.3pp | — | Target (5.05 avg bits) |
+
+**Controller sensitivity finding** ★: Better-trained controller (v2, val_acc=0.446) assigns avg_bits=8.70 vs paper's 5.05. The controller becomes "conservative" — assigning high precision to most tokens, trading compression for accuracy. This reveals a two-objective tension: our quartile-labeling approach trains for classification accuracy alone, not for the paper's compound loss (α·CE + β·latency + γ·quality). A well-trained DWB controller must simultaneously achieve good accuracy AND maintain ~5.05 avg bits — this requires end-to-end training with the full compound loss, not just quartile classification.
 
 ---
 
