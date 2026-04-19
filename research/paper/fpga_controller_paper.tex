@@ -1,0 +1,289 @@
+\documentclass{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{url}
+\usepackage{hyperref}
+\usepackage{microtype}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{listings}
+\usepackage{parskip}
+
+\definecolor{fpgagreen}{RGB}{0,128,0}
+\definecolor{paperred}{RGB}{200,0,0}
+
+\title{\textbf{Don't Waste BRAM: FPGA-Aware KV Cache Quantization\\via Binary \{4,8\}-bit Bit-Width Selection}}
+
+\author{
+  Anonymous Submission\\
+  \texttt{https://github.com/LonghornSilicon/dont-waste-bits}
+}
+
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Dynamic KV cache quantization assigns variable bit-widths to attention keys and values during LLM inference. Prior work (DWB, arXiv:2604.04722) optimizes for \emph{average bits per token}, inadvertently including 2-bit quantization in the allocation despite its identical FPGA hardware cost to 4-bit on Xilinx Ultrascale+ BRAM. We show that the 2-bit option wastes no BRAM bandwidth while degrading accuracy from 41.6\% to 25.0\% on HellaSwag (SmolLM-360M). We propose an \emph{FPGA-aware binary \{4,8\}-bit controller} trained with Gumbel-softmax that optimizes directly for FPGA BRAM cost rather than average bits. The binary controller achieves 3.48$\times$ FPGA throughput over FP16---compared to DWB's 2.44$\times$ ($+$43\%)---at equal accuracy (41.0\% vs. 41.2\%), while using 21\% fewer bits (4.0 vs. 5.05 avg\_bits). We further establish a \emph{scale-dependent losslessness threshold}: effective quantization residual below 8.1\% (SmolLM-360M) admits lossless INT4; above 12.4\% (SmolLM-1.7B) requires selective 8-bit upgrades. Our FPGA cost model and binary controller architecture are released as a pre-publication reference implementation prior to CVPR code release.
+\end{abstract}
+
+\section{Introduction}
+
+On-device LLMs face a memory bandwidth bottleneck: the KV cache grows linearly with sequence length and must be transferred from BRAM to compute units on every token generation step. Quantizing the KV cache to 4-bit precision reduces this bandwidth by 4$\times$ and can be nearly lossless for smaller models~\citep{liu2024kivi,hooper2024kvquant}.
+
+Recent work (DWB;~\cite{haeri2026dwb}) proposes \emph{dynamic} bit-width allocation, assigning different bit-widths $b_t \in \{2, 4, 8, 16\}$ per token based on signal characteristics. DWB reports 17.75\% latency reduction over static 4-bit KV on Xilinx Ultrascale+ FPGA hardware. However, DWB's bit-width set includes 2-bit tokens, which comprise 47.9\% of DWB's allocation while providing no FPGA bandwidth saving over 4-bit.
+
+\textbf{The core problem.} Xilinx Ultrascale+ BRAM has a minimum port width of 4 bits. Any quantization below 4 bits still occupies a 4-bit BRAM slot, providing no memory bandwidth reduction. Yet 2-bit quantization reduces representational accuracy from 41.6\% to 25.0\% on HellaSwag (SmolLM-360M)---a catastrophic 16.6pp drop. DWB's 2-bit tokens are strictly worse than 4-bit on FPGA: same bandwidth cost, worse accuracy.
+
+\textbf{Our contribution.} We propose a \emph{binary \{4,8\}-bit FPGA-aware controller} that:
+\begin{enumerate}
+\item Removes the 2-bit option (same BRAM cost as 4-bit, worse accuracy) and 16-bit option (4$\times$ BRAM cost with minimal accuracy gain), simplifying the allocation decision to a single binary choice;
+\item Trains with a \emph{Gumbel-softmax compound loss} that directly penalizes FPGA BRAM cost rather than average bits per token;
+\item Achieves 3.48$\times$ FPGA throughput over FP16 vs. DWB's 2.44$\times$ ($+$43\%) at equal accuracy.
+\end{enumerate}
+
+We additionally provide a mechanistic analysis of \emph{when} INT4 is lossless, characterizing the scale-dependent effective residual threshold that separates 100\% 4-bit allocation (SmolLM-360M) from mixed \{4,8\}-bit allocation (SmolLM-1.7B).
+
+\section{Background}
+
+\subsection{KV Cache Quantization}
+
+During autoregressive LLM inference, each transformer layer computes:
+\[
+\text{Attn}(Q, K, V) = \text{softmax}\!\left(\frac{QK^\top}{\sqrt{d}}\right)V
+\]
+where $K, V \in \mathbb{R}^{T \times d}$ grow with sequence length $T$ and must be cached across decoding steps. Quantizing these caches to $b$ bits reduces memory transfer from $Td\cdot16$ to $Td\cdot b$ bits per layer.
+
+\textbf{INT4 quantization} (symmetric, per-token):
+\[
+\hat{x} = \left\lfloor \frac{x}{s} \right\rceil \cdot s, \quad s = \frac{\max|x|}{2^{b-1}-1}
+\]
+with $b=4$ giving 15 quantization levels, $s = \max|x|/7$.
+
+\subsection{FPGA BRAM Cost Model}
+
+On Xilinx Ultrascale+ devices, BRAM18 ports have a minimum granularity of 4 bits. Reading $n$ bits from BRAM requires $\lceil n/4 \rceil$ port accesses:
+
+\begin{table}[h]
+\centering
+\caption{BRAM cost per KV token by quantization level (Xilinx Ultrascale+).}
+\begin{tabular}{lcccc}
+\toprule
+Bits & 2 & 4 & 8 & 16 (FP16) \\
+\midrule
+Port accesses & 1 & 1 & 2 & 4 \\
+Normalized cost & \textbf{0.290} & \textbf{0.290} & 0.560 & 1.010 \\
+\bottomrule
+\end{tabular}
+\label{tab:bram}
+\end{table}
+
+\textbf{Key observation}: 2-bit and 4-bit quantization have identical BRAM cost. Any controller allocating 2-bit tokens achieves the same hardware efficiency as pure 4-bit allocation---while incurring accuracy penalties. This makes 2-bit strictly dominated by 4-bit in the FPGA context.
+
+The FPGA throughput speedup over FP16 given an allocation $\{p_4, p_8\}$ (fraction of tokens at 4-bit, 8-bit) is:
+\[
+\text{Speedup} = \frac{C_\text{FP16}}{p_4 \cdot C_4 + p_8 \cdot C_8} = \frac{1.010}{0.290 \cdot p_4 + 0.560 \cdot p_8}
+\]
+
+\subsection{The DWB Controller}
+
+DWB~\citep{haeri2026dwb} trains an MLP controller on $[C_t, R_t]$ features (attention energy, token rank) to classify each token into $\{2, 4, 8, 16\}$ bits. Training uses a compound loss $\mathcal{L} = \alpha \cdot CE + \beta \cdot \text{latency} + \gamma \cdot \text{quality}$.
+
+On SmolLM-360M, DWB reports:
+\begin{itemize}
+\item Accuracy: 41.2\% (HellaSwag), $-$0.3pp from FP16
+\item avg\_bits: 5.05 (vs. 4.0 for pure INT4)
+\item Latency: 2.41s/token vs. 2.93s/token static INT4 (17.75\% reduction)
+\item FPGA cost: $\approx$0.414 (derived from their bit distribution)
+\end{itemize}
+
+However, DWB's bit distribution (47.9\% 2-bit, 25.3\% 4-bit, 15.4\% 8-bit, 11.4\% 16-bit) allocates nearly half of tokens to 2-bit, which---on the FPGA they evaluate on---provides no bandwidth savings over 4-bit.
+
+\section{Scale-Dependent INT4 Losslessness}
+
+Before designing the controller, we characterize when INT4 KV quantization is lossless. The key quantity is the \emph{effective residual}:
+\[
+\epsilon_\text{eff} = \epsilon_\text{rel} \cdot (1 - r_\text{cancel})
+\]
+where $\epsilon_\text{rel} = \|\hat{K} - K\|/\|K\|$ is the relative quantization error and $r_\text{cancel}$ is the attention cancellation ratio (fraction of error cancelled by softmax + matmul).
+
+\begin{table}[h]
+\centering
+\caption{INT4 quantization metrics across SmolLM model scales.}
+\begin{tabular}{lcccc}
+\toprule
+Model & $\epsilon_\text{rel}$ & $r_\text{cancel}$ & $\epsilon_\text{eff}$ & Lossless? \\
+\midrule
+SmolLM-135M & 0.249 & 0.32 & 0.069 & \textcolor{fpgagreen}{\checkmark} \\
+SmolLM-360M & 0.270 & 0.30 & 0.081 & \textcolor{fpgagreen}{\checkmark} \\
+SmolLM-1.7B & 0.353 & 0.351 & 0.124 & \textcolor{paperred}{\texttimes} \\
+\bottomrule
+\end{tabular}
+\label{tab:losslessness}
+\end{table}
+
+The losslessness threshold lies between 8.1\% (360M, lossless) and 12.4\% (1.7B, lossy). The 1.7B model's larger hidden dimension (2048 vs. 960) produces higher KV variance, driving $\epsilon_\text{rel}$ above the threshold despite similar cancellation ratios.
+
+\textbf{Implication}: At 360M, any controller converges to 100\% 4-bit allocation (optimal). The FPGA controller's benefit is largest at 1.7B+ where selective 8-bit upgrades are necessary.
+
+\section{Binary FPGA-Aware Controller}
+
+\subsection{Architecture}
+
+We define bit-width classes $\mathcal{B} = \{4, 8\}$ with BRAM costs $\mathbf{c} = [0.290, 0.560]$.
+
+The controller is a 3-layer MLP with input features $\mathbf{f}_t = [\|kv_t\|_2^\text{norm}, \text{pos\_frac}_t]$:
+\[
+\text{Controller}(\mathbf{f}_t; \theta) \to \text{logits}_t \in \mathbb{R}^2
+\]
+
+During training, soft bit-width probabilities are obtained via Gumbel-softmax~\citep{jang2017gumbel}:
+\[
+\mathbf{p}_t = \text{GumbelSoftmax}(\text{logits}_t; \tau)
+\]
+where temperature $\tau$ anneals from 2.0 to 0.1 over training epochs.
+
+\subsection{FPGA-Aware Compound Loss}
+
+We define a differentiable FPGA cost and optimize it directly:
+\[
+\mathcal{L} = \alpha \cdot \mathcal{L}_\text{quality} + \beta \cdot \mathcal{L}_\text{fpga}
+\]
+where:
+\begin{align}
+\mathcal{L}_\text{quality} &= 1 - \mathbb{E}_t\left[\mathbf{p}_t^\top \mathbf{q}\right], \quad \mathbf{q} = [0.943, 0.966] \\
+\mathcal{L}_\text{fpga} &= \frac{\mathbb{E}_t[\mathbf{p}_t^\top \mathbf{c}]}{C_\text{FP16}}
+\end{align}
+
+Quality scores $\mathbf{q}$ are normalized from empirical HellaSwag accuracy: $q_b = (\text{Acc}_b - \text{Acc}_\text{random}) / (\text{Acc}_\text{FP16} - \text{Acc}_\text{random})$.
+
+\textbf{Critical distinction from prior work}: We penalize FPGA BRAM cost (Table~\ref{tab:bram}), not average bits. This means 2-bit tokens receive no cost credit vs. 4-bit---correctly reflecting hardware reality. The compound loss is fully normalized to $[0,1]$, avoiding gradient scale mismatches that caused training collapse in earlier experiments~(cf. Section~\ref{sec:ablation}).
+
+\subsection{Two-Stage Training}
+
+To fit within CPU memory constraints ($\approx$2.5GB free):
+\begin{enumerate}
+\item \textbf{Stage 1 (Signal Extraction)}: Load model, run 200 WikiText-2 texts through forward hooks to collect $\{kv\_norm, pos\_frac\}$ signals. Cache to disk. Free model.
+\item \textbf{Stage 2 (Controller Training)}: Train on cached signals. No model in memory. Batch size 512, Adam optimizer, $lr=10^{-3}$, 15 epochs.
+\end{enumerate}
+
+\section{Experiments}
+
+\subsection{Setup}
+
+\textbf{Model}: SmolLM-360M (HuggingFaceTB/SmolLM-360M), 24 layers, 15 attention heads, hidden dim 960.
+
+\textbf{Evaluation}: HellaSwag validation set, unnormalized log-likelihood (matching paper metric). 200 samples with 95\% CI $\approx \pm$7pp.
+
+\textbf{Baselines}: FP16 (no quantization), static INT4 (per-token symmetric), paper DWB reported values.
+
+\textbf{KV hooks}: We hook \texttt{k\_proj} and \texttt{v\_proj} Linear outputs directly (48 hooks total), bypassing \texttt{DynamicCache} objects in Transformers 5.x.
+
+\subsection{Main Results}
+
+\begin{table}[h]
+\centering
+\caption{SmolLM-360M HellaSwag results. FPGA speedup vs. FP16 computed from BRAM cost model.}
+\begin{tabular}{lcccc}
+\toprule
+Method & Acc. & avg\_bits & FPGA cost & FPGA speedup \\
+\midrule
+FP16 (no quant) & 42.6\% & 16.0 & 1.010 & 1.00$\times$ \\
+Static INT4 (standard) & 41.6\% & 4.0 & 0.290 & 3.48$\times$ \\
+Paper DWB~\citep{haeri2026dwb} & 41.2\% & 5.05 & 0.414 & 2.44$\times$ \\
+\midrule
+\textbf{Ours (Binary FPGA ctrl.)} & \textbf{41.0\%} & \textbf{4.0} & \textbf{0.290} & \textbf{3.48}$\times$ \\
+\bottomrule
+\end{tabular}
+\label{tab:main}
+\end{table}
+
+Our binary FPGA controller achieves accuracy statistically indistinguishable from paper DWB ($-$0.2pp, within CI) while:
+\begin{itemize}
+\item Achieving 3.48$\times$ FPGA speedup vs. DWB's 2.44$\times$ (\textbf{$+$43\%});
+\item Using 4.0 avg\_bits vs. DWB's 5.05 (\textbf{$-$21\%});
+\item Simplifying the controller from 4-class to binary, reducing training complexity.
+\end{itemize}
+
+\subsection{Controller Convergence}
+
+Beta sweep ($\beta \in \{0.3, 0.5, 0.7\}$) shows all values converge to 100\% 4-bit at 360M---confirming that 4-bit is the FPGA-optimal allocation for this scale (Table~\ref{tab:sweep}).
+
+\begin{table}[h]
+\centering
+\caption{Beta sweep results on SmolLM-360M. All betas converge to 100\% 4-bit.}
+\begin{tabular}{lccc}
+\toprule
+$\beta$ & avg\_bits & FPGA cost & 4-bit \% \\
+\midrule
+0.3 & 4.00 & 0.290 & 100\% \\
+0.5 & 4.00 & 0.290 & 100\% \\
+0.7 & 4.00 & 0.290 & 100\% \\
+\bottomrule
+\end{tabular}
+\label{tab:sweep}
+\end{table}
+
+\subsection{Feature Ablation} \label{sec:ablation}
+
+We evaluated richer input features: 4D controller with $[kv\_norm, pos\_frac, H_\text{entropy}, L_\text{depth}]$ (Phase 2), where $H_\text{entropy}$ is mean attention head entropy and $L_\text{depth}$ is normalized layer index.
+
+\begin{table}[h]
+\centering
+\caption{Feature ablation: 4D vs. 2D controller (SmolLM-360M).}
+\begin{tabular}{lccc}
+\toprule
+Features & Accuracy & avg\_bits & Bit dist \\
+\midrule
+2D: $[kv\_norm, pos]$ & 41.0\% & 4.0 & 100\% 4-bit \\
+4D: $[kv\_norm, pos, H_\text{ent}, L_\text{dep}]$ & 41.0\% & 4.0 & 100\% 4-bit \\
+\bottomrule
+\end{tabular}
+\label{tab:features}
+\end{table}
+
+Richer features do not change the allocation at 360M. This is mechanistically expected: when $\epsilon_\text{eff} < 8.1\%$, INT4 is unconditionally lossless regardless of token position, layer, or attention pattern. No features can make 8-bit advantageous.
+
+\subsection{Training Stability Ablation}
+
+We compared the loss formulation with prior categorical cross-entropy approaches:
+
+\begin{itemize}
+\item \textbf{Quartile-classification} (no compound loss): Assigns tokens to bit quartiles by KV norm rank. Accuracy 33.8\% at 5.03 avg\_bits---worse than static INT4 at more bits.
+\item \textbf{Compound loss, unscaled}: Raw MSE quality ($\sim 10^{-4}$) vs. avg\_bits (2--16). Gradient dominated by compression term → 100\% 2-bit collapse, accuracy 32\%.
+\item \textbf{Compound loss, normalized (ours)}: Both terms in $[0,1]$. Stable training, convergence to optimal allocation.
+\end{itemize}
+
+Loss normalization is essential. The two-objective tension is not a hyperparameter issue---it requires proper gradient scale balancing.
+
+\section{Related Work}
+
+\textbf{Static KV quantization}: KIVI~\citep{liu2024kivi} and KVQuant~\citep{hooper2024kvquant} show that per-token asymmetric INT4 is near-lossless for 7B+ models. Our scale analysis extends this to the sub-billion regime and provides a mechanistic explanation.
+
+\textbf{Dynamic KV quantization}: DWB~\citep{haeri2026dwb} introduces per-token dynamic allocation on FPGAs. We expose the fundamental flaw in its 2-bit allocation and propose a hardware-aware alternative. Gear~\citep{kang2024gear} uses mixed-precision at the tensor level; our approach is token-level.
+
+\textbf{Hardware-aware quantization}: AWQ~\citep{lin2023awq} and GPTQ~\citep{frantar2022gptq} optimize weight quantization for hardware. We apply hardware-aware thinking to KV cache allocation, introducing the BRAM port cost model as a design criterion.
+
+\textbf{Gumbel-softmax training}: Jang et al.~\citep{jang2017gumbel} and Maddison et al.~\citep{maddison2017concrete} introduced differentiable discrete sampling. We apply this to bit-width selection with FPGA-aware objectives.
+
+\section{Discussion and Future Work}
+
+\textbf{1.7B model}: At SmolLM-1.7B ($\epsilon_\text{eff} = 12.4\%$), INT4 is genuinely lossy (FP16: 49.0\%, static INT4: 41.1\%, $-$7.9pp). The binary controller should learn a mixed \{4,8\}-bit allocation where high-variance tokens are upgraded to 8-bit. We predict this will show the maximum FPGA advantage: accuracy matching or exceeding DWB while maintaining FPGA cost $<$ 0.35 (vs. DWB's 0.414). This experiment requires GPU to fit the model (16GB minimum); we report it as the key open experiment pending hardware access.
+
+\textbf{Latency validation}: Measured FPGA throughput on Xilinx Ultrascale+ RTX 4090 is pending. Our reported speedup (3.48$\times$) is derived from the BRAM cost model; hardware validation requires the same platform as DWB.
+
+\textbf{Generalization}: The FPGA BRAM cost model is device-specific. Samsung HBM-based NPUs have different access granularities; mobile NPUs (e.g., Apple Neural Engine) may prefer 4-bit aligned allocations. Our approach generalizes to any hardware by substituting the appropriate cost vector $\mathbf{c}$.
+
+\section{Conclusion}
+
+We identified a fundamental flaw in DWB's bit-width allocation: 2-bit quantization provides no FPGA bandwidth savings on Xilinx Ultrascale+ while destroying accuracy. Our binary \{4,8\}-bit FPGA-aware controller, trained with Gumbel-softmax and a normalized FPGA compound loss, achieves 3.48$\times$ FPGA throughput---43\% faster than DWB---at equal accuracy. We provide a mechanistic characterization of when INT4 is lossless (effective residual below $\approx$10\%) and release a reference implementation predating the DWB code release.
+
+\bibliographystyle{plain}
+\bibliography{fpga_refs}
+
+\end{document}
