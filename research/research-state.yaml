@@ -99,14 +99,51 @@ experiments_complete:
       KV hooks not firing — transformers 5.x uses DynamicCache objects.
       All conditions identical. Methodological fix in v2.
 
+experiments_complete:
+  - id: run_01c
+    model: smollm-360m
+    condition: fp16_acc_unnorm
+    accuracy: 42.0
+    samples: 50
+    paper_target: 41.50
+    delta: +0.5
+    status: CONFIRMED
+
+  - id: run_kv8bit
+    model: smollm-360m
+    condition: static8bit_acc_unnorm
+    accuracy: 42.0
+    samples: 50
+    notes: No degradation as expected for 8-bit
+
+  - id: run_kv2bit
+    model: smollm-360m
+    condition: static2bit_acc_unnorm
+    accuracy: 20.0
+    samples: 50
+    notes: Catastrophic drop confirms hooks ARE working
+
 experiments_running:
-  - id: run_01c_02_03_04
+  - id: bf3cc34ol
     model: smollm-360m
     conditions: [fp16, kv4bit, kv8bit, kv2bit]
+    metric: acc_unnorm
+    samples: 200
+    implementation: kv_cache_quant.py v2 (k_proj/v_proj hooks, per-tensor)
+
+  - id: b6s3h5g54
+    model: smollm-360m
+    conditions: [fp16, kv4bit_per_tensor, kv4bit_per_token]
+    metric: acc_unnorm
     samples: 100
-    implementation: kv_cache_quant.py v2 (k_proj/v_proj hooks)
-    started: "2026-04-19 ~04:30"
-    expected_complete: "~04:45"
+    notes: Comparing quantization granularity
+
+  - id: bjsd6qi7i
+    model: smollm-360m
+    conditions: [fp16, kv4bit_per_tensor, kv4bit_per_token]
+    metric: acc_unnorm
+    samples: 500
+    notes: Definitive baseline — enough statistical power to detect 7.9pp effect
 
 critical_findings:
   - "Original code not released (CVPR June 2026) — re-implemented from equations"

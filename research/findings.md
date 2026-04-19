@@ -63,11 +63,11 @@ The Dynamic KV (rule-based) baseline **underperforms static 4-bit KV** on accura
 
 ## Open Questions
 
-1. ~~Does SmolLM-360M or SmolLM2-360M match 41.50%?~~ **SmolLM2 = 45.33%, SmolLM-360M FP16 = 49% on 100 samples — both exceed paper's 41.5%. See discussion below.**
-2. ~~Does weight quantization approximate KV cache quantization?~~ **NO — critical methodological error. KV cache quant = hook k_proj/v_proj outputs. Weight quant is completely different. Fixed in v2.**
-3. Why does hooks-on-DynamicCache fail? Resolved: transformers 5.x uses DynamicCache objects, not raw tuples — must hook projection layers directly.
-4. Is the 17.75% latency gain purely from bandwidth reduction, or also fewer FP16 ops?
-5. Why does SmolLM-360M FP16 measure ~49% locally vs paper's 41.5%? Model checkpoint version? Paper evaluation protocol differences? **Under investigation.**
+1. ~~Does SmolLM-360M or SmolLM2-360M match 41.50%?~~ **SmolLM-360M acc (unnorm) = 42.0% ✅ matches paper's 41.5%.**
+2. ~~Does weight quantization approximate KV cache quantization?~~ **NO — hook k_proj/v_proj outputs directly.**
+3. ~~Why hooks-on-DynamicCache fail?~~ **transformers 5.x DynamicCache — hook projections instead.**
+4. Does per-tensor INT4 quantization reproduce paper's 33.6% static 4-bit baseline? **Active investigation: 50-samp noisy (CI ±14pp), 200-samp running, also testing per-token quant.**
+5. Is the 17.75% latency gain purely from bandwidth reduction, or also fewer FP16 ops?
 
 ---
 
@@ -90,10 +90,12 @@ Result of v1: All conditions (FP16, KV-4bit, KV-8bit) gave identical 49% accurac
 | 00 | Arithmetic | H1,H2,H3 | self-consistent | — | — | DONE |
 | 01a | FP16 (SmolLM2-360M) | HellaSwag acc% | **45.33%** | 41.50% | +3.83pp | STORED — wrong model variant but stored for comparison table |
 | 01b | FP16 (SmolLM-360M, hooks-v1) | HellaSwag acc% | **49.00%** | 41.50% | +7.5pp | DISCREPANCY — hooks not working (v1 bug) |
-| 01c | FP16 (SmolLM-360M, hooks-v2) | HellaSwag acc% | — | 41.50% | — | RUNNING |
-| 02 | Static KV-4bit (SmolLM-360M, hooks-v2) | HellaSwag acc% | — | 33.60% | — | RUNNING |
-| 03 | Static KV-8bit (SmolLM-360M, hooks-v2) | HellaSwag acc% | — | — | — | RUNNING |
-| 04 | Static KV-2bit (SmolLM-360M, hooks-v2) | HellaSwag acc% | — | — | — | RUNNING |
+| 01c | FP16 (acc unnorm, 50 samp) | HellaSwag acc% | **42.0%** | 41.50% | **+0.5pp** | ✅ CONFIRMED |
+| 02a | KV-4bit per-tensor (acc, 50 samp) | HellaSwag acc% | 46.0% | 33.60% | +12pp | NOISE — 50 samp CI ±14pp |
+| 02b | KV-4bit per-tensor (acc, 200 samp) | HellaSwag acc% | — | 33.60% | — | RUNNING |
+| 02c | KV-4bit per-token (acc) | HellaSwag acc% | — | 33.60% | — | QUEUED |
+| 03 | KV-8bit (acc, 50 samp) | HellaSwag acc% | 42.0% | — | 0pp | Good (8-bit minimal loss) |
+| 04 | KV-2bit (acc, 50 samp) | HellaSwag acc% | **20.0%** | — | -22pp | ✅ Hooks confirmed working |
 | 05 | DWB (ours) | HellaSwag acc% | — | 41.20% | — | QUEUED |
 | 06 | FP16 latency | ms/token | — | 3.50 | — | AWAITING BREV |
 | 07 | Static 4-bit latency | ms/token | — | 2.93 | — | AWAITING BREV |

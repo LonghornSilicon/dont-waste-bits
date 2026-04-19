@@ -52,10 +52,52 @@ def quantize_int2(x: torch.Tensor) -> torch.Tensor:
     return (x / scale).round().clamp(-2, 1) * scale
 
 
+def quantize_int4_per_token(x: torch.Tensor) -> torch.Tensor:
+    """INT4 KV quantization, per-token scale (more realistic for KV cache).
+
+    In autoregressive generation, each new K/V token is quantized independently
+    as it's added to the cache. Per-token scale is the standard in most KV
+    quantization papers (KIVI, QuaRot, etc.) and is more aggressive than
+    per-tensor when token magnitudes vary (outlier tokens drive per-tensor scale).
+
+    x shape: (batch, seq_len, features) — scales each position independently.
+    """
+    if x.dim() == 3:
+        result = x.clone()
+        for t in range(x.shape[1]):
+            tok = x[:, t, :]
+            scale = tok.abs().max() / 7.0
+            if scale > 0:
+                result[:, t, :] = (tok / scale).round().clamp(-8, 7) * scale
+        return result
+    scale = x.abs().max() / 7.0
+    if scale == 0:
+        return x
+    return (x / scale).round().clamp(-8, 7) * scale
+
+
+def quantize_int8_per_token(x: torch.Tensor) -> torch.Tensor:
+    """INT8 KV quantization, per-token scale."""
+    if x.dim() == 3:
+        result = x.clone()
+        for t in range(x.shape[1]):
+            tok = x[:, t, :]
+            scale = tok.abs().max() / 127.0
+            if scale > 0:
+                result[:, t, :] = (tok / scale).round().clamp(-128, 127) * scale
+        return result
+    scale = x.abs().max() / 127.0
+    if scale == 0:
+        return x
+    return (x / scale).round().clamp(-128, 127) * scale
+
+
 _QUANT_FNS = {
     "fp16": lambda x: x,
-    "static4bit": quantize_int4,
+    "static4bit": quantize_int4,           # per-tensor (conservative)
+    "static4bit_per_token": quantize_int4_per_token,  # per-token (realistic)
     "static8bit": quantize_int8,
+    "static8bit_per_token": quantize_int8_per_token,
     "static2bit": quantize_int2,
 }
 
