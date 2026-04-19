@@ -1,0 +1,45 @@
+{
+  "model": "HuggingFaceTB/SmolLM-360M",
+  "benchmark": "ARC-Challenge",
+  "limit": 100,
+  "metric": "acc_unnorm",
+  "date": "2026-04-19T08:07:55.731586",
+  "hellaswag_reference": {
+    "dwb_scalar": 40.0,
+    "dwb_turboquant": 42.0,
+    "delta_pp": 2.0
+  },
+  "conditions": {
+    "fp16": {
+      "accuracy": 35.0,
+      "correct": 35,
+      "total": 100
+    },
+    "dwb_scalar": {
+      "accuracy": 26.0,
+      "correct": 26,
+      "total": 100,
+      "elapsed_s": 124.0,
+      "bit_pct": {
+        "2": 37.4,
+        "4": 17.3,
+        "8": 12.2,
+        "16": 33.2
+      },
+      "avg_bits": 7.72239971600994
+    },
+    "dwb_turboquant": {
+      "accuracy": 28.999999999999996,
+      "correct": 29,
+      "total": 100,
+      "elapsed_s": 882.3,
+      "bit_pct": {
+        "2": 37.4,
+        "4": 17.3,
+        "8": 12.2,
+        "16": 33.2
+      },
+      "avg_bits": 7.72239971600994
+    }
+  }
+}

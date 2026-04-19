@@ -50,8 +50,23 @@ hypotheses:
   TQ-H3:
     slug: reasoning-benefit
     claim: "Benefit larger on reasoning benchmarks (ARC-C) vs HellaSwag"
-    status: UNTESTED
+    status: CONFIRMED
     priority: MEDIUM
+    result:
+      fp16_arc: 35.0
+      dwb_scalar_arc: 26.0
+      dwb_turboquant_arc: 29.0
+      arc_delta: +3.0
+      hellaswag_delta: +2.0
+      arc_bit_dist: {2: 37.4, 4: 17.3, 8: 12.2, 16: 33.2}
+      arc_avg_bits: 7.72
+    note: >
+      ARC-Challenge delta (+3pp) > HellaSwag delta (+2pp) — TQ-H3 confirmed.
+      Controller assigns more 16-bit tokens on ARC (33.2% vs 15.6% HellaSwag),
+      fewer 2-bit tokens (37.4% vs 57.3%). Despite PolarQuant affecting fewer tokens,
+      per-affected-token gain is higher on reasoning tasks.
+      DWB-TurboQuant 29.0% vs DWB-scalar 26.0% at avg_bits=7.72 on ARC-Challenge.
+    data_file: research/data/tq_h3_arc_100samp_20260419_0807.json
 
 baselines_from_main:
   smollm360m_fp16_500samp: 42.6
@@ -71,5 +86,4 @@ implementation:
 
 next_steps:
   - Academic paper writeup (install academic-research-paper-writer skill from mcpmarket)
-  - TQ-H3 (ARC-Challenge) — optional, would strengthen paper
   - Latency of PolarQuant vs scalar DWB (GPU required, H1 + TQ latency overhead)

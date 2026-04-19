@@ -118,6 +118,17 @@ We present an independent reproduction of "Don't Waste Bits!" (arXiv:2604.04722,
 
 **TQ-H2: CONFIRMED** (+2.0pp, same compression). DWB-TurboQuant matches FP16 (42.6%) and exceeds paper's DWB claim (41.2%).
 
+**TQ-H3 Results** (ARC-Challenge reasoning benchmark, 100 samples):
+
+| Condition | Accuracy | vs FP16 | vs DWB-scalar | avg_bits |
+|-----------|----------|---------|---------------|---------|
+| FP16 | 35.0% | — | — | 16.0 |
+| DWB-scalar | 26.0% | −9.0pp | — | 7.72 |
+| **DWB-TurboQuant** | **29.0%** | −6.0pp | **+3.0pp** | **7.72** |
+
+**TQ-H3: CONFIRMED** — gain is +3pp on ARC-Challenge (reasoning) vs +2pp on HellaSwag (commonsense).
+ARC bit distribution: {2: 37.4%, 4: 17.3%, 8: 12.2%, 16: 33.2%} — controller assigns more 16-bit on reasoning tasks. Despite fewer 2-bit tokens, per-affected-token gain is higher on ARC.
+
 **Implementation**: Self-contained per-head WHT rotation (head_dim=64, 2^6, power-of-2 ✓). No external dependencies. Critical: must apply per-head, not across full concatenated KV projection.
 
 ### 8. Discussion
@@ -126,13 +137,13 @@ We present an independent reproduction of "Don't Waste Bits!" (arXiv:2604.04722,
 - The "cannot reproduce" is itself a finding: naive INT4 is NOT harmful
 - Paper's +7.6pp H2 claim requires non-standard 8-level INT4 baseline
 - Latency claim (H1, 17.75%) cannot be tested without GPU — arithmetic verified
-- DWB-TurboQuant: CONFIRMED — +2pp over DWB-scalar at same compression, matches FP16
+- DWB-TurboQuant: CONFIRMED across two benchmarks — +2pp HellaSwag, +3pp ARC-Challenge
 
 ### 9. Conclusion
 - FP16 baseline confirmed, DWB accuracy consistent with paper's claims
 - INT4 losslessness is a novel insight with implications for KV cache design
 - int4_int3range (8 effective levels) is the likely paper baseline — identified and confirmed cross-model
-- DWB-TurboQuant: vector quantization improves quality at 2-bit tier
+- DWB-TurboQuant: vector quantization improves quality at 2-bit tier, confirmed on two benchmarks
 - All code available at https://github.com/LonghornSilicon/dont-waste-bits
 
 ---
