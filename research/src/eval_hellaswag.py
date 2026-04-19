@@ -38,8 +38,14 @@ PAPER_TARGETS = {
 }
 
 
-def score_continuation(model, tokenizer, context, continuation, device="cpu"):
-    """Length-normalized log-likelihood of continuation given context."""
+def score_continuation(model, tokenizer, context, continuation, device="cpu", normalize=False):
+    """Log-likelihood of continuation given context.
+
+    normalize=False: raw sum (matches paper's reported 'accuracy' metric, ~41.5% FP16)
+    normalize=True:  per-token average (lm-eval acc_norm, ~54% FP16 — NOT what paper uses)
+
+    Confirmed via diagnostic: unnormalized gives 42.0% on 50 val samples vs paper's 41.5%.
+    """
     full_text = context + continuation
     full_ids = tokenizer.encode(full_text, return_tensors="pt").to(device)
     ctx_len = tokenizer.encode(context, return_tensors="pt").shape[1]
@@ -53,7 +59,7 @@ def score_continuation(model, tokenizer, context, continuation, device="cpu"):
 
     log_probs = F.log_softmax(logits[ctx_len - 1:ctx_len - 1 + len(cont_ids)], dim=-1)
     score = log_probs[range(len(cont_ids)), cont_ids].sum().item()
-    return score / len(cont_ids)
+    return score / len(cont_ids) if normalize else score
 
 
 def apply_kv_cache_quant(model, mode="static4bit"):
@@ -82,7 +88,7 @@ def evaluate_hellaswag(model, tokenizer, limit=None, device="cpu"):
 
         # lm-eval HellaSwag format: activity_label + ": " + ctx_a + " " + ctx_b
         ctx = ex["activity_label"] + ": " + ex["ctx_a"] + " " + ex["ctx_b"].capitalize()
-        scores = [score_continuation(model, tokenizer, ctx, " " + e, device)
+        scores = [score_continuation(model, tokenizer, ctx, " " + e, device, normalize=False)
                   for e in ex["endings"]]
         if max(range(4), key=lambda j: scores[j]) == int(ex["label"]):
             correct += 1

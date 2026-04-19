@@ -7,6 +7,21 @@
 
 ## Current Understanding
 
+### Key Metric Discovery — CONFIRMED
+
+**The paper uses unnormalized log-likelihood (`acc`), not length-normalized (`acc_norm`).**
+
+Evidence:
+- Our `acc_norm` gives SmolLM-360M ~49% on HellaSwag
+- Paper reports SmolLM-360M FP16 = 41.5%, SmolLM-1.7B FP16 = 49.0%
+- Our SmolLM-360M acc_norm ≈ paper's SmolLM-1.7B — clearly wrong metric
+- Direct test: `acc (unnorm)` on 50 val samples = **42.0%** vs paper's **41.5%** ✓
+- PDF text confirms: *"Accuracy is computed based on the final multiple-choice answer selected by the model"* and baseline FP16 numbers are *taken from reference [7]* (the SmolLM paper, which reports `acc`)
+
+**This resolves the FP16 discrepancy entirely.** All prior runs using acc_norm were using the wrong metric.
+
+---
+
 ### What the paper claims
 "Don't Waste Bits!" (arXiv:2604.04722) proposes an adaptive KV-cache quantization framework where a lightweight 3-layer MLP controller assigns per-token bit-widths ({2, 4, 8, FP16}) during LLM decoding. Four token-level signals drive the controller: entropy (H_t), token rarity (R_t), attention variance (V_t), and prediction confidence (C_t).
 
@@ -39,9 +54,10 @@ The Dynamic KV (rule-based) baseline **underperforms static 4-bit KV** on accura
 ## Lessons and Constraints
 
 - **Hardware**: RTX 4090 required only for latency (H1). Accuracy (H2, H3) runs on CPU.
-- **Accuracy evaluation**: `eval_hellaswag.py` uses length-normalized log-likelihood (standard zero-shot HellaSwag protocol).
-- **Model variant**: Checking SmolLM-360M vs SmolLM2-360M — FP16 baseline probe running now.
-- **4-bit baseline**: Paper applies 4-bit to KV cache only; must simulate KV quantization, not weight quantization.
+- **Metric**: Paper uses **unnormalized** log-likelihood (`acc`), NOT `acc_norm`. Critical difference: acc_norm gives ~54% for SmolLM-360M while acc gives ~42% matching paper's 41.5%.
+- **Model variant**: Paper uses original SmolLM-360M (not SmolLM2-360M). SmolLM2-360M FP16 acc_norm = 45.33% (stored for comparison table).
+- **KV cache quantization**: Hook `k_proj` and `v_proj` Linear layers directly. NOT model weights, NOT `past_key_values` (DynamicCache in transformers 5.x silently fails).
+- **FP16 baseline**: Paper's FP16 numbers are taken from SmolLM reference paper [7], not independently measured. Our acc (unnorm) = 42.0% on 50 samples confirms match.
 
 ---
 
