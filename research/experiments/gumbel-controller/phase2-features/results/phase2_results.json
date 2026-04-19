@@ -1,0 +1,65 @@
+{
+  "experiment": "phase2_4d_features",
+  "model": "HuggingFaceTB/SmolLM-360M",
+  "features": [
+    "kv_norm",
+    "pos_frac",
+    "head_entropy",
+    "layer_depth"
+  ],
+  "beta_sweep": [
+    {
+      "beta": 0.3,
+      "train_avg_bits": 4.0,
+      "dist": {
+        "2": 0.0,
+        "4": 100.0,
+        "8": 0.0,
+        "16": 0.0
+      }
+    },
+    {
+      "beta": 0.5,
+      "train_avg_bits": 4.000014305114746,
+      "dist": {
+        "2": 0.0,
+        "4": 99.99964833259583,
+        "8": 0.00035438874874671455,
+        "16": 0.0
+      }
+    },
+    {
+      "beta": 0.7,
+      "train_avg_bits": 4.0,
+      "dist": {
+        "2": 0.0,
+        "4": 100.0,
+        "8": 0.0,
+        "16": 0.0
+      }
+    },
+    {
+      "beta": 1.0,
+      "train_avg_bits": 4.0,
+      "dist": {
+        "2": 0.0,
+        "4": 100.0,
+        "8": 0.0,
+        "16": 0.0
+      }
+    }
+  ],
+  "best_beta": 0.5,
+  "eval_samples": 200,
+  "accuracy": 41.0,
+  "avg_bits": 4.0,
+  "bit_dist_pct": {
+    "2": 0.0,
+    "4": 100.0,
+    "8": 0.0,
+    "16": 0.0
+  },
+  "paper_target_accuracy": 41.2,
+  "paper_target_avg_bits": 5.05,
+  "elapsed_s": 692.6
+}
