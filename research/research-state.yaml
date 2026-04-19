@@ -41,17 +41,23 @@ hypotheses:
     slug: H3-fp16-parity
     claim: "Within 0.30 points of FP16 (SmolLM-360M, HellaSwag)"
     arithmetic_check: "41.50 - 41.20 = 0.30 — VERIFIED from paper Table 3"
-    status: CONSISTENT
+    status: IMPL_GAP  # our re-implementation falls short; paper's controller quality undisclosed
     note: >
-      DWB 40.0% vs FP16 42.6% = -2.6pp gap at 100 samples (CI ±10pp, within noise).
-      Directionally consistent but not definitively confirmed. More samples would help.
+      DEFINITIVE (500 samples, CI ±4.4pp): DWB 33.8% vs paper 41.2% = -7.4pp gap > CI.
+      NOT reproduced by our implementation. Root cause: controller val_acc=36.6% insufficient.
+      Standard INT4 (4.0 bits) gives 41.6%; our DWB (5.03 avg bits) gives 33.8% — worse.
+      Controller mislabels important tokens as low-priority (2-bit), degrading accuracy.
+      Paper's controller training details (data, epochs, hyperparams) not disclosed.
     results:
       dwb_100samp: 40.0
       dwb_200samp: 38.0
+      dwb_500samp: 33.8
       fp16_500samp: 42.6
-      delta_100samp: -2.6
-      delta_200samp: -4.6
-      ci_200samp: "±6.7pp"
+      delta_500samp: -7.4
+      ci_500samp: "±4.4pp"
+      controller_val_acc: 0.366
+      avg_bits_500samp: 5.03
+      bit_dist_500samp: {2: 47.9, 4: 25.3, 8: 15.4, 16: 11.4}
     priority: HIGH
 
   H4:
