@@ -1,7 +1,7 @@
 # Research Findings — Don't Waste Bits! Verification
 
 **Last updated**: 2026-04-19  
-**Phase**: Inner Loop — Baselines Running
+**Phase**: Inner Loop — First Result In
 
 ---
 
@@ -47,7 +47,7 @@ The Dynamic KV (rule-based) baseline **underperforms static 4-bit KV** on accura
 
 ## Open Questions
 
-1. Does SmolLM-360M or SmolLM2-360M reproduce the paper's FP16 = 41.50%? **(probing now)**
+1. ~~Does SmolLM-360M or SmolLM2-360M match 41.50%?~~ **SmolLM2 = 45.33% → paper used original SmolLM-360M. Running original now.**
 2. Does 4-bit weight quantization approximate 4-bit KV quantization in accuracy impact?
 3. Is the 17.75% latency gain purely from bandwidth reduction, or also fewer FP16 ops?
 
@@ -58,7 +58,8 @@ The Dynamic KV (rule-based) baseline **underperforms static 4-bit KV** on accura
 | Run | Condition | Metric | Value | Paper Target | Delta | Status |
 |-----|-----------|--------|-------|-------------|-------|--------|
 | 00 | Arithmetic | H1,H2,H3 | self-consistent | — | — | DONE |
-| 01 | FP16 baseline | HellaSwag acc% | — | 41.50% | — | RUNNING (300 samp) |
+| 01a | FP16 (SmolLM2-360M) | HellaSwag acc% | **45.33%** | 41.50% | +3.83pp | DISCREPANCY — wrong model variant |
+| 01b | FP16 (SmolLM-360M original) | HellaSwag acc% | — | 41.50% | — | RUNNING |
 | 02 | Static 4-bit | HellaSwag acc% | — | 33.60% | — | QUEUED |
 | 03 | DWB (ours) | HellaSwag acc% | — | 41.20% | — | QUEUED |
 | 04 | FP16 latency | ms/token | — | 3.50 | — | AWAITING BREV |

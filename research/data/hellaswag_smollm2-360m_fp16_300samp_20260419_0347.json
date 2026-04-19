@@ -1,0 +1,14 @@
+{
+  "accuracy": 45.33333333333333,
+  "correct": 136,
+  "total": 300,
+  "elapsed_s": 537.710782289505,
+  "model": "smollm2-360m",
+  "model_id": "HuggingFaceTB/SmolLM2-360M",
+  "condition": "fp16",
+  "limit": 300,
+  "paper_target": 41.5,
+  "delta_from_paper": 3.83,
+  "date": "2026-04-19T03:47:30.427258",
+  "verification_status": "DISCREPANCY"
+}
