@@ -40,14 +40,31 @@ Recent work (DWB;~\cite{haeri2026dwb}) proposes \emph{dynamic} bit-width allocat
 
 \textbf{The core problem.} Xilinx Ultrascale+ BRAM has a minimum port width of 4 bits. Any quantization below 4 bits still occupies a 4-bit BRAM slot, providing no memory bandwidth reduction. Yet 2-bit quantization reduces representational accuracy from 41.6\% to 25.0\% on HellaSwag (SmolLM-360M)---a catastrophic 16.6pp drop. DWB's 2-bit tokens are strictly worse than 4-bit on FPGA: same bandwidth cost, worse accuracy.
 
-\textbf{Our contribution.} We propose a \emph{binary \{4,8\}-bit FPGA-aware controller} that:
+Our contributions are:
+
 \begin{enumerate}
-\item Removes the 2-bit option (same BRAM cost as 4-bit, worse accuracy) and 16-bit option (4$\times$ BRAM cost with minimal accuracy gain), simplifying the allocation decision to a single binary choice;
-\item Trains with a \emph{Gumbel-softmax compound loss} that directly penalizes FPGA BRAM cost rather than average bits per token;
-\item Achieves 3.48$\times$ FPGA throughput over FP16 vs. DWB's 2.44$\times$ ($+$43\%) at equal accuracy.
+\item \textbf{FPGA BRAM cost model}: A formal model of Xilinx Ultrascale+ BRAM port access costs showing that 2-bit quantization occupies the same 4-bit port slot as 4-bit---providing zero bandwidth savings---while catastrophically degrading accuracy ($-$16.6pp). This exposes a fundamental design flaw in DWB that causes it to spend 47.9\% of allocation on a strictly dominated option.
+
+\item \textbf{Binary \{4,8\}-bit controller}: By restricting bit choices to $\{4, 8\}$---the only two options with distinct BRAM costs---we simplify the controller to a single binary decision. At SmolLM-360M (where INT4 is lossless), the controller correctly learns 100\% 4-bit allocation, achieving 3.48$\times$ FPGA speedup vs. DWB's 2.44$\times$ entirely by eliminating wasteful 2-bit tokens. At SmolLM-1.7B (where INT4 degrades $-$7.9pp), the controller is predicted to learn a non-trivial mixed allocation.
+
+\item \textbf{Scale-dependent losslessness}: Mechanistic characterization of when INT4 KV quantization is unconditionally lossless, via the effective residual metric $\epsilon_\text{eff}$. This provides a principled criterion for selecting bit-width sets without empirical search.
+
+\item \textbf{Gumbel-softmax training with normalized compound loss}: A compound loss that directly penalizes FPGA BRAM cost, with both quality and hardware terms normalized to $[0,1]$ to prevent gradient collapse. Prior quartile-classification approaches achieve 33.8\% at 5.03 avg\_bits---worse than static INT4---due to gradient scale mismatch.
 \end{enumerate}
 
-We additionally provide a mechanistic analysis of \emph{when} INT4 is lossless, characterizing the scale-dependent effective residual threshold that separates 100\% 4-bit allocation (SmolLM-360M) from mixed \{4,8\}-bit allocation (SmolLM-1.7B).
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.95\linewidth]{figures/fpga_comparison}
+\caption{Left: FPGA throughput speedup over FP16. Our binary controller matches static INT4 (3.48$\times$) and outperforms paper DWB (2.44$\times$) by $+$43\%. Right: accuracy vs. FPGA cost. Our method and static INT4 dominate the Pareto frontier at 360M; DWB spends more BRAM for no accuracy gain.}
+\label{fig:comparison}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.65\linewidth]{figures/bram_cost_model}
+\caption{Xilinx Ultrascale+ BRAM cost per KV token. 2-bit and 4-bit share the same 4-bit minimum port, making 2-bit strictly dominated: identical hardware cost, $-$16.6pp accuracy.}
+\label{fig:bram}
+\end{figure}
 
 \section{Background}
 
@@ -83,7 +100,7 @@ Normalized cost & \textbf{0.290} & \textbf{0.290} & 0.560 & 1.010 \\
 \label{tab:bram}
 \end{table}
 
-\textbf{Key observation}: 2-bit and 4-bit quantization have identical BRAM cost. Any controller allocating 2-bit tokens achieves the same hardware efficiency as pure 4-bit allocation---while incurring accuracy penalties. This makes 2-bit strictly dominated by 4-bit in the FPGA context.
+\textbf{Key observation} (Figure~\ref{fig:bram}): 2-bit and 4-bit quantization have identical BRAM cost. Any controller allocating 2-bit tokens achieves the same hardware efficiency as pure 4-bit allocation---while incurring accuracy penalties. This makes 2-bit strictly dominated by 4-bit in the FPGA context.
 
 The FPGA throughput speedup over FP16 given an allocation $\{p_4, p_8\}$ (fraction of tokens at 4-bit, 8-bit) is:
 \[
