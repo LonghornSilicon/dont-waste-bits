@@ -1,0 +1,43 @@
+{
+  "model": "HuggingFaceTB/SmolLM-360M",
+  "benchmark": "BoolQ",
+  "limit": 100,
+  "date": "2026-04-19T09:35:09.587387",
+  "cross_benchmark_reference": {
+    "hellaswag_delta": 2.0,
+    "arc_delta": 3.0
+  },
+  "conditions": {
+    "fp16": {
+      "accuracy": 55.00000000000001,
+      "correct": 55,
+      "total": 100
+    },
+    "dwb_scalar": {
+      "accuracy": 61.0,
+      "correct": 61,
+      "total": 100,
+      "elapsed_s": 162.2,
+      "bit_pct": {
+        "2": 38.3,
+        "4": 16.8,
+        "8": 9.4,
+        "16": 35.6
+      },
+      "avg_bits": 7.879378334493157
+    },
+    "dwb_turboquant": {
+      "accuracy": 41.0,
+      "correct": 41,
+      "total": 100,
+      "elapsed_s": 1332.0,
+      "bit_pct": {
+        "2": 38.3,
+        "4": 16.8,
+        "8": 9.4,
+        "16": 35.6
+      },
+      "avg_bits": 7.879378334493157
+    }
+  }
+}
