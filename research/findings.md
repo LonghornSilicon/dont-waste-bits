@@ -23,7 +23,7 @@ genuine degradation at 1.7B — where the paper's static INT4 baseline is actual
 |-------|--------|-----------|-------|
 | H1: 17.75% latency reduction | ⏳ AWAITING GPU | — | 17.75% |
 | H2: +7.6pp over static INT4 | ✅ EXPLAINED | See Insight 5 | 41.2% vs 33.6% |
-| H3: within 0.30pp of FP16 | ~✅ CONSISTENT | 38.0% (200 samp) vs 42.6% | 41.2% vs 41.5% |
+| H3: within 0.30pp of FP16 | ⚠️ IMPL_GAP | 33.8% (500 samp, CI±4.4pp) vs 42.6% | 41.2% vs 41.5% |
 | H4: cross-model validation | ✅ CONFIRMED | See H4 Results | 135M + 360M + 1.7B |
 | FP16 baseline (500 samp, 360M) | ✅ CONFIRMED | 42.6% | 41.5% |
 | FP16 baseline (100 samp, 135M) | ✅ CONFIRMED | 40.0% | 37.2% |
@@ -207,11 +207,18 @@ The 1.7B result validates the paper's core motivation for adaptive quantization.
 - Training: 2,995 token samples, 5 epochs, lr=0.003
 - Val accuracy: **45.6%** (vs 25% random) — controller learns importance quartile
 - Bit distribution: {2bit: 57.3%, 4bit: 18.9%, 8bit: 8.3%, 16bit: 15.6%}, avg=5.05 bits/token
-- DWB accuracy: **40.0%** on 100 samples, **38.0%** on 200 samples (paper: 41.2%)
+- DWB accuracy: **40.0%** on 100 samples, **38.0%** on 200 samples, **33.8%** on 500 samples (paper: 41.2%)
 
-H3 consistency: DWB 38.0% vs FP16 42.6% = -4.6pp gap at n=200 (CI ±6.7pp).  
-Both 100-sample and 200-sample results are within noise of the paper's 41.2%.  
-**H3 is numerically consistent but not definitively confirmed — gap direction stable at -2.6 to -4.6pp.**
+H3 definitive (500 samples, CI ±4.4pp): DWB 33.8% vs FP16 42.6% = **-8.8pp gap**.  
+Gap from paper's 41.2%: **-7.4pp** — exceeds the ±4.4pp CI. **H3 NOT reproduced by our implementation.**
+
+**Root cause — controller quality**: Our controller val_acc=36.6% (vs 25% random), using 5.03 avg bits.
+Standard INT4 (4.0 bits) gives 41.6% — our DWB with MORE bits (5.03) gives LESS accuracy (33.8%).
+This means the controller is mislabeling important tokens as low-priority (2-bit), causing degradation.
+The paper's controller likely has much higher val_acc (undisclosed training details).
+
+**Implementation gap confirmed**: DWB accuracy is highly sensitive to controller training quality.
+Reproducing the paper's 41.2% requires controller training data/procedure not disclosed in the paper.
 
 | Run | N | DWB | FP16 | Delta | CI | Status |
 |-----|---|-----|------|-------|----|--------|

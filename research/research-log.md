@@ -227,3 +227,21 @@ consistent with 18pp accuracy drop.
 Scale-dependent INT4 losslessness fully explained from first principles.
 research-state.yaml updated with mechanistic_verification section.
 Paper-ready: install academic-research-paper-writer from mcpmarket.com.
+
+---
+
+## 2026-04-19 — Session 5: H3 Definitive — DWB 500-Sample Result
+
+**Protocol**: DWB 500-sample evaluation to get CI±4.4pp for H3 (committed before run).
+**Result**: 33.8% (169/500), avg_bits=5.03, bit_dist={2:47.9%, 4:25.3%, 8:15.4%, 16:11.4%}
+
+**Key finding**: Gap from paper = -7.4pp, exceeds ±4.4pp CI. H3 NOT reproduced.
+
+**Root cause**: Controller val_acc=36.6% insufficient. Standard INT4 (4 bits) → 41.6%; our
+DWB (5.03 avg bits) → 33.8% — worse accuracy with MORE bits means controller is assigning
+2-bit precision to important tokens. A well-trained controller would avoid this.
+
+**Implication**: DWB accuracy is highly controller-sensitive. Paper's training details undisclosed.
+Our implementation correctly implements the architecture, but the training quality gap is real.
+
+**Status update**: H3 → IMPL_GAP. All other hypotheses unchanged.

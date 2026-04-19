@@ -57,7 +57,7 @@ We present an independent reproduction of "Don't Waste Bits!" (arXiv:2604.04722,
 | KV-4bit asym | 200 | 42.5% | 33.6% | +8.9pp | ⚠️ LOSSLESS |
 | **int4_int3range (8 levels)** | 100 | **33.0%** | 33.6% | -0.6pp | ✅ **MATCHES** |
 | KV-2bit | 200 | 25.0% | — | — | ✅ Hooks confirmed |
-| DWB adaptive | 200 | 38.0% | 41.2% | -3.2pp | ~✅ H3 consistent |
+| DWB adaptive | 500 | 33.8% | 41.2% | **-7.4pp** | ⚠️ IMPL_GAP (controller quality) |
 | Autoregressive INT4 | 50 | 42.0% | 33.6% | +8.4pp | ⚠️ Methodology ruled out |
 | FP16 latency | — | — | 3.50 ms/tok | — | ⏳ Needs GPU |
 | DWB latency | — | — | 2.41 ms/tok | — | ⏳ Needs GPU |
