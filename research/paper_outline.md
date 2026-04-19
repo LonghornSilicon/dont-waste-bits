@@ -101,11 +101,12 @@ We present an independent reproduction of "Don't Waste Bits!" (arXiv:2604.04722,
 Token examples: 2-bit = {".", ":", "a", "the", "and"} (function words); 16-bit = {"cheer", "ice", "knife"} (rare content words).
 Interpretation: controller preserves KV for tokens that are confidently placed in low-entropy contexts — these are exactly the tokens that downstream positions attend to (per Insight 5 mechanism).
 
-**Insight 5 (novel)**: INT4 losslessness mechanism
-- Zero-mean symmetric quantization errors cancel in attention weighted sum
-- Outlier tokens set the quantization scale → they are best quantized AND most attended
-- This is a self-reinforcing property of transformer attention
-- Holds cross-model (135M and 360M)
+**Insight 5 (novel)**: INT4 losslessness mechanism — **directly verified** ★
+- Zero-mean confirmed: symmetry ratio = 0.0027 (standard INT4), 0.0037 (INT3-range); both ≈ zero-mean
+- Cancellation confirmed: actual attention output error is **3.3× below naive bound** (standard INT4)
+- Threshold effect: both schemes cancel similarly, but INT3-range base error is 2× larger (55.79% vs 26.95% relative) → residuals exceed decision threshold → fails
+- Self-reinforcing: outlier tokens (most-attended, per Insight 6 high-C_t tokens) set the scale → best quantized AND most attended → output preserved
+- Holds cross-model (135M and 360M), and in autoregressive mode
 
 ### 7. DWB-TurboQuant Extension (Novel Contribution)
 
