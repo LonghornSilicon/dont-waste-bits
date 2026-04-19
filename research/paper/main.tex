@@ -378,8 +378,9 @@ and 5 epochs, holding $\alpha=1, \gamma=0.1$ fixed.
 \centering
 \caption{$\beta$ sweep: latency penalty weight vs.\ accuracy and
 compression. No $\beta$ achieves the paper's 41.2\% at 5.05 bits.
-($\dagger$) beta=1.0 training-only (val\_acc 0.257 $\approx$ random 0.25);
-betas 1.0/2.0 full eval blocked by RAM on test machine (2.5~GB free).}
+At $\beta \geq 1.0$ the controller assigns every token to 2-bit
+(100\% 2-bit), collapsing accuracy to 32\% and val\_acc below random
+(0.25 for 4 classes). Full 4-beta sweep (100 train/eval, 5 epochs).}
 \label{tab:beta}
 \footnotesize
 \begin{tabular}{ccccc}
@@ -388,8 +389,8 @@ $\beta$ & Acc & avg\_bits & val\_acc & Bit dist (\% 2b/4b/8b/16b) \\
 \midrule
 0.1 & 39.0\% & 5.30 & 0.407 & 38.5/37.6/9.9/14.0 \\
 0.5 & 39.0\% & 3.92 & 0.341 & 37.0/57.4/0.0/5.5 \\
-1.0 & $\approx$N/A$^\dagger$ & $<$3.5 & 0.257 & --- \\
-2.0 & \textit{(not run)} & --- & --- & --- \\
+1.0 & 32.0\% & \textbf{2.00} & 0.257 & 100/0/0/0 \\
+2.0 & 32.0\% & \textbf{2.00} & 0.227 & 100/0/0/0 \\
 \midrule
 \textit{Paper} & \textit{41.2\%} & \textit{5.05} & --- & undisclosed \\
 \bottomrule
@@ -400,16 +401,16 @@ $\beta$ & Acc & avg\_bits & val\_acc & Bit dist (\% 2b/4b/8b/16b) \\
 hyperparameter issue.
 At $\beta=0.1$, avg\_bits = 5.30 $\approx$ paper's 5.05, yet accuracy
 (39.0\%) remains 2.2pp below the paper's 41.2\%.
-At $\beta=0.5$, avg\_bits drops to 3.92 (below target) while
-accuracy is unchanged at 39.0\%---higher latency penalty trades bits
-for no accuracy benefit, worsening the compression/accuracy ratio.
-At $\beta=1.0$, training val\_acc = 0.257 $\approx$ random (0.25)---the
-latency penalty overwhelms the classification loss entirely, leaving the
-controller in essentially a random state.
+At $\beta=0.5$, avg\_bits drops to 3.92 while accuracy is unchanged
+(39.0\%)---higher latency penalty reduces bits with no accuracy benefit.
+At $\beta \geq 1.0$, the controller collapses entirely: every token is
+assigned 2-bit (avg\_bits = 2.00, bit\_dist = \{2: 100\%\}), accuracy
+drops to 32.0\%, and val\_acc (0.257 at $\beta=1.0$; 0.227 at $\beta=2.0$)
+falls below the random baseline of 0.25---the latency penalty completely
+overwhelms the classification objective.
 There is no $\beta$ that simultaneously achieves the paper's 41.2\%
-accuracy at 5.05 avg\_bits; the compound-loss training procedure used
-by the original paper is qualitatively different from our
-quartile-classification approach.
+accuracy at 5.05 avg\_bits; end-to-end compound-loss training is
+qualitatively different from our quartile-classification approach.
 We will update this table when results are available.
 
 %-----------------------------------------------------------------------
