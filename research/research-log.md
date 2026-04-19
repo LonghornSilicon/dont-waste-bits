@@ -35,11 +35,38 @@
 
 ---
 
+---
+
+## 2026-04-19 — Metric Discovery (Major)
+
+**Key finding**: Paper uses unnormalized log-likelihood (`acc`), not length-normalized (`acc_norm`).  
+Direct test: `acc (unnorm)` on 50 val samples = **42.0%** vs paper's **41.5%** ✓
+
+Evidence from paper PDF: *"Accuracy is computed based on the final multiple-choice answer selected by the model"* and *"reported accuracy of existing methods are directly taken from [7]"* (SmolLM paper). The FP16 baseline 41.5% is from a citation.
+
+Cross-model sanity check: our acc_norm for SmolLM-360M ≈ 54%, while paper reports SmolLM-1.7B = 49%. Our smaller model matching paper's larger model in acc_norm revealed the metric mismatch.
+
+**KV-4bit investigation**: 
+- KV-2bit: 20% (catastrophic, confirms hooks work)
+- KV-8bit: 42% (no degradation, expected)
+- KV-4bit on 50 samples: 46% (noisy, within CI ±14pp)
+- Per-tensor INT4 noise is roughly zero-mean (symmetric quantization), so errors cancel in attention sum
+- Running 500-sample definitive test + per-token + asymmetric variants
+
+**DWB controller training**: Running in background (150 train examples, 5 epochs).
+
+**Git**: All commits authored as themoddedcube@gmail.com. History rewritten and force-pushed to GitHub.
+
+---
+
 ## Pending
 
-- [x] FP16 baseline run (SmolLM-360M, HellaSwag) — DONE (49% on 100 samp, but hooks v1 invalid)
-- [ ] Corrected FP16 + KV-4bit + KV-8bit + KV-2bit (hooks v2) — RUNNING
+- [x] FP16 baseline confirmed — 42.0% ✅
+- [x] Metric resolved — use acc (unnorm)
+- [x] KV hooks fixed — k_proj/v_proj
+- [x] Git authorship fixed — themoddedcube@gmail.com
+- [ ] KV-4bit definitive baseline (500 samp) — RUNNING
+- [ ] DWB controller training — RUNNING
+- [ ] DWB evaluation
 - [ ] GPU environment setup on Brev (for H1 latency)
-- [ ] DWB method run
-- [ ] Force-push corrected history to GitHub
 - [ ] TurboQuant pipeline (turboquant-integration branch)
