@@ -5,90 +5,101 @@
 **Accepted**: CVPR 2026 · Original code releases June 3–7, 2026
 
 **Verification by**: themoddedcube / LonghornSilicon  
-**Status**: Outer loop — all accuracy experiments complete; latency awaiting GPU
+**Status**: Accuracy experiments complete. Latency awaiting RTX 4090.
 
 ---
 
 ## What This Repo Does
 
-Independent reproduction of Table 3 from the paper. Since original code is not yet public, we re-implement the full method from the paper's equations and document critical methodological discoveries.
-
-### Claims Under Verification
-
-| Claim | Paper Value | Baseline | Model | Benchmark |
-|-------|-------------|----------|-------|-----------|
-| Latency reduction | **17.75%** | vs static 4-bit KV | SmolLM-360M | HellaSwag |
-| Accuracy improvement | **+7.60 pp** | vs static 4-bit KV | SmolLM-360M | HellaSwag |
-| Gap from FP16 | **≤ 0.30 pp** | vs FP16 | SmolLM-360M | HellaSwag |
+Independent reproduction of Table 3 from the paper. Since original code is not yet public,
+we re-implement the full method from paper equations and document critical methodological discoveries.
 
 ---
 
-## Results
+## Results (Accuracy)
 
-### Accuracy Experiments (CPU, HellaSwag, acc metric)
+### Claims vs Our Results
 
-| Condition | Ours | Paper | Delta | Status |
-|-----------|------|-------|-------|--------|
-| FP16 baseline (50 samp) | **42.0%** | 41.50% | +0.5pp | ✅ CONFIRMED |
-| FP16 baseline (200 samp) | **44.0%** | 41.50% | +2.5pp | ✅ Within noise |
-| Static KV-4bit per-tensor (200 samp) | **44.5%** | 33.60% | +10.9pp | ⚠️ CANNOT REPRODUCE |
-| Static KV-4bit per-token (100 samp) | **44.0%** | 33.60% | +10.4pp | ⚠️ CANNOT REPRODUCE |
-| Static KV-8bit (200 samp) | **44.0%** | — | ~0pp | ✅ No degradation (expected) |
-| Static KV-2bit (200 samp) | **25.0%** | — | -19pp | ✅ Confirms hooks work |
-| DWB adaptive (ours, 100 samp) | **40.0%** | 41.20% | -1.2pp | ~✅ Within noise |
-| FP16 latency | — | 3.50 ms/tok | — | ⏳ Awaiting RTX 4090 |
-| Static 4-bit latency | — | 2.93 ms/tok | — | ⏳ Awaiting RTX 4090 |
-| DWB latency | — | 2.41 ms/tok | — | ⏳ Awaiting RTX 4090 |
+| Claim | Paper | Ours | Status |
+|-------|-------|------|--------|
+| FP16 baseline (500 samples) | 41.50% | **42.6%** | ✅ CONFIRMED (Δ=+1.1pp, within noise) |
+| Static INT4 KV (standard) | 33.60% | **41.2–44.5%** | ⚠️ CANNOT REPRODUCE standard INT4 |
+| Static INT4 KV (int3range) | 33.60% | **33.0%** | ✅ MATCHES with 8-level INT4 |
+| DWB adaptive | 41.20% | **40.0%** | ~✅ Within noise (H3 consistent) |
+| Latency reduction | 17.75% | — | ⏳ Awaiting RTX 4090 |
 
-**SmolLM2-360M FP16 (acc_norm, for comparison)**: 45.33% (different model variant, stored)
+### Detailed Accuracy Table
+
+| Condition | Samples | Ours | Paper | Δ |
+|-----------|---------|------|-------|---|
+| FP16 | 500 | 42.6% | 41.5% | +1.1pp |
+| KV-4bit sym per-tensor | 500 | 41.6% | 33.6% | +8.0pp |
+| KV-4bit sym per-token | 500 | 41.2% | 33.6% | +7.6pp |
+| KV-4bit asym per-tensor | 200 | 42.5% | 33.6% | +8.9pp |
+| **KV int4_int3range (8 levels)** | 100 | **33.0%** | 33.6% | **-0.6pp ✅** |
+| KV-2bit | 200 | 25.0% | — | -17pp (hooks confirmed) |
+| DWB adaptive | 100 | 40.0% | 41.2% | -1.2pp |
+| Latency (FP16) | — | — | 3.50 ms/tok | — |
+| Latency (KV-4bit) | — | — | 2.93 ms/tok | — |
+| Latency (DWB) | — | — | 2.41 ms/tok | — |
 
 ---
 
-## Methodological Findings (Key Contributions)
+## Key Methodological Findings
 
-### Finding 1: Evaluation metric is critical
-The paper uses **unnormalized log-likelihood** (`acc`), not length-normalized (`acc_norm`).  
-`acc_norm` (lm-eval default) gives ~49–54% for SmolLM-360M vs paper's 41.5%.  
-`acc` (unnorm) gives 42.0% on 50 samples — matches paper's 41.5% ✓  
-*Cross-model evidence*: our SmolLM-360M acc_norm ≈ paper's SmolLM-1.7B acc — definitively wrong metric.
+### Finding 1: Evaluation metric matters critically
+Paper uses **unnormalized** log-likelihood (`acc`), not length-normalized (`acc_norm`).
+- `acc_norm` (lm-eval default): ~54% for SmolLM-360M → WRONG
+- `acc` (unnorm): ~42% → matches paper's 41.5% ✓
 
-### Finding 2: KV cache hooks fail with DynamicCache (transformers 5.x)
-transformers 5.x uses `DynamicCache` objects, not raw `(key, value)` tuples.  
-Hooks on attention modules silently fail to intercept KV tensors.  
-**Fix**: Hook `k_proj` and `v_proj` Linear submodule outputs directly.  
-SmolLM-360M has 32 attention layers × 2 (k+v) = 64 hooks total.
+### Finding 2: KV hooks fail with DynamicCache (transformers 5.x)
+transformers 5.x uses `DynamicCache` objects — hooks on attention outputs silently fail.  
+**Fix**: Hook `k_proj` and `v_proj` Linear submodules directly (64 hooks for SmolLM-360M).
 
 ### Finding 3: sdpa attention blocks output_attentions
-transformers 5.x uses sdpa by default, which does NOT support `output_attentions=True`.  
-**Fix**: Reload with `attn_implementation='eager'` for DWB signal extraction.
+Default sdpa attention doesn't support `output_attentions=True` for DWB signal extraction.  
+**Fix**: Reload with `attn_implementation='eager'`.
 
-### Finding 4: Symmetric per-tensor INT4 is nearly lossless for attention ★
-Our INT4 KV implementation gives ~44.5% accuracy — essentially identical to FP16 (~44%).  
-The paper claims 33.6% (7.9pp drop) for static INT4.  
-**We cannot reproduce the paper's static INT4 accuracy drop.**
+### Finding 4: Standard INT4 KV is nearly lossless ★
+**6 INT4 variants (sym/asym × per-tensor/per-token/block) all give ≈ FP16 accuracy.**  
+Our 500-sample result: FP16=42.6%, INT4=41.2–41.6%. The ~8pp gap between our INT4 and the paper's
+33.6% is **statistically significant** (n=500, CI=±4.4pp).
 
-Hypothesis: symmetric quantization produces zero-mean errors that cancel in the attention weighted sum, especially when outlier tokens set the scale and tend to be the most-attended tokens.
+Hypothesis: symmetric INT4 produces zero-mean quantization errors that cancel in the attention
+weighted sum, preserving accuracy. The most-attended tokens set the quantization scale and are
+thus also the best-quantized.
 
-Supporting evidence: KV-2bit (asymmetric-like behavior at 4 levels only) gives 25% (catastrophic), while INT4 (16 levels, still zero-mean) gives ~44% (no degradation).
+### Finding 5: Paper's INT4 baseline uses ~8 effective quantization levels ★★
+`int4_int3range` (scale=max/3, 8 levels) gives **33.0%** matching the paper's **33.6%** (Δ=-0.6pp).  
+Standard INT4 uses scale=max/7 (16 levels) → lossless.  
+The paper's "Static 4-bit KV" is **equivalent to INT3 quantization stored in 4-bit format**.
 
-The paper's "Static 4-bit KV" baseline likely uses a different, more aggressive quantization scheme (e.g., from KIVI or a similar published method) with non-cancelling errors.
+| Levels | Scale | Acc | vs Paper |
+|--------|-------|-----|---------|
+| 16 (standard INT4) | max/7 | ~42% | +8pp (lossless) |
+| 8 (int4_int3range) | max/3 | 33% | **-0.6pp ✅** |
+| 4 (INT2) | max/1 | 25% | -8.6pp |
+
+**Implication**: The paper's claim that DWB achieves +7.6pp over static INT4 is conditional
+on the INT4 baseline using 8 effective levels (not 16). With proper 16-level INT4, standard
+quantization already matches FP16 accuracy.
 
 ---
 
-## Method Summary
+## Method Summary (Re-implementation)
 
-The paper proposes a lightweight 3-layer MLP controller that assigns per-token KV-cache precision from {2, 4, 8, FP16} bits during autoregressive decoding, driven by four token-level signals:
+Controller: Linear(4,128) → ReLU → Linear(128,128) → ReLU → Linear(128,4) — **33,540 params**
 
-- **H_t** — Shannon entropy of next-token distribution (Eq. 14)
-- **R_t** — Token rarity / inverse frequency (Eq. 15)
-- **V_t** — Attention variance across heads (Eq. 16)
-- **C_t** — Model confidence (max softmax probability)
+Four token-level signals:
+- **H_t**: entropy of next-token distribution (Eq. 14)
+- **R_t**: rarity / inverse frequency (Eq. 15)  
+- **V_t**: attention variance across heads (Eq. 16)
+- **C_t**: prediction confidence (Eq. 17)
 
-Training minimizes: `L = α·CE + β·latency + γ·quality` (Eq. 28, α=1, β=0.1, γ=0.1).  
-Architecture: Linear(4,128) → ReLU → Linear(128,128) → ReLU → Linear(128,4) = 33,540 params.
+Training loss: `L = α·CE + β·latency + γ·quality` (Eq. 28, α=1, β=0.1, γ=0.1)
 
-Our controller: trained on 2,995 token samples from 100 HellaSwag train contexts. Val accuracy: **45.6%** (vs 25% random chance) — controller learns importance quartile above chance.
-
+Our controller: 2,995 token samples from 100 HellaSwag train examples, 5 epochs.  
+Val accuracy: **45.6%** (vs 25% random) — learns importance quartile above chance.  
 DWB eval bit distribution: {2bit: 57.3%, 4bit: 18.9%, 8bit: 8.3%, 16bit: 15.6%}, avg=5.05 bits/token.
 
 ---
@@ -98,25 +109,26 @@ DWB eval bit distribution: {2bit: 57.3%, 4bit: 18.9%, 8bit: 8.3%, 16bit: 15.6%},
 ```
 dont-waste-bits/
 ├── README.md
-├── 2604.04722v1.pdf              # Original paper
+├── 2604.04722v1.pdf                    # Original paper
 └── research/
-    ├── research-state.yaml       # Central experiment state
-    ├── research-log.md           # Decision timeline
-    ├── findings.md               # Evolving synthesis (primary doc)
-    ├── paper_outline.md          # Reproducibility paper outline
-    ├── literature/               # Survey notes
+    ├── research-state.yaml             # Experiment state
+    ├── research-log.md                 # Decision timeline
+    ├── findings.md                     # Synthesis (primary doc)
+    ├── paper_outline.md                # Reproducibility paper outline
     ├── src/
-    │   ├── dwb_implementation.py # Re-implementation from paper equations
-    │   ├── eval_hellaswag.py     # HellaSwag evaluator (acc metric)
-    │   ├── eval_dwb.py           # DWB two-pass evaluation
-    │   ├── kv_cache_quant.py     # KV cache quantization hooks (v2)
-    │   ├── run_kv_comparison.py  # Multi-condition KV quant sweep
-    │   └── brev_setup.sh         # NVIDIA Brev GPU setup
-    ├── data/                     # Experiment results (JSON)
-    └── experiments/
-        ├── H1-latency-reduction/
-        ├── H2-accuracy-improvement/
-        └── H3-fp16-parity/
+    │   ├── dwb_implementation.py       # DWB re-implementation
+    │   ├── eval_hellaswag.py           # HellaSwag evaluator (acc metric)
+    │   ├── eval_dwb.py                 # DWB two-pass evaluation
+    │   ├── kv_cache_quant.py           # KV quantization hooks (v2)
+    │   ├── run_kv_comparison.py        # Multi-condition KV sweep
+    │   ├── run_int4_investigation.py   # INT4 variant investigation
+    │   └── eval_autoregressive.py      # AR scoring with KV cache
+    └── data/
+        ├── baseline_500samp_*.json     # Definitive 500-sample baseline
+        ├── kv_comparison_*.json        # 200-sample INT4 variant comparison
+        ├── int4_investigation_*.json   # 7-variant INT4 investigation
+        ├── dwb_eval_*.json             # DWB adaptive evaluation
+        └── dwb_controller_smollm360m.pt  # Trained controller
 ```
 
 ---
@@ -127,40 +139,27 @@ dont-waste-bits/
 # FP16 baseline
 python research/src/eval_hellaswag.py --model smollm-360m --condition fp16 --limit 500
 
-# KV quantization comparison (multi-condition)
+# Multi-condition INT4 comparison
 python research/src/run_kv_comparison.py 200
 
-# DWB adaptive evaluation (trains controller if not cached)
+# INT4 variant investigation (7 schemes)
+python research/src/run_int4_investigation.py
+
+# DWB adaptive evaluation (trains/loads controller)
 python research/src/eval_dwb.py --model smollm-360m --limit 200
-
-# Full latency + accuracy (GPU required)
-bash research/src/brev_setup.sh
 ```
-
----
-
-## Hardware
-
-| Experiment | Hardware | Notes |
-|-----------|----------|-------|
-| Accuracy (H2, H3) | CPU | SmolLM-360M fits in RAM |
-| Latency (H1) | **NVIDIA RTX 4090** | Must match paper hardware |
-
-Latency experiments run on **NVIDIA Brev** cloud.
 
 ---
 
 ## Status
 
-- [x] Arithmetic verification — all 3 claims internally consistent
-- [x] Re-implementation of all paper equations (DWB controller, signals, training loss)
-- [x] FP16 baseline confirmed — **42.0%** acc (paper: 41.50%) ✅
-- [x] Metric resolved — paper uses unnormalized `acc`, not `acc_norm` (Finding 1)
-- [x] KV hook fix — `k_proj`/`v_proj` not `past_key_values` (Finding 2)
+- [x] Arithmetic verification ✓
+- [x] FP16 baseline confirmed — 42.6% (500 samp, paper: 41.5%) ✓
+- [x] Metric resolved — unnormalized `acc`, not `acc_norm` (Finding 1)
+- [x] KV hook fix — `k_proj`/`v_proj` (Finding 2)
 - [x] Eager attention fix — for DWB signal extraction (Finding 3)
-- [x] DWB controller trained — val_acc=45.6%, avg 5.05 bits/token
-- [x] DWB eval: **40.0%** (paper: 41.2%, within noise) ~✅
-- [x] INT4 losslessness documented — cannot reproduce paper's 33.6% static baseline (Finding 4)
-- [ ] Static INT4 baseline investigation — asymmetric/calibrated scheme
+- [x] Standard INT4 losslessness documented (Finding 4) — all 6 variants ≈ FP16
+- [x] Paper's INT4 baseline reproduced — `int4_int3range` = 33.0% ≈ 33.6% (Finding 5)
+- [x] DWB controller trained (val_acc=45.6%) and evaluated (40.0%)
 - [ ] Latency experiments (H1) — RTX 4090 required
 - [ ] Academic paper writeup

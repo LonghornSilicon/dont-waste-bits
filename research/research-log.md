@@ -59,14 +59,49 @@ Cross-model sanity check: our acc_norm for SmolLM-360M ≈ 54%, while paper repo
 
 ---
 
-## Pending
+---
 
+## 2026-04-19 — Outer Loop Reflection: INT4 Losslessness
+
+**All accuracy experiments now have results.** Synthesizing.
+
+### H3 (FP16 parity): CONSISTENT ✅
+DWB 40.0% vs FP16 42–44% on different sample counts. Delta -1.2pp is within noise
+(CI ±10pp for 100 samples). H3 cannot be definitively confirmed with 100 samples
+but is numerically consistent.
+
+### H2 (DWB > static INT4): CANNOT VERIFY ⚠️
+Our static INT4 KV gives ~44.5% (200 samp) — essentially same as FP16.
+Paper claims 33.6% (7.9pp below FP16). We cannot reproduce this 7.9pp drop.
+DWB gives 40.0%, which is below our FP16 baseline — the paper's narrative
+(DWB recovers from INT4 degradation) cannot be tested against our baseline.
+
+**Why doesn't INT4 degrade accuracy?**
+Hypothesis: symmetric per-tensor INT4 produces zero-mean errors that cancel in the
+attention weighted sum. KV-2bit (25%) breaks this via only 4 quantization levels;
+INT4 (16 levels) preserves enough resolution for cancellation to dominate.
+
+**Next**: Run 7 INT4 variant schemes to find which (if any) reproduces 33.6%.
+Candidates: asymmetric per-tensor, offline fixed scale, group quantization, clipped range.
+
+### DWB Controller
+val_acc=45.6% (vs 25% random) — learns importance quartile signal.
+Bit distribution: {2bit: 57.3%, 4bit: 18.9%, 8bit: 8.3%, 16bit: 15.6%}, avg=5.05 bits.
+Controller over-assigns 2-bit (57%); paper likely has different distribution.
+
+### Direction: DEEPEN H2
+Investigate what INT4 scheme reproduces the paper's 33.6%.
+If asymmetric / fixed-scale / group-quant shows degradation → confirms paper's scheme differs.
+Document all findings as methodological insights for the reproducibility paper.
+
+**Status:**
 - [x] FP16 baseline confirmed — 42.0% ✅
 - [x] Metric resolved — use acc (unnorm)
 - [x] KV hooks fixed — k_proj/v_proj
-- [x] Git authorship fixed — themoddedcube@gmail.com
-- [ ] KV-4bit definitive baseline (500 samp) — RUNNING
-- [ ] DWB controller training — RUNNING
-- [ ] DWB evaluation
-- [ ] GPU environment setup on Brev (for H1 latency)
-- [ ] TurboQuant pipeline (turboquant-integration branch)
+- [x] KV-2bit: 25% confirms hooks work ✅
+- [x] KV-4bit per-tensor (200 samp): 44.5% — cannot reproduce paper's 33.6%
+- [x] DWB trained (val_acc=45.6%) and evaluated (40.0%) ✅
+- [x] INT4 losslessness documented (Finding 4)
+- [ ] INT4 variant investigation — 7 schemes running now
+- [ ] Latency experiments (H1) — RTX 4090 required
+- [ ] Academic paper writeup

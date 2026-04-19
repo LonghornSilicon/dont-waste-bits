@@ -1,0 +1,14 @@
+{
+  "model": "smollm-360m",
+  "limit": 500,
+  "metric": "acc_unnormalized",
+  "date": "2026-04-19T06:04:00.306652",
+  "fp16": 42.6,
+  "kv4_per_token": 41.199999999999996,
+  "kv4_per_tensor": 41.6,
+  "paper_fp16": 41.5,
+  "paper_kv4": 33.6,
+  "delta_fp16": 1.1,
+  "delta_kv4_per_token": 7.6,
+  "delta_kv4_per_tensor": 8.0
+}
