@@ -274,7 +274,7 @@ final_status:
   github: https://github.com/LonghornSilicon/dont-waste-bits
   git_heads:
     main: cc51aa6
-    turboquant-integration: 9c15f3d
+    turboquant-integration: 7e1ba69
   branches:
     main: verification + ablation + 1.7B mechanistic + paper
     turboquant-integration: all of main + DWB-TurboQuant + controller analysis + HTML report
