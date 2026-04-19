@@ -271,17 +271,42 @@ final_status:
   mechanistic_verification: COMPLETE
   latency_experiments: AWAITING_GPU  # H1: 17.75% reduction, arithmetic verified; RTX 4090 required
   paper_writeup: COMPLETE  # research/paper/main.tex + refs.bib + paper_rendered.html (commit a775006)
+  fpga_controller_360m: COMPLETE  # Phase 1-4 all show 100% 4-bit at 360M — correct and expected
+  fpga_controller_1b7: PENDING  # Key experiment: 1.7B is the interesting regime (eff_residual=12.4%)
   github: https://github.com/LonghornSilicon/dont-waste-bits
   git_heads:
     main: cc51aa6
     turboquant-integration: 7e1ba69
+    gumbel-controller: 0b0f854  # phase2 richer features result
+    fpga-controller: e0bab99   # phase4 binary FPGA controller result
   branches:
     main: verification + ablation + 1.7B mechanistic + paper
     turboquant-integration: all of main + DWB-TurboQuant + controller analysis + HTML report
+    gumbel-controller: phase1 + phase2 (richer features — confirms scale-driven 4-bit)
+    fpga-controller: phase1 + phase3 (FPGA model) + phase4 binary controller
+
+fpga_controller_results:
+  phase2_richer_features:
+    model: SmolLM-360M
+    features: [kv_norm, pos_frac, head_entropy, layer_depth]
+    accuracy: 41.0
+    avg_bits: 4.0
+    bit_dist: {4: 100.0}
+    conclusion: "100% 4-bit — richer features don't help at 360M; eff_residual=8.1% drives result"
+  phase4_binary_fpga:
+    model: SmolLM-360M
+    accuracy: 41.0
+    avg_bits: 4.0
+    fpga_cost: 0.290
+    fpga_speedup: 3.48
+    paper_dwb_speedup: 2.44
+    advantage: "+43% FPGA throughput vs paper DWB at equal accuracy"
+    conclusion: "100% 4-bit at 360M — key experiment is 1.7B where INT4 lossy"
 
 blockers:
   - GPU (RTX 4090 on NVIDIA Brev) for latency measurement (H1) — only remaining blocker
   - To compile PDF: upload research/paper/main.tex + refs.bib to Overleaf (free)
+  - SmolLM-1.7B FPGA controller experiment (needs more RAM or GPU for eval)
 
 original_repo: https://github.com/SayedPedramHaeri/Dont-Waste-Bits
 our_repo: https://github.com/LonghornSilicon/dont-waste-bits
