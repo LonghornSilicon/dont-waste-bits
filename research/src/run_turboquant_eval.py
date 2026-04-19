@@ -33,8 +33,26 @@ DEVICE = "cpu"
 CONTROLLER_PATH = "research/data/dwb_controller_smollm360m.pt"
 
 
+def polar_quant_per_head(x: torch.Tensor, quant: PolarQuant) -> torch.Tensor:
+    """
+    Apply PolarQuant per attention head (64-dim Hadamard, not full concatenated KV).
+    x: [batch, seq_len, n_heads * head_dim]
+    Reshapes to [batch*seq_len, n_heads, head_dim], rotates last dim, reshapes back.
+    """
+    batch, seq, d = x.shape
+    # Infer head_dim as largest power-of-2 divisor of d (64 for SmolLM-360M)
+    head_dim = 64  # SmolLM-360M: head_dim=64 (power of 2, safe for WHT)
+    n_heads = d // head_dim
+    if d % head_dim != 0 or (head_dim & (head_dim - 1)) != 0:
+        # Fallback: quantize without rotation if head_dim is not power-of-2
+        return quant.quantize_dequantize(x)
+    x_heads = x.view(batch * seq, n_heads, head_dim)
+    x_out = quant.quantize_dequantize(x_heads.view(batch * seq * n_heads, head_dim))
+    return x_out.view(batch, seq, d)
+
+
 def attach_polar_quant_hooks(model):
-    """Hook k_proj and v_proj with PolarQuant (3-bit keys, 2-bit values)."""
+    """Hook k_proj and v_proj with per-head PolarQuant (3-bit keys, 2-bit values)."""
     key_quant = PolarQuant(bits=3, seed=42)
     val_quant = PolarQuant(bits=2, seed=137)
     handles = []
@@ -43,14 +61,14 @@ def attach_polar_quant_hooks(model):
         if name.endswith(".k_proj"):
             def make_k_hook(q):
                 def hook(mod, inp, out):
-                    return q.quantize_dequantize(out)
+                    return polar_quant_per_head(out, q)
                 return hook
             handles.append(module.register_forward_hook(make_k_hook(key_quant)))
             attached += 1
         elif name.endswith(".v_proj"):
             def make_v_hook(q):
                 def hook(mod, inp, out):
-                    return q.quantize_dequantize(out)
+                    return polar_quant_per_head(out, q)
                 return hook
             handles.append(module.register_forward_hook(make_v_hook(val_quant)))
             attached += 1

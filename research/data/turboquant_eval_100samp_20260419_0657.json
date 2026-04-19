@@ -1,0 +1,32 @@
+{
+  "model": "HuggingFaceTB/SmolLM-360M",
+  "limit": 100,
+  "metric": "acc_unnorm",
+  "date": "2026-04-19T06:57:42.353555",
+  "conditions": {
+    "fp16": {
+      "accuracy": 41.0,
+      "correct": 41,
+      "total": 100,
+      "elapsed_s": 97.2
+    },
+    "scalar_2bit": {
+      "accuracy": 22.0,
+      "correct": 22,
+      "total": 100,
+      "elapsed_s": 102.6
+    },
+    "polar_quant_3bit_keys_2bit_vals": {
+      "accuracy": 27.0,
+      "correct": 27,
+      "total": 100,
+      "elapsed_s": 222.9
+    }
+  },
+  "baselines": {
+    "paper_fp16": 41.5,
+    "paper_dwb": 41.2,
+    "verified_fp16_500samp": 42.6,
+    "verified_dwb_200samp": 38.0
+  }
+}
