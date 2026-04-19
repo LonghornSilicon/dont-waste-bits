@@ -138,6 +138,17 @@ _QUANT_FNS = {
 }
 
 
+def quantize_tensor(x: torch.Tensor, bits: int) -> torch.Tensor:
+    """Dispatch quantization by bit width. Used by adaptive controllers."""
+    if bits >= 16:
+        return x
+    levels = 2 ** (bits - 1) - 1
+    scale = x.abs().max() / max(levels, 1)
+    if scale == 0:
+        return x
+    return (x / scale).round().clamp(-levels - 1, levels) * scale
+
+
 def make_proj_hook(quant_fn):
     """Hook for k_proj or v_proj output: quantize before attention uses it."""
     def hook(module, input, output):
