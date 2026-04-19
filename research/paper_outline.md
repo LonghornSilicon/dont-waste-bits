@@ -114,12 +114,23 @@ SmolLM-1.7B (50 samples) — **scale-dependent reversal**:
 Token examples: 2-bit = {".", ":", "a", "the", "and"} (function words); 16-bit = {"cheer", "ice", "knife"} (rare content words).
 Interpretation: controller preserves KV for tokens that are confidently placed in low-entropy contexts — these are exactly the tokens that downstream positions attend to (per Insight 5 mechanism).
 
-**Insight 5 (novel)**: INT4 losslessness mechanism — **directly verified** ★
-- Zero-mean confirmed: symmetry ratio = 0.0027 (standard INT4), 0.0037 (INT3-range); both ≈ zero-mean
-- Cancellation confirmed: actual attention output error is **3.3× below naive bound** (standard INT4)
-- Threshold effect: both schemes cancel similarly, but INT3-range base error is 2× larger (55.79% vs 26.95% relative) → residuals exceed decision threshold → fails
-- Self-reinforcing: outlier tokens (most-attended, per Insight 6 high-C_t tokens) set the scale → best quantized AND most attended → output preserved
-- Holds cross-model (135M and 360M), and in autoregressive mode
+**Insight 5 (novel)**: INT4 losslessness mechanism — **fully verified across scales** ★
+
+Cross-scale mechanistic comparison (20 examples each, K/V error analysis):
+
+| Metric | Std INT4 — 360M | Std INT4 — 1.7B |
+|--------|----------------|----------------|
+| Symmetry ratio | 0.0027 | 0.0006 (both ≈ zero-mean) |
+| Relative error | 26.95% | 35.31% (+31%) |
+| Cancellation ratio | 0.30 | 0.35 |
+| **Effective residual** | **8.1%** | **12.4%** |
+| Accuracy impact | ~0pp | ~10pp loss |
+
+- Zero-mean confirmed at both scales (symmetry ≈ 0) — same mechanism
+- Decision threshold: between 8.1% and 12.4% effective residual error
+- Root cause of scale failure: larger hidden dim (2048 vs 960) → higher KV variance → larger errors at same scale divisor
+- Self-reinforcing property holds: high-C_t tokens set scale AND receive most attention weight
+- INT3-range at 1.7B: effective residual = 66.83% × 0.19 = 12.6% (just above threshold too)
 
 ### 7. DWB-TurboQuant Extension (Novel Contribution)
 

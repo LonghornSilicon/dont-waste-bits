@@ -1,0 +1,41 @@
+{
+  "model": "HuggingFaceTB/SmolLM-1.7B",
+  "n_examples": 20,
+  "date": "2026-04-19",
+  "num_attention_heads": 32,
+  "num_kv_heads": 8,
+  "kv_error_stats": {
+    "standard_int4": {
+      "error_mean_avg": 0.000249,
+      "rel_error_avg": 0.3531,
+      "symmetry_ratio": 0.0006,
+      "n_measurements": "approx 20*96"
+    },
+    "int3range_int4": {
+      "error_mean_avg": 0.000226,
+      "rel_error_avg": 0.6683,
+      "symmetry_ratio": 0.0003
+    }
+  },
+  "attention_output_simulation": {
+    "standard_int4": {
+      "cancellation_ratio": 0.3511
+    },
+    "int3range_int4": {
+      "cancellation_ratio": 0.1883
+    }
+  },
+  "comparison_360m": {
+    "std_int4_rel_error_360m": 0.2695,
+    "std_int4_cancellation_360m": 0.3,
+    "std_int4_symmetry_360m": 0.0027,
+    "i3r_rel_error_360m": 0.5579,
+    "i3r_cancellation_360m": 0.24
+  },
+  "derived_residual_error": {
+    "std_int4_1b7": 0.124,
+    "std_int4_360m": 0.0809,
+    "i3r_1b7": 0.1258,
+    "i3r_360m": 0.1339
+  }
+}
