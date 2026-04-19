@@ -172,7 +172,7 @@ def train_controller(sig_tensor, beta=0.5, epochs=EPOCHS, lr=LR):
             hi = vp.argmax(dim=-1)
             dist = {b: (hi==i).float().mean().item()*100 for i,b in enumerate(BIT_CLASSES)}
         tau *= tau_decay
-        print(f"  [β={beta}] Epoch {epoch+1:2d}/{epochs}: loss={total_loss/n_b:.5f} "
+        print(f"  [b={beta}] Epoch {epoch+1:2d}/{epochs}: loss={total_loss/n_b:.5f} "
               f"avg_bits={val_bits:.2f} fpga_cost={val_fpga:.3f} tau={tau:.3f} "
               f"dist={{{', '.join(f'{b}b:{v:.0f}%' for b,v in dist.items())}}}", flush=True)
 

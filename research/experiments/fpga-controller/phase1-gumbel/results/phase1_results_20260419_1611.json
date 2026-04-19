@@ -1,0 +1,22 @@
+{
+  "experiment": "phase1_gumbel",
+  "model": "HuggingFaceTB/SmolLM-360M",
+  "train_tokens": 18564,
+  "epochs": 15,
+  "alpha": 1.0,
+  "beta": 0.1,
+  "tau_initial": 1.0,
+  "tau_final": 0.1,
+  "eval_samples": 200,
+  "accuracy": 26.5,
+  "avg_bits": 2.0,
+  "bit_dist_pct": {
+    "2": 100.0,
+    "4": 0.0,
+    "8": 0.0,
+    "16": 0.0
+  },
+  "paper_target_accuracy": 41.2,
+  "paper_target_avg_bits": 5.05,
+  "elapsed_s": 674.9
+}
