@@ -1,0 +1,5 @@
+# 10 MB; rebuildable from code/run_phase7c_routing_ablation.py Stage 1 in ~5 min on A4000
+results/phase7_signal_cache_v2.pt
+
+# Runtime logs
+logs/

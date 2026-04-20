@@ -1,0 +1,56 @@
+{
+  "experiment": "phase7c_routing_ablation",
+  "model": "HuggingFaceTB/SmolLM-1.7B",
+  "n_samples": 200,
+  "seed": 0,
+  "target_p4": 0.74,
+  "beta_controller": 1.413,
+  "controller_train_p4": 0.741,
+  "strategies": {
+    "random": {
+      "accuracy_pct": 48.5,
+      "avg_bits": 5.042,
+      "fpga_cost": 0.3604,
+      "fpga_speedup": 2.803,
+      "p4_pct": 73.94,
+      "p8_pct": 26.06,
+      "n_tokens": 209880,
+      "elapsed_s": 482.5
+    },
+    "controller": {
+      "accuracy_pct": 47.5,
+      "avg_bits": 4.179,
+      "fpga_cost": 0.3021,
+      "fpga_speedup": 3.344,
+      "p4_pct": 95.53,
+      "p8_pct": 4.47,
+      "n_tokens": 209880,
+      "elapsed_s": 1171.9
+    },
+    "kv_norm": {
+      "accuracy_pct": 44.5,
+      "avg_bits": 5.037,
+      "fpga_cost": 0.36,
+      "fpga_speedup": 2.805,
+      "p4_pct": 74.07,
+      "p8_pct": 25.93,
+      "n_tokens": 209880,
+      "elapsed_s": 457.8
+    }
+  },
+  "baselines": {
+    "fp16_paper": {
+      "accuracy_pct": 49.0,
+      "fpga_speedup": 1.0
+    },
+    "int4_paper": {
+      "accuracy_pct": 41.1,
+      "fpga_speedup": 3.48
+    },
+    "dwb_paper": {
+      "accuracy_pct": 48.6,
+      "fpga_speedup": 2.44
+    }
+  },
+  "elapsed_s": 2468.0
+}

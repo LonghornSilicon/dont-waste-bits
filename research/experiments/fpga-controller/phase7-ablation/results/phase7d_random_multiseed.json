@@ -1,0 +1,93 @@
+{
+  "experiment": "phase7d_random_multiseed",
+  "model": "HuggingFaceTB/SmolLM-1.7B",
+  "n_samples": 500,
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "target_p4": 0.74,
+  "per_seed": {
+    "0": {
+      "accuracy_pct": 48.0,
+      "avg_bits": 5.043,
+      "fpga_cost": 0.3604,
+      "fpga_speedup": 2.802,
+      "p4_pct": 73.91,
+      "p8_pct": 26.09,
+      "n_tokens": 522312,
+      "elapsed_s": 1116.7
+    },
+    "1": {
+      "accuracy_pct": 48.8,
+      "avg_bits": 5.038,
+      "fpga_cost": 0.36,
+      "fpga_speedup": 2.805,
+      "p4_pct": 74.06,
+      "p8_pct": 25.94,
+      "n_tokens": 522312,
+      "elapsed_s": 1068.0
+    },
+    "2": {
+      "accuracy_pct": 48.2,
+      "avg_bits": 5.04,
+      "fpga_cost": 0.3602,
+      "fpga_speedup": 2.804,
+      "p4_pct": 74.0,
+      "p8_pct": 26.0,
+      "n_tokens": 522312,
+      "elapsed_s": 972.2
+    },
+    "3": {
+      "accuracy_pct": 48.4,
+      "avg_bits": 5.039,
+      "fpga_cost": 0.3601,
+      "fpga_speedup": 2.805,
+      "p4_pct": 74.04,
+      "p8_pct": 25.96,
+      "n_tokens": 522312,
+      "elapsed_s": 772.8
+    },
+    "4": {
+      "accuracy_pct": 46.8,
+      "avg_bits": 5.037,
+      "fpga_cost": 0.36,
+      "fpga_speedup": 2.806,
+      "p4_pct": 74.07,
+      "p8_pct": 25.93,
+      "n_tokens": 522312,
+      "elapsed_s": 769.9
+    }
+  },
+  "summary": {
+    "accuracy_mean": 48.04,
+    "accuracy_std": 0.754,
+    "accuracy_sem": 0.337,
+    "accuracy_ci95_pp": 0.661,
+    "accuracy_range": [
+      46.8,
+      48.8
+    ],
+    "p4_mean": 74.02,
+    "p4_std": 0.065,
+    "fpga_speedup_mean": 2.804
+  },
+  "baselines": {
+    "fp16_paper": {
+      "accuracy_pct": 49.0,
+      "fpga_speedup": 1.0
+    },
+    "int4_paper": {
+      "accuracy_pct": 41.1,
+      "fpga_speedup": 3.48
+    },
+    "dwb_paper": {
+      "accuracy_pct": 48.6,
+      "fpga_speedup": 2.44
+    }
+  },
+  "elapsed_s": 4705.9
+}

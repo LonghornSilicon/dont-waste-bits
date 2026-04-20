@@ -1,0 +1,20 @@
+{
+  "experiment": "phase7f_kv_norm_inverted",
+  "model": "HuggingFaceTB/SmolLM-1.7B",
+  "n_samples": 200,
+  "seed": 0,
+  "target_p4": 0.74,
+  "strategy": "kv_norm_inverted (top-p4 by L2 norm \u2192 4-bit)",
+  "metrics": {
+    "accuracy_pct": 44.5,
+    "avg_bits": 5.038,
+    "fpga_cost": 0.3601,
+    "fpga_speedup": 2.805,
+    "p4_pct": 74.05,
+    "p8_pct": 25.95,
+    "n_tokens": 209880,
+    "elapsed_s": 509.1
+  },
+  "note": "Sanity check: the pathological reverse of Phase 7c's kv_norm. Tokens with the largest L2 norm \u2014 carrying the most attention signal \u2014 lose precision to 4-bit, while small-norm tokens get the 8-bit slots. Expected to drop well below random/controller.",
+  "elapsed_s": 513.9
+}
