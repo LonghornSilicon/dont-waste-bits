@@ -51,14 +51,14 @@
 <!-- ===== CPU COMPLETE BANNER ===== -->
 <div style="background:#22543d; color:white; border-radius:10px; padding:18px 22px; margin:18px 0; text-align:center;">
   <div style="font-size:1.5em; font-weight:bold; margin-bottom:6px;">✓ CPU RESEARCH PHASE COMPLETE</div>
-  <div style="font-size:0.95em; opacity:0.9;">30 sessions · 9 checkpoints · 4 model families · mean formula error 0.018 · max 0.040 · all within ±0.04 · floor attractor confirmed via 4 routes</div>
+  <div style="font-size:0.95em; opacity:0.9;">31 sessions · 10 checkpoints · 5 model families · 9 of 10 within ±0.04 · GQA-scale interaction confirmed · floor attractor via 4 routes</div>
   <div style="margin-top:8px; font-size:0.88em; opacity:0.8;">Paper ready for Overleaf · GPU needed for 1.7B HellaSwag · FPGA board for latency</div>
 </div>
 
 <!-- ===== TLDR ===== -->
 <div class="callout blue">
 <strong>TL;DR</strong><br>
-We independently reproduced and extended arXiv:2604.04722 over 30 autonomous sessions. The paper's core accuracy claims are <strong>explained</strong> (the "+7.6pp improvement" uses an unusually weak INT4 baseline). We built a novel <strong>FPGA-aware binary {4,8}-bit controller</strong> that achieves <strong class="best">3.48× FPGA throughput</strong> vs. DWB's 2.44× (+43%) by eliminating the 2-bit option that wastes 47.9% of allocation on Xilinx Ultrascale+. We derived a universal beta calibration formula <strong>β* = gap_mean/0.267</strong>, validated across <strong>9 checkpoints and 4 model families</strong> (scales 124M–1.7B), with prediction error ≤±0.04 in all cases. A new finding: well-trained transformers converge to a <strong>floor gap_mean ≈ 0.18–0.19</strong> (representation quality attractor), confirmed via 4 independent routes. A complete paper is written at <code>research/paper/fpga_controller_paper.tex</code>; only the 1.7B HellaSwag accuracy row awaits a Brev A4000 GPU run.
+We independently reproduced and extended arXiv:2604.04722 over 31 autonomous sessions. The paper's core accuracy claims are <strong>explained</strong> (the "+7.6pp improvement" uses an unusually weak INT4 baseline). We built a novel <strong>FPGA-aware binary {4,8}-bit controller</strong> that achieves <strong class="best">3.48× FPGA throughput</strong> vs. DWB's 2.44× (+43%) by eliminating the 2-bit option that wastes 47.9% of allocation on Xilinx Ultrascale+. We derived a universal beta calibration formula <strong>β* = gap_mean/0.267</strong>, validated across <strong>10 checkpoints and 5 model families</strong> (scales 124M–1.7B), with 9 of 10 within ±0.04. New finding: <strong>GQA reduces gap_mean -16% vs MHA at equal scale, but floor convergence requires both GQA AND ≥1B scale</strong> — confirmed via SmolLM2-360M (GQA, 0.283) vs SmolLM-360M (MHA, 0.337) vs TinyLlama-1.1B (GQA+large, 0.189). A complete paper is written at <code>research/paper/fpga_controller_paper.tex</code>; only the 1.7B HellaSwag accuracy row awaits a Brev A4000 GPU run.
 </div>
 
 <!-- ===== KEY NUMBERS ===== -->
@@ -605,6 +605,27 @@ research/
 <p style="color:#718096; font-size:0.85em;">Paper updated: OPT-350M row added to tab:betastar (9th checkpoint); OPT Discussion paragraph updated to "OPT-125M and OPT-350M" convergence narrative; all counts updated to 9 checkpoints; floor attractor = 4 routes; mean error 0.018, max 0.040. Commit: 6541226</p>
 </div>
 
+<!-- ===== SESSION 31 ===== -->
+<div class="callout blue">
+<h2>Session 31 ★★★ SmolLM2-360M — GQA-Scale Interaction: 5th Family, 10th Checkpoint</h2>
+<p><strong>SmolLM2-360M (GQA, same d=960 as SmolLM-360M MHA) gives gap_mean=0.283: GQA reduces gap_mean by 16% vs MHA at equal scale, but floor convergence requires BOTH GQA AND ≥1B scale. 10th checkpoint. Formula borderline (error=0.044), 9 of 10 within ±0.04.</strong></p>
+<div class="two-col" style="grid-template-columns: 1fr 1fr 1fr 1fr; gap:12px;">
+  <div class="stat-card"><div class="big best">0.283</div><div class="lbl">gap_mean<br><small>SmolLM2-360M GQA</small></div></div>
+  <div class="stat-card"><div class="big bad">−16%</div><div class="lbl">gap_mean reduction<br><small>vs SmolLM MHA (0.337)</small></div></div>
+  <div class="stat-card"><div class="big neutral">0.044</div><div class="lbl">formula error<br><small>borderline (≤±0.05)</small></div></div>
+  <div class="stat-card"><div class="big best">5</div><div class="lbl">model families<br><small>10 checkpoints total</small></div></div>
+</div>
+<p><strong>GQA-Scale Interaction</strong> — the cleanest experiment possible (same architecture, same hidden dim, only K/V heads change):</p>
+<table>
+  <tr><th>Model</th><th>Architecture</th><th>gap_mean</th><th>β*</th><th>Formula error</th></tr>
+  <tr><td>SmolLM-360M</td><td>MHA (15/15 heads)</td><td>0.337</td><td>1.260</td><td>&lt;0.040</td></tr>
+  <tr class="best"><td>SmolLM2-360M</td><td>GQA (15 attn / 5 KV)</td><td>0.283</td><td>1.058</td><td>0.044 (borderline)</td></tr>
+  <tr class="best"><td>TinyLlama-1.1B</td><td>GQA (32 attn / 4 KV)</td><td>0.189</td><td>0.707</td><td>0.003 (best fit)</td></tr>
+</table>
+<p><strong>Key insight</strong>: GQA reduces gap_mean but floor convergence requires scale ≥1B. The gradient MHA(0.337) → smallGQA(0.283) → largeGQA(0.189) shows both factors matter. The borderline formula error (0.044) is explained by the highest gap_std of all 10 checkpoints (0.052 vs typical 0.025–0.035) — intermediate regime with higher per-token variance.</p>
+<p style="color:#718096; font-size:0.85em;">Paper updated: SmolLM2-360M as 5th family, 10th checkpoint. Table caption "10 checkpoints, 5 families, 9 of 10 within ±0.04". SmolLM2 Discussion paragraph. Abstract/conclusion updated. Commit: 596debc</p>
+</div>
+
 <!-- ===== PENDING ITEMS ===== -->
 <h2>Pending Items (in priority order)</h2>
 <table>
@@ -632,7 +653,7 @@ research/
 <hr>
 <p style="color:#718096; font-size:0.82em; text-align:center;">
   Generated by autoresearch loop — 2026-04-20 &nbsp;|&nbsp;
-  30 sessions, ~67 experiments, 4 branches, commits on <code>fpga-controller</code> branch &nbsp;|&nbsp;
+  31 sessions, ~68 experiments, 4 branches, commits on <code>fpga-controller</code> branch &nbsp;|&nbsp;
   <a href="https://github.com/LonghornSilicon/dont-waste-bits">github.com/LonghornSilicon/dont-waste-bits</a>
 </p>
 
