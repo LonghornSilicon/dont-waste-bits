@@ -499,6 +499,219 @@ Model & Attn & Variant & gap mean & $\beta^*$ & Measured transition & $\Delta$ga
 
 We identified a fundamental flaw in DWB's KV cache quantization: the 2-bit option wastes no FPGA BRAM bandwidth (identical 4-bit port on Xilinx Ultrascale+) while catastrophically degrading accuracy ($-$16.6pp). By restricting bit choices to $\{4, 8\}$---the only options with distinct BRAM costs---our binary FPGA-aware controller Pareto-dominates DWB at any given hardware budget. At SmolLM-360M (where INT4 is lossless), the controller achieves 3.48$\times$ FPGA throughput---43\% faster than DWB---at equal accuracy. At SmolLM-1.7B (where INT4 is lossy), the controller achieves genuine mixed allocation across a broad plateau $\beta \in [1.57, 1.70+]$; at $\beta=1.70$ (5-seed mean: 79.9\% 4-bit, avg\_bits=4.80), it yields 2.93$\times$ FPGA throughput---\textbf{20\% faster than DWB at fewer bits}---pending HellaSwag accuracy evaluation. We additionally provide: (1) a formal BRAM port cost model for Xilinx Ultrascale+; (2) a mechanistic characterization of scale-dependent losslessness (threshold $\epsilon_\text{eff} \approx 10\%$); (3) a universal beta calibration criterion $\beta^* = \text{gap\_mean}/0.267$ predicting the phase transition from CPU-only calibration---validated experimentally at ten model checkpoints across five families (SmolLM-135M/360M/1.7B/MHA, SmolLM2-360M/GQA, TinyLlama-1.1B/GQA, OPT-125M/350M, GPT-2-Small/Medium/Large; 9 of 10 within $\pm 0.04$; GQA reduces gap\_mean $-$16\% vs. MHA at equal scale but floor requires $\geq$1B; floor gap\_mean $\approx 0.18$--$0.19$ confirmed as representation quality attractor across OPT scaling, GQA+scale, MHA-instruct, and GPT-2 family)---enabling exact per-model tuning without GPU grid search; and (4) a reference implementation predating the DWB code release.
 
+\appendix
+
+\section{Independent Verification of Original Paper Claims}
+\label{app:verification}
+
+This appendix documents our independent verification of \cite{haeri2026dwb} across 37 experimental sessions, plus methodological findings that emerged during reproduction. All experiments run on CPU (Intel/AMD, no GPU required for verification) using locally cached model weights.
+
+\subsection{Accuracy Baselines Confirmed}
+
+All FP16 baselines reproduced within noise across three scales:
+
+\begin{table}[h]
+\centering
+\caption{FP16 baseline reproduction. Paper uses unnormalized log-likelihood (\texttt{acc}), not length-normalized (\texttt{acc\_norm}). The \texttt{acc\_norm} metric (lm-eval default) gives $\approx$54\% for SmolLM-360M---13pp above the paper's value. Switching to \texttt{acc} recovers 42\% $\approx$ 41.5\% (\textbf{Finding A1}).}
+\begin{tabular}{lcccl}
+\toprule
+Model & Samples & Ours & Paper & Status \\
+\midrule
+SmolLM-360M & 500 & 42.6\% & 41.5\% & \textbf{Confirmed} ($\Delta$=+1.1pp, within noise) \\
+SmolLM-135M & 100 & 40.0\% & 37.2\% & \textbf{Confirmed} ($\Delta$=+2.8pp) \\
+SmolLM-1.7B & 50  & 50.0\% & 49.0\% & \textbf{Confirmed} ($\Delta$=+1.0pp) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Static INT4 Baseline: Paper Uses 8-Level Quantization}
+\label{app:int4}
+
+The paper's ``Static 4-bit KV'' baseline (33.6\%) does \emph{not} use standard 16-level INT4 (scale$=$max/7). Standard INT4 gives 41.6\%---lossless at 360M scale. The paper's result matches \texttt{int4\_int3range} quantization (scale$=$max/3, 8 effective levels, equivalent to INT3 stored in 4-bit format):
+
+\begin{table}[h]
+\centering
+\caption{INT4 variants on SmolLM-360M HellaSwag. Standard INT4 is lossless; the paper's baseline is not (\textbf{Finding A2}).}
+\begin{tabular}{lcccl}
+\toprule
+Condition & Samples & Ours & Paper & Notes \\
+\midrule
+FP16 baseline & 500 & 42.6\% & 41.5\% & Reference \\
+KV INT4 standard (sym, per-tensor) & 500 & 41.6\% & 33.6\% & Lossless---paper uses different INT4 \\
+KV INT4 standard (sym, per-token) & 500 & 41.2\% & 33.6\% & Lossless \\
+KV INT4 standard (asym, per-tensor) & 200 & 42.5\% & 33.6\% & Lossless \\
+\textbf{KV int4\_int3range (8 levels)} & 100 & \textbf{33.0\%} & \textbf{33.6\%} & \textbf{Match: $\Delta$=$-$0.6pp} \\
+KV 2-bit & 200 & 25.0\% & --- & $-$17pp; confirms 2-bit is catastrophic \\
+SmolLM-135M int4\_int3range & 100 & 32.0\% & 33.6\% & Cross-model confirmed \\
+SmolLM-1.7B standard INT4 & 50 & 40.0\% & 41.1\% & \textbf{Genuinely lossy at 1.7B} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Scale-Dependent Losslessness: Mechanistic Characterization}
+\label{app:lossless}
+
+INT4 losslessness is not universal---it depends on the model's effective quantization residual $\epsilon_\text{eff} = \epsilon_\text{rel} \times r_\text{survive}$:
+
+\begin{table}[h]
+\centering
+\caption{Effective residual error and losslessness threshold (\textbf{Finding A3}). Decision threshold is between 8.1\% and 12.4\%.}
+\begin{tabular}{lcccc}
+\toprule
+Model & $\epsilon_\text{rel}$ & $r_\text{survive}$ & $\epsilon_\text{eff}$ & INT4 lossless? \\
+\midrule
+SmolLM-135M & 0.249 & 0.28 & 6.9\% & \textbf{Yes} \\
+SmolLM-360M & 0.270 & 0.30 & 8.1\% & \textbf{Yes} (borderline) \\
+SmolLM-1.7B & 0.353 & 0.35 & 12.4\% & \textbf{No} ($-$7.9pp accuracy loss) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Controller Signal Analysis}
+
+We measured the discriminative power of each input signal used by the DWB controller using Cohen's $d$ on 500-sample HellaSwag signal extractions (\textbf{Finding A4}):
+
+\begin{table}[h]
+\centering
+\caption{Controller signal discriminability. Confidence ($C_t$) dominates; rarity ($R_t$) is near-uninformative.}
+\begin{tabular}{lcc}
+\toprule
+Signal & Cohen's $d$ & Role \\
+\midrule
+$C_t$ (confidence) & 4.55 & \textbf{Primary driver} \\
+$H_t$ (entropy) & 4.09 & Strong secondary \\
+$V_t$ (attn.\ variance) & 1.42 & Moderate \\
+$R_t$ (rarity) & 0.52 & Near-zero---barely discriminates \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Methodological Notes for Reproduction}
+
+Three implementation details are critical for reproducing DWB results (\textbf{Findings A5--A7}):
+
+\begin{enumerate}
+\item \textbf{Evaluation metric}: Use unnormalized log-likelihood (\texttt{acc}), not length-normalized (\texttt{acc\_norm}). The lm-eval harness defaults to \texttt{acc\_norm}; switching gives $\approx$13pp higher scores that do not match the paper.
+
+\item \textbf{KV hooks}: \texttt{transformers} 5.x uses \texttt{DynamicCache} objects---hooks on attention outputs fail silently. Hook \texttt{k\_proj} and \texttt{v\_proj} Linear submodules directly (48 hooks for SmolLM-360M, 64 for 1.7B).
+
+\item \textbf{Eager attention}: Default \texttt{sdpa} attention does not support \texttt{output\_attentions=True} needed for DWB signal extraction. Reload with \texttt{attn\_implementation=`eager'}.
+\end{enumerate}
+
+\section{Full Calibration Sensitivity Dataset}
+\label{app:sensitivity}
+
+We measured within-corpus calibration sensitivity (how closely a single text estimates $\beta^*$ relative to a 10-text aggregate) across six models and four architecture types. All experiments use the same 10 technical texts; results are formally archived as JSON files in the repository.
+
+\begin{table}[h]
+\centering
+\caption{Calibration corpus sensitivity across six models. \textbf{max\_error}: largest $|\beta^*_\text{1-text} - \beta^*_\text{10-text}|$ across 10 texts. \textbf{mean\_error}: mean absolute error. All within $\leq\pm0.018$ (well inside the $\pm0.5$ inter-regime gap). The orthogonality of gap\_std and calibration sensitivity is consistent across all six: models with high within-text token variance (gap\_std) do \emph{not} show high calibration instability (\textbf{Finding A8}).}
+\begin{tabular}{llcccc}
+\toprule
+Architecture & Model & gap\_std & max\_error & mean\_error & JSON file \\
+\midrule
+LLaMA-GQA & SmolLM2-360M & \textbf{0.052} & 0.013 & \textbf{0.004} & \texttt{smollm2\_360m\_cal\_sensitivity} \\
+LLaMA-GQA & TinyLlama-1.1B & \textbf{0.051} & 0.008 & \textbf{0.004} & \texttt{tinyllama\_cal\_sensitivity} \\
+LLaMA-MHA & SmolLM-1.7B & 0.063 & 0.015 & 0.005 & \texttt{calibration\_sensitivity\_1b7} \\
+Conv1D & GPT-2 Medium (345M) & 0.052 & 0.011 & 0.005 & \texttt{gpt2\_medium\_cal\_sensitivity} \\
+Conv1D & GPT-2 Small (124M) & 0.033 & 0.018 & 0.009 & \texttt{gpt2\_cal\_sensitivity} \\
+OPT/Meta & OPT-125M & 0.028 & \textbf{0.006} & \textbf{0.002} & \texttt{opt125m\_cal\_sensitivity} \\
+\bottomrule
+\end{tabular}
+\label{tab:sensitivity_full}
+\end{table}
+
+Two within-family comparisons strengthen Finding A8: (1) GPT-2 Medium (gap\_std$=0.052$, max\_error$=0.011$) outperforms GPT-2 Small (gap\_std$=0.033$, max\_error$=0.018$) despite higher intra-text variance---scale increases gap\_std but reduces calibration error within the GPT-2 family; (2) both LLaMA-GQA models (SmolLM2-360M and TinyLlama-1.1B) share identical mean\_error (0.004) despite differing by 0.75B parameters and formula-fit quality (errors 0.044 vs.\ 0.003).
+
+\textbf{Corpus dependency} (\textbf{Finding A9}): gap\_mean can shift across text domains. OPT-125M: technical texts give gap\_mean$=0.170$ vs.\ wikitext-2 calibration value of $0.213$ ($\Delta=0.043$). GPT-2 Small: $0.233$ vs.\ $0.196$ ($\Delta=0.037$). The sensitivity analysis measures \emph{within-corpus} consistency; users should calibrate on text representative of their deployment domain.
+
+\section{Cross-Architecture Beta Calibration: Extended Results}
+\label{app:crossarch}
+
+The 10-checkpoint validation from Table~\ref{tab:betastar} is reproduced here with additional detail. All results are CPU-only; transition windows measured by binary controller beta sweeps (3-seed mean).
+
+\begin{table}[h]
+\centering
+\caption{Extended beta calibration results. Formula error = $|\beta_\text{measured} - \beta^*_\text{theory}|$ where $\beta_\text{measured}$ is the interpolated 50\%-4-bit crossing. $\dagger$: Borderline case (error=0.044, within $\pm0.05$); highest gap\_std of all 10 checkpoints drives wider transition window. GQA-scale interaction: GQA alone reduces gap\_mean $-$16\% at 360M but requires $\geq$1B for floor convergence.}
+\begin{tabular}{llccccc}
+\toprule
+Family & Model & gap\_mean & $\beta^*$ & Measured transition & Error & Notes \\
+\midrule
+SmolLM/LLaMA-MHA & 135M & 0.330 & 1.233 & $[1.2, 1.3]$ & 0.017 & Lossless INT4 \\
+SmolLM/LLaMA-MHA & 360M & 0.337 & 1.260 & $[1.2, 1.4]$ & 0.020 & Lossless INT4 \\
+SmolLM/LLaMA-MHA & 1.7B & 0.424 & 1.584 & $[1.55, 1.57]$ & 0.014 & Genuine mixed alloc.\ \\
+SmolLM2/LLaMA-GQA & 360M & 0.283 & 1.058 & $[1.10, 1.20]$ & 0.044$^\dagger$ & GQA effect at 360M \\
+TinyLlama/LLaMA-GQA & 1.1B & \textbf{0.189} & \textbf{0.707} & $[0.68, 0.74]$ & \textbf{0.003} & GQA+scale floor \\
+OPT/Meta & 125M & 0.213 & 0.798 & $[0.75, 0.80]$ & 0.023 & OPT above floor \\
+OPT/Meta & 350M & \textbf{0.181} & \textbf{0.679} & $[0.65, 0.70]$ & 0.021 & OPT at floor \\
+GPT-2/OpenAI & 124M & 0.196 & 0.733 & $[0.70, 0.80]$ & 0.017 & Floor cluster \\
+GPT-2/OpenAI & 345M & 0.188 & 0.704 & $[0.68, 0.70]$ & 0.014 & Floor cluster \\
+GPT-2/OpenAI & 774M & 0.192 & 0.720 & $[0.70, 0.72]$ & 0.010 & Floor cluster \\
+\midrule
+\multicolumn{4}{l}{\textbf{Summary}} & \multicolumn{3}{l}{9/10 within $\pm0.04$; mean error 0.018} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Floor gap\_mean $\approx 0.18$--$0.19$} (\textbf{Finding A10}): a representation quality attractor reached by four independent routes:
+\begin{enumerate}
+\item \textbf{OPT scaling}: 0.213 (125M) $\to$ 0.181 (350M)---converges from above as scale grows
+\item \textbf{GQA + scale $\geq$1B}: TinyLlama-1.1B at 0.189 via architectural regularization
+\item \textbf{MHA instruction-tuning}: SmolLM base ($0.337$) $\to$ instruct ($0.181$--$0.194$)
+\item \textbf{GPT-2 family cluster}: all three sizes within 0.008 ($0.188$--$0.196$)
+\end{enumerate}
+
+\section{Instruct vs.\ Base Model Calibration}
+\label{app:instruct}
+
+SFT substantially lowers gap\_mean in MHA models but has no measurable effect on GQA models already at the floor:
+
+\begin{table}[h]
+\centering
+\caption{SFT effect on gap\_mean and $\beta^*$ (\textbf{Finding A11}). MHA: $-$44\% from SFT. GQA: $-$0.3\% (GQA already at floor by architecture). Practical implication: MHA models need recalibration after SFT; GQA base-model calibration transfers to instruct variant without modification.}
+\begin{tabular}{llcccc}
+\toprule
+Model & Attn & Variant & gap\_mean & $\beta^*$ & $\Delta$gap \\
+\midrule
+SmolLM-135M & MHA & Base & 0.330 & 1.233 & --- \\
+SmolLM-135M & MHA & Instruct & 0.181 & 0.677 & $-$45\% \\
+SmolLM-360M & MHA & Base & 0.337 & 1.261 & --- \\
+SmolLM-360M & MHA & Instruct & 0.194 & 0.727 & $-$43\% \\
+TinyLlama-1.1B & GQA & Base & 0.189 & 0.707 & --- \\
+TinyLlama-1.1B & GQA & Chat (SFT) & 0.188 & 0.705 & $-$0.3\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Repository Structure and Reproducibility}
+\label{app:repo}
+
+All experiments are reproducible from cached model weights (no internet required after initial download). The repository at \url{https://github.com/LonghornSilicon/dont-waste-bits} (branch: \texttt{fpga-controller}) contains:
+
+\begin{itemize}
+\item \texttt{research/src/}: Reusable evaluation scripts (\texttt{eval\_hellaswag.py}, \texttt{eval\_dwb.py}, \texttt{kv\_cache\_quant.py})
+\item \texttt{research/experiments/fpga-controller/phase5-benchmark/code/}: All calibration and sensitivity scripts (one per model)
+\item \texttt{research/experiments/fpga-controller/phase5-benchmark/results/}: JSON result files for all 10 checkpoints + 6 sensitivity tests
+\item \texttt{research/paper/figures/}: All four paper figures (PDF + PNG)
+\item \texttt{research/to\_human/final\_summary.html}: Interactive progress report
+\item \texttt{research/findings.md}: Full experimental log (37 sessions)
+\end{itemize}
+
+\textbf{Key commands}:
+\begin{verbatim}
+# FP16 baseline (reproduces paper's 41.5%)
+python research/src/eval_hellaswag.py --model smollm-360m \
+    --condition fp16 --limit 500
+
+# Beta calibration for any model
+python research/experiments/fpga-controller/phase5-benchmark/ \
+    code/smollm2_360m_calibration.py
+
+# Calibration sensitivity test (single-text vs 10-text)
+python research/experiments/fpga-controller/phase5-benchmark/ \
+    code/opt125m_cal_sensitivity.py
+\end{verbatim}
+
 \bibliographystyle{plain}
 \bibliography{fpga_refs}
 
