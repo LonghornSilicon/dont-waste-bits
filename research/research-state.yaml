@@ -1,6 +1,6 @@
 project: dont-waste-bits-verification
 created: "2026-04-19"
-last_updated: "2026-04-19"
+last_updated: "2026-04-20"
 
 research_question: >
   Can we independently reproduce the claims of "Don't Waste Bits! Adaptive KV-Cache

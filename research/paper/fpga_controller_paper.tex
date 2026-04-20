@@ -381,7 +381,7 @@ Loss normalization is essential. The two-objective tension is not a hyperparamet
 
 \textbf{Dynamic KV quantization}: DWB~\citep{haeri2026dwb} introduces per-token dynamic allocation on FPGAs. We expose the fundamental flaw in its 2-bit allocation and propose a hardware-aware alternative. Gear~\citep{kang2024gear} uses mixed-precision at the tensor level; our approach is token-level.
 
-\textbf{Hardware-aware quantization}: AWQ~\citep{lin2023awq} and GPTQ~\citep{frantar2022gptq} optimize weight quantization for hardware. We apply hardware-aware thinking to KV cache allocation, introducing the BRAM port cost model as a design criterion.
+\textbf{Hardware-aware quantization}: AWQ~\citep{lin2023awq} and GPTQ~\citep{frantar2022gptq} optimize weight quantization for hardware. InnerQ~\citep{innerq2026} applies hardware-aware KV-cache quantization for GPU inference, grouping over the inner cache dimension to enable scale-factor reuse across compute units (22\% speedup on GPU). We apply hardware-aware thinking to FPGA KV cache allocation, introducing the BRAM port cost model as a design criterion---a distinct constraint from GPU compute-unit alignment.
 
 \textbf{Gumbel-softmax training}: Jang et al.~\citep{jang2017gumbel} and Maddison et al.~\citep{maddison2017concrete} introduced differentiable discrete sampling. We apply this to bit-width selection with FPGA-aware objectives.
 
