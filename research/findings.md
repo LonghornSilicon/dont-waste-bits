@@ -1,7 +1,7 @@
 # Research Findings — Don't Waste Bits! Verification
 
-**Last updated**: 2026-04-20 (Session 38: GPT-2 Large sensitivity — Full family sweep complete. Non-monotonic gap_std (S=0.033, M=0.052, L=0.026) vs monotonic max_error (0.018→0.011→0.004) definitively breaks causal link. Finding 9: 7 data points / 4 arch types. CPU loop exhausted.)  
-**Phase**: CPU_COMPLETE — 10 checkpoints / 5 model families / 2×2 instruct matrix. GPU (1.7B HellaSwag accuracy) + FPGA hardware (latency) are only remaining blockers.
+**Last updated**: 2026-04-20 (Session 41: SmolLM-360M-Instruct — instruct floor effect corpus-dependent; base and instruct identical on technical texts. 12 sensitivity JSONs, 9 uniform methodology. CPU verification COMPLETE.)  
+**Phase**: CPU_COMPLETE — 12 sensitivity JSONs / 10 checkpoints / 5 families / 10 findings. Only GPU (1.7B HellaSwag) + FPGA (latency) remain.
 
 ---
 
