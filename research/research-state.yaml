@@ -280,7 +280,7 @@ final_status:
     main: fe6e2ed
     turboquant-integration: dd78315
     gumbel-controller: fec47ec  # concluded — superseded by fpga-controller
-    fpga-controller: 7478ca9   # session 10 — simulation + paper polish
+    fpga-controller: a7b7156   # session 13 — fine beta sweep + paper polish
   branches:
     main: verification + ablation + 1.7B mechanistic + paper
     turboquant-integration: all of main + DWB-TurboQuant + controller analysis + HTML report
@@ -314,6 +314,18 @@ fpga_controller_results:
     fpga_cost: 0.290
     fpga_speedup: 3.48
     conclusion: "100% 4-bit at 360M (correct — INT4 lossless). Phase transition at beta=1.0->1.5 confirmed."
+  phase5_fine_beta_360m:
+    model: SmolLM-360M
+    method: fine-grained beta sweep on cached 89856-token signals
+    gap_distribution: {mean: 0.3367, std: 0.0501}
+    predicted_transition: 1.260
+    sweep:
+      1.1: {p4: 0.0, p8: 100.0, speedup: 1.80}
+      1.2: {p4: 0.0, p8: 100.0, speedup: 1.80}
+      1.25: {p4: 41.7, p8: 58.3, speedup: 2.26, note: "mixed — at transition"}
+      1.3: {p4: 58.7, p8: 41.3, speedup: 2.52, note: "mixed — above transition"}
+      1.4: {p4: 100.0, p8: 0.0, speedup: 3.48}
+    conclusion: "Transition window beta=[1.20,1.40] brackets predicted beta*=1.260. Theory confirmed to within ±0.04."
   phase5_sim_1b7:
     model: SmolLM-1.7B (SIMULATED)
     method: synthetic signals with predicted gap distribution

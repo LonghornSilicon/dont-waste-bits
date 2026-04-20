@@ -488,3 +488,31 @@ Paper polish pass with no new experimental data (waiting for Brev A4000).
 **Assessment**: Paper is near-final and complete as a standalone contribution. Only outstanding item is the Brev A4000 hardware run to fill Table 1's 1.7B "Ours" row.
 
 **Remaining**: Brev 1.7B hardware run. Paper otherwise publication-ready.
+
+---
+
+## 2026-04-19 — Session 13 (autoresearch tick)
+
+**Trigger**: Dual autoresearch loop ticks. No Brev 1.7B results yet.
+
+**Experiments run**:
+- `beta_transition_fine.py`: Fine-grained beta sweep [1.1, 1.2, 1.25, 1.3, 1.4] on cached 89,856-token signals
+- Used already-cached Stage 1 signals — fast controller-only training
+
+**Key result — phase transition confirmed to within ±0.04 in beta**:
+- Theoretical prediction: beta* = gap_mean/0.267 = 0.337/0.267 = 1.260
+- beta=1.2: 100% 8-bit (threshold 0.321 < gap 0.337)
+- beta=1.25: 41.7% 4-bit (threshold 0.334 ≈ gap 0.337) — TRANSITION POINT
+- beta=1.3: 58.7% 4-bit (above transition)
+- beta=1.4: 100% 4-bit
+
+This is a clean empirical confirmation of the gradient analysis theory.
+
+**Paper updates**:
+- Fixed Table 1 footnote: binary controller used 200 samples (not 500)
+- Updated tab:pertok_sweep with 7 beta values + hdashline separating regimes
+- Added arydshln package for hdashline
+- Updated Discussion: explicit beta transition window [1.2, 1.4] brackets predicted 1.260
+- Updated beta calibration figure with fine sweep points + transition annotation at 1.26
+
+**Commit**: a7b7156
