@@ -377,4 +377,6 @@ Phase 5 script now sweeps [1.0, 1.5, 2.0, 3.0] and selects best. Code validated 
 - **Global quality scores fail at ANY scale**: avg q8-q4 ≈ 0.337 even at 360M → dL/dp4 > 0 with beta=0.5 → 100% 8-bit. Not just a 1.7B problem.
 - **Per-token quality proxy requires correct beta**: q_local alone doesn't fix it — need beta≥1.5 so FPGA threshold (beta*0.267) exceeds avg quality gap (0.337).
 - **beta=1.5 validated**: Smoke test on 360M shows clean flip from 100% 8-bit (beta=1.0) to 100% 4-bit (beta=1.5). Phase 5 script sweeps [1.0,1.5,2.0,3.0] automatically.
-- **Phase 5 script**: Use `run_phase5_1b7_pertok.py` (commit bc778ba). v1 (`run_phase5_1b7.py`) is broken for two reasons: wrong betas AND global quality scores.
+- **Phase 5 script**: Use `run_phase5_1b7_pertok.py` (latest commit). v1 (`run_phase5_1b7.py`) is broken: wrong betas + global quality scores.
+- **Paper (commit 00be181)**: Two quality regimes formally defined in controller section. Table 1 has 1.7B TBD row. Section 5.3 is a standalone validated per-token beta calibration experiment. `update_paper_1b7.py` will auto-fill TBDs when Brev results arrive.
+- **Lessons for paper writing**: The fact that 2-bit is dominated is the core contribution — state it in abstract, intro bullet 1, and conclusion. The per-token proxy and beta calibration are the technical enablers for 1.7B (scale-generalization). These are independent contributions, both novel relative to DWB.
