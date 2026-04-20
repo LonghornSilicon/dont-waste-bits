@@ -48,17 +48,17 @@
   &nbsp;(branch: <code>fpga-controller</code>)
 </p>
 
+<!-- ===== CPU COMPLETE BANNER ===== -->
+<div style="background:#22543d; color:white; border-radius:10px; padding:18px 22px; margin:18px 0; text-align:center;">
+  <div style="font-size:1.5em; font-weight:bold; margin-bottom:6px;">✓ CPU RESEARCH PHASE COMPLETE</div>
+  <div style="font-size:0.95em; opacity:0.9;">29 sessions · 8 checkpoints · 4 model families · mean formula error 0.018 · max 0.040 · all within ±0.04</div>
+  <div style="margin-top:8px; font-size:0.88em; opacity:0.8;">Paper ready for Overleaf · GPU needed for 1.7B HellaSwag · FPGA board for latency</div>
+</div>
+
 <!-- ===== TLDR ===== -->
 <div class="callout blue">
 <strong>TL;DR</strong><br>
-We independently reproduced and extended arXiv:2604.04722. The paper's core accuracy claims
-are <strong>explained</strong> (the "+7.6pp improvement" comes from an unusually weak INT4 baseline using
-8 quantization levels instead of the standard 15). We then built a novel
-<strong>FPGA-aware binary {4,8}-bit controller</strong> that achieves <strong class="best">3.48× FPGA throughput</strong>
-vs. DWB's 2.44× (+43%) by eliminating the 2-bit option that DWB wastes 47.9% of allocation on
-— an option that provides <em>zero BRAM bandwidth savings</em> on Xilinx Ultrascale+ hardware
-while catastrophically degrading accuracy. A paper is written and ready; only the SmolLM-1.7B
-hardware row (Table 1) awaits a Brev A4000 run.
+We independently reproduced and extended arXiv:2604.04722 over 29 autonomous sessions. The paper's core accuracy claims are <strong>explained</strong> (the "+7.6pp improvement" uses an unusually weak INT4 baseline). We built a novel <strong>FPGA-aware binary {4,8}-bit controller</strong> that achieves <strong class="best">3.48× FPGA throughput</strong> vs. DWB's 2.44× (+43%) by eliminating the 2-bit option that wastes 47.9% of allocation on Xilinx Ultrascale+. We derived a universal beta calibration formula <strong>β* = gap_mean/0.267</strong>, validated across <strong>8 checkpoints and 4 model families</strong> (scales 124M–1.7B), with prediction error ≤±0.04 in all cases. A complete paper is written at <code>research/paper/fpga_controller_paper.tex</code>; only the 1.7B HellaSwag HellaSwag accuracy row awaits a Brev A4000 GPU run.
 </div>
 
 <!-- ===== KEY NUMBERS ===== -->

@@ -8,7 +8,7 @@ research_question: >
   Specifically: (H1) 17.75% latency reduction, (H2) +7.60 accuracy points over
   static 4-bit KV, (H3) within 0.30 points of FP16 — all on SmolLM-360M / HellaSwag.
 
-phase: CPU_SATURATED  # Session 27: All CPU experiments exhausted. 27 sessions, ~60 experiments. 6 checkpoints/4 families/2x2 instruct matrix complete. Only GPU (1.7B accuracy) + FPGA hardware remain.
+phase: CPU_COMPLETE  # Session 29: 29 sessions, ~65 experiments. 8 checkpoints/4 families/2x2 instruct matrix/complete GPT-2 family. Formula validated mean error 0.018, max 0.040. Paper near-final. Only GPU (1.7B HellaSwag) + FPGA hardware remain.
 
 hypotheses:
   H1:
