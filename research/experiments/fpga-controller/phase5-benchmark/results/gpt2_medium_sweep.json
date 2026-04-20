@@ -1,0 +1,143 @@
+{
+  "model": "gpt2-medium",
+  "hidden_dim": 1024,
+  "gap_mean": 0.188,
+  "predicted_beta_star": 0.704,
+  "measured_transition": [
+    0.68,
+    0.7
+  ],
+  "theory_error": 0.014,
+  "sweep": {
+    "0.55": {
+      "p4_mean": 0.0,
+      "p4_runs": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "threshold": 0.1469,
+      "regime": "8-bit"
+    },
+    "0.6": {
+      "p4_mean": 0.0,
+      "p4_runs": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "threshold": 0.1602,
+      "regime": "8-bit"
+    },
+    "0.62": {
+      "p4_mean": 0.0,
+      "p4_runs": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "threshold": 0.1655,
+      "regime": "8-bit"
+    },
+    "0.64": {
+      "p4_mean": 0.0,
+      "p4_runs": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "threshold": 0.1709,
+      "regime": "8-bit"
+    },
+    "0.66": {
+      "p4_mean": 0.0,
+      "p4_runs": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "threshold": 0.1762,
+      "regime": "8-bit"
+    },
+    "0.68": {
+      "p4_mean": 0.0,
+      "p4_runs": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "threshold": 0.1816,
+      "regime": "8-bit"
+    },
+    "0.7": {
+      "p4_mean": 58.53333333333333,
+      "p4_runs": [
+        53.1,
+        60.9,
+        61.6
+      ],
+      "threshold": 0.1869,
+      "regime": "MIXED"
+    },
+    "0.72": {
+      "p4_mean": 64.43333333333334,
+      "p4_runs": [
+        62.8,
+        67.7,
+        62.8
+      ],
+      "threshold": 0.1922,
+      "regime": "MIXED"
+    },
+    "0.74": {
+      "p4_mean": 87.89999999999999,
+      "p4_runs": [
+        100.0,
+        100.0,
+        63.7
+      ],
+      "threshold": 0.1976,
+      "regime": "MIXED"
+    },
+    "0.76": {
+      "p4_mean": 100.0,
+      "p4_runs": [
+        100.0,
+        100.0,
+        100.0
+      ],
+      "threshold": 0.2029,
+      "regime": "4-bit"
+    },
+    "0.78": {
+      "p4_mean": 100.0,
+      "p4_runs": [
+        100.0,
+        100.0,
+        100.0
+      ],
+      "threshold": 0.2083,
+      "regime": "4-bit"
+    },
+    "0.8": {
+      "p4_mean": 100.0,
+      "p4_runs": [
+        100.0,
+        100.0,
+        100.0
+      ],
+      "threshold": 0.2136,
+      "regime": "4-bit"
+    },
+    "0.85": {
+      "p4_mean": 100.0,
+      "p4_runs": [
+        100.0,
+        100.0,
+        100.0
+      ],
+      "threshold": 0.227,
+      "regime": "4-bit"
+    }
+  }
+}

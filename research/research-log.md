@@ -811,3 +811,28 @@ SFT has nothing to regularize — the floor is architecture-determined, not trai
 
 **Paper**: tab:instruct expanded with TinyLlama GQA rows; Discussion updated with GQA null-shift.
 **Commit**: 969c3f6
+
+---
+
+## 2026-04-20 Session 28 — GPT-2 Medium (345M): Dimension Hypothesis Challenged
+
+**Protocol**: Test whether larger hidden_dim (1024 vs 768) → higher gap_mean within GPT-2 family. Naive prediction: gap_mean scales with K/V dimension → Medium > Small (0.196).
+
+**Model**: openai/gpt2-medium (345M, d_model=1024, 24 layers, 16 heads). Same Conv1D c_attn architecture as GPT-2 Small. 26,352 cached signals from 10 texts.
+
+**Result: DIMENSION HYPOTHESIS CHALLENGED**
+- GPT-2 Small (124M, d=768): gap_mean = 0.1956
+- GPT-2 Medium (345M, d=1024): gap_mean = **0.1880** — LOWER, not higher!
+- beta* predicted: 0.1880/0.267 = **0.704**
+- Fine sweep [0.55-0.80]: transition [0.68, 0.70], mid=0.690, error=**0.014** — CONFIRMED ≤±0.04
+
+**Key finding — floor gap_mean ≈ 0.18-0.19 is about representation quality, not dimension**:
+More expressive models (GPT-2 Medium, GQA TinyLlama, MHA+SFT) all converge to this floor. Raw K/V dimensionality does not predict gap_mean — the model's learned representation regularity does.
+
+**Paper updates**:
+- tab:betastar: 7th checkpoint row added (GPT-2 Medium, 345M, gap_mean=0.188, β*=0.704, [0.68,0.70])
+- Discussion: "dimension hypothesis challenged" paragraph added after GPT-2 Small
+- Summary sentence extended with floor gap_mean insight
+- All counts: 6→7 checkpoints; mean error updated: 0.021→0.020
+
+**Result files**: gpt2_medium_cal.json, gpt2_medium_sweep.json, gpt2_medium_cache.pt

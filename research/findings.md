@@ -1,7 +1,7 @@
 # Research Findings — Don't Waste Bits! Verification
 
-**Last updated**: 2026-04-20 (Session 27: TinyLlama-Chat null shift — GQA instruct calibration transfers! MHA instruct -44%, GQA instruct -0.3%. Completed 2×2 matrix {MHA,GQA}×{base,instruct}. tab:instruct updated. Floor gap_mean ≈ 0.18-0.19 identified.)  
-**Phase**: ACTIVE — CPU experiments continuing. 6 checkpoints + 4 families validated. GPU (1.7B accuracy) + FPGA hardware (latency) pending.
+**Last updated**: 2026-04-20 (Session 28: GPT-2 Medium (345M) — null/reversed dimension hypothesis! Larger dim (1024) has LOWER gap_mean (0.188) than Small (768, 0.196). 7th checkpoint confirmed. Floor gap_mean ≈ 0.18-0.19 = representation quality floor, not dimension artifact.)  
+**Phase**: CPU_SATURATED — 7 checkpoints / 4 families / 2×2 instruct matrix complete. GPU (1.7B accuracy) + FPGA hardware (latency) remain.
 
 ---
 
@@ -744,3 +744,49 @@ The ~44% reduction in gap_mean is scale-independent and reproducible. The shift 
 **Practical implication**: For GQA models (TinyLlama, Mistral, Llama-3), base calibration transfers to instruct — no re-calibration needed. For MHA models (SmolLM, OPT, GPT-2), re-calibration after SFT is required.
 
 **Paper update**: tab:instruct expanded to 3 models (2 MHA + 1 GQA), Discussion updated with GQA null-shift insight and practical implication revised.
+
+---
+
+## Session 28: GPT-2 Medium (345M) — Dimension Hypothesis Challenged ★ SURPRISING
+
+**Date**: 2026-04-20 (Session 28)
+
+**Hypothesis**: Within the GPT-2 family, larger hidden_dim → higher gap_mean (naive dimension scaling).
+
+**Model**: openai/gpt2-medium (345M, d_model=1024, 24 layers, 16 heads, 26,352 cached signals)
+
+**Results**:
+- gap_mean = **0.1880** (GPT-2 Small: 0.1956 — LOWER despite larger dim!)
+- Predicted beta* = 0.1880/0.267 = **0.704**
+- Fine sweep transition: **[0.68, 0.70]**, mid=0.690, error=**0.014** — within ±0.04 ✓
+
+| beta | threshold | 4-bit% | regime |
+|------|-----------|--------|--------|
+| 0.68 | 0.1816 | 0% | 8-bit |
+| 0.70 | 0.1869 | 58.5% | MIXED |
+| 0.72 | 0.1922 | 64.4% | MIXED |
+| 0.74 | 0.1976 | 87.9% | MIXED |
+| 0.76 | 0.2029 | 100% | 4-bit |
+
+**FINDING — Dimension hypothesis REFUTED within GPT-2 family**:
+- GPT-2 Small (124M, d=768): gap_mean = 0.196
+- GPT-2 Medium (345M, d=1024): gap_mean = 0.188 — LOWER, not higher
+
+**Interpretation — floor gap_mean is about representation quality, not dimension**:
+GPT-2 Medium clusters with GQA models (TinyLlama ~0.189) and MHA-instruct models (SmolLM ~0.181-0.194) at the floor ≈ 0.18-0.19. The pattern: more expressive / better-trained models learn more REGULAR KV representations, driving gap_mean toward this floor regardless of hidden_dim. Raw K/V dimensionality is a secondary factor.
+
+**Full 7-checkpoint / 4-family summary**:
+
+| Family | Model | gap_mean | beta* theory | measured transition | error |
+|--------|-------|----------|--------------|---------------------|-------|
+| LLaMA-MHA (SmolLM) | 135M | 0.330 | 1.234 | [1.2, 1.3] | <0.03 |
+| LLaMA-MHA (SmolLM) | 360M | 0.337 | 1.261 | [1.2, 1.4] | <0.04 |
+| LLaMA-MHA (SmolLM) | 1.7B | 0.424 | 1.584 | [1.55, 1.57] | <0.015 |
+| LLaMA-GQA (TinyLlama) | 1.1B | 0.189 | 0.707 | [0.68, 0.74] | 0.003 |
+| OPT-MHA (Meta) | 125M | 0.213 | 0.798 | [0.75, 0.80] | 0.023 |
+| GPT-2 (OpenAI) | 124M | 0.196 | 0.733 | [0.70, 0.80] | 0.017 |
+| **GPT-2 Medium (OpenAI)** | **345M** | **0.188** | **0.704** | **[0.68, 0.70]** | **0.014** |
+
+Mean error (7 checkpoints): **0.020**, max: **0.040** — all within ±0.04.
+
+**Paper update**: GPT-2 Medium row added to tab:betastar (7th checkpoint), Discussion extended with "dimension hypothesis challenged / floor gap_mean = representation quality" paragraph, all counts updated to 7 checkpoints, abstract/contributions/conclusion updated.

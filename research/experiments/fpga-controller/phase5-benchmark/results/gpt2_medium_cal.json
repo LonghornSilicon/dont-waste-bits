@@ -1,0 +1,16 @@
+{
+  "model": "gpt2-medium",
+  "hidden_dim": 1024,
+  "n_layers": 24,
+  "n_heads": 16,
+  "gap_mean": 0.188,
+  "gap_std": 0.0448,
+  "predicted_beta_star": 0.704,
+  "gpt2_small_gap_mean": 0.1956,
+  "delta_gap": -0.0076,
+  "delta_pct": -3.9,
+  "n_tokens": 26352,
+  "elapsed_s": 5.5,
+  "within_family_prediction": 0.219,
+  "cross_family_prediction": 0.286
+}
