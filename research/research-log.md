@@ -564,3 +564,35 @@ This is a clean empirical confirmation of the gradient analysis theory.
 **Commits**: f72018d, 859fb22, b66d30c, cec8a3d, b3abcd4
 
 **Status**: Paper is in consistent, near-final state. Only remaining gap: 1.7B accuracy (needs Brev GPU).
+
+---
+
+## 2026-04-19 — Session 17 (autoresearch tick)
+
+**Trigger**: Autoresearch loop tick.
+
+**Key decision**: Rather than continuing paper polish, ran the 1.7B beta calibration on real model signals to replace the simulated 1.7B data.
+
+**Experiment run**: `beta_calibration_1b7.py` — SmolLM-1.7B CPU forward pass (10 texts, max_len=64, 24 layers → 15,360 tokens, 26 seconds). Protocol committed first (9e9ba7b).
+
+**Results (MAJOR)**:
+- gap_mean = 0.4235 (simulation predicted 0.400 — close but measurably higher)
+- beta* = 0.4235/0.267 = **1.584** (simulation predicted 1.498)
+- beta=1.5: 0% 4-bit (all 8-bit, just BELOW transition) — NOT the universal operating point!
+- **beta=1.6: 68.4% 4-bit → 2.69× FPGA speedup — beats DWB (2.44×) by +10%**
+
+**Cross-scale formula confirmed at all three scales (all measured)**:
+- 135M: beta*=1.234, measured [1.2,1.3] ✓
+- 360M: beta*=1.261, measured [1.2,1.4] ✓
+- 1.7B: beta*=1.584, measured [1.5,1.6] ✓
+
+**Paper updates**:
+- Simulation table replaced with real data
+- Tab. tab:betastar row 3 updated (gap_mean 0.400→0.4235, beta* 1.498→1.584, source: CPU experiment)
+- Table 1: 1.7B FPGA metrics updated (5.26 bits, 0.375 cost, 2.69× speedup from real beta=1.6)
+- "beta=1.5 near-universal" → "beta*=gap_mean/0.267 universal calibration criterion"
+- Figures regenerated with all three scales as measured data
+
+**Commits**: 9e9ba7b (protocol), c35d77f (results + paper), 73f9be8 (HTML)
+
+**Status**: All FPGA metrics measured on CPU. Only remaining gap: 1.7B HellaSwag accuracy (GPU eval).
