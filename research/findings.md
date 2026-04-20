@@ -1,6 +1,6 @@
 # Research Findings — Don't Waste Bits! Verification
 
-**Last updated**: 2026-04-19 (Session 16: paper formula bug fixed r_cancel→r_survive; Table 1 FPGA metrics from 1.7B simulation; figure caption corrected)  
+**Last updated**: 2026-04-19 (Session 17: 1.7B MEASURED beta calibration — gap_mean=0.4235, beta*=1.584, beta=1.6 gives 2.69× speedup beating DWB +10%. Simulation replaced with real data.)  
 **Phase**: EXTENDED — FPGA controller experiments complete; paper pending
 
 ---
@@ -376,9 +376,10 @@ Phase 5 script now sweeps [1.0, 1.5, 2.0, 3.0] and selects best. Code validated 
 - **1.7B validates paper's core claim**: Genuine INT4 degradation occurs at scale — H2 is strongest at 1.7B.
 - **Global quality scores fail at ANY scale**: avg q8-q4 ≈ 0.337 even at 360M → dL/dp4 > 0 with beta=0.5 → 100% 8-bit. Not just a 1.7B problem.
 - **Per-token quality proxy requires correct beta**: q_local alone doesn't fix it — need beta≥1.5 so FPGA threshold (beta*0.267) exceeds avg quality gap (0.337).
-- **beta=1.5 validated**: Smoke test on 360M shows clean flip from 100% 8-bit (beta=1.0) to 100% 4-bit (beta=1.5). Phase 5 script sweeps [1.0,1.5,2.0,3.0] automatically.
-- **Phase 5 script**: Use `run_phase5_1b7_pertok.py` (latest commit). v1 (`run_phase5_1b7.py`) is broken: wrong betas + global quality scores.
-- **Paper (commit b66d30c)**: Two quality regimes formally defined in controller section. Table 1 has 1.7B accuracy TBD but FPGA metrics (5.86 bits, 0.415 cost, 2.43× speedup) filled from simulation. `update_paper_1b7.py` will auto-fill accuracy TBD when Brev results arrive.
+- **beta=1.5 validated at 135M/360M, NOT at 1.7B**: Smoke test on 360M shows clean flip. At 1.7B, beta*=1.584 — beta=1.5 is just below the transition (all 8-bit). Use beta=1.6 at 1.7B for genuine mixed allocation.
+- **beta* = gap_mean/0.267 confirmed at ALL THREE SCALES**: 135M: 0.3297/0.267=1.234 [measured: 1.2-1.3 ✓], 360M: 0.3367/0.267=1.261 [measured: 1.2-1.4 ✓], 1.7B: 0.4235/0.267=1.584 [measured: 1.5-1.6 ✓]. This is the key calibration formula.
+- **1.7B at beta=1.6**: 68.4% 4-bit, avg_bits=5.26, FPGA cost=0.375, speedup=2.69× — beats DWB (2.44×) by +10%!
+- **Paper (current HEAD)**: 1.7B simulation REPLACED with real measured data. Table 1 1.7B FPGA metrics updated: 5.26 bits, 0.375 cost, 2.69× speedup. Figures regenerated. Only remaining gap: 1.7B HellaSwag accuracy (GPU eval).
 - **Formula consistency**: ε_eff = ε_rel × r_survive. All three rows now consistent: 135M: 0.249×0.28=0.069 ✓, 360M: 0.270×0.30=0.081 ✓, 1.7B: 0.353×0.351=0.124 ✓. Table column was incorrectly labeled r_cancel (fixed in session 16).
 - **Lessons for paper writing**: The fact that 2-bit is dominated is the core contribution — state it in abstract, intro bullet 1, and conclusion. The per-token proxy and beta calibration are the technical enablers for 1.7B (scale-generalization). These are independent contributions, both novel relative to DWB.
 
@@ -452,3 +453,29 @@ Trained binary {4,8} controller on synthetic signals. This is a MODEL-BASED PRED
 - The simulation is added as Table tab:sim_1b7 in the Discussion section
 - Pareto dominance argument is nuanced: at 1.7B, we eliminate the dominated 2-bit option, but the overall accuracy-FPGA tradeoff depends on controller quality
 - GPU measurement (Brev A4000) will determine whether beta=1.5 achieves competitive accuracy
+
+---
+
+## SmolLM-1.7B Beta Calibration: MEASURED ★ NEW (Session 17)
+
+**Date**: 2026-04-19 (Session 17)
+
+**Experiment**: `beta_calibration_1b7.py` — real SmolLM-1.7B signals, 10 texts, max_len=64, 15,360 tokens (26 seconds for signal extraction on CPU).
+
+**Key result**: gap_mean=**0.4235** (simulation predicted 0.400), beta*=**1.584** (simulation predicted 1.498).
+
+**Implication — beta=1.5 is NOT at the 1.7B transition:**
+- beta=1.5: threshold=0.401 < gap_mean=0.424 → **0% 4-bit** (all 8-bit, 1.80× speedup)
+- beta=1.6: threshold=0.428 > gap_mean=0.424 → **68.4% 4-bit** (genuine mixed, 2.69× speedup)
+- This is **+10% over DWB** (2.44×) at similar avg_bits (5.26 vs 5.05)!
+
+**Cross-scale formula beta* = gap_mean/0.267 — CONFIRMED at all three scales:**
+| Scale | gap_mean (measured) | beta* (theory) | Measured transition | beta=1.5 outcome |
+|-------|---------------------|----------------|---------------------|-----------------|
+| 135M  | 0.3297              | 1.234          | [1.2, 1.3] ✓        | 100% 4-bit      |
+| 360M  | 0.3367              | 1.261          | [1.2, 1.4] ✓        | 100% 4-bit      |
+| 1.7B  | **0.4235**          | **1.584**      | **[1.5, 1.6] ✓**   | 0% 4-bit (below!)|
+
+**Recommendation**: measure gap_mean on 10 texts (< 1 min CPU), set beta = gap_mean/0.267 + 0.1.
+
+**Paper updates**: Simulation table replaced with real data. Tab. tab:betastar row 3 updated. Abstract/conclusion/contributions revised. Figures regenerated with all three scales measured.

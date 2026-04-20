@@ -1,0 +1,79 @@
+{
+  "model": "HuggingFaceTB/SmolLM-1.7B",
+  "n_texts": 10,
+  "max_length": 64,
+  "n_tokens": 15360,
+  "gap_mean": 0.4235,
+  "gap_std": 0.0629,
+  "avg_q4_local": 0.5473,
+  "avg_q8_local": 0.9708,
+  "predicted_beta_star": 1.584,
+  "simulation_prediction_gap_mean": 0.4,
+  "simulation_prediction_beta_star": 1.498,
+  "elapsed_s": 33.0,
+  "sweep": [
+    {
+      "beta": 1.0,
+      "threshold": 0.2673,
+      "p4_pct": 0.0,
+      "p8_pct": 100.0,
+      "avg_bits": 8.0,
+      "fpga_speedup": 1.804,
+      "outcome": "8-bit"
+    },
+    {
+      "beta": 1.2,
+      "threshold": 0.3208,
+      "p4_pct": 0.0,
+      "p8_pct": 100.0,
+      "avg_bits": 8.0,
+      "fpga_speedup": 1.804,
+      "outcome": "8-bit"
+    },
+    {
+      "beta": 1.3,
+      "threshold": 0.3475,
+      "p4_pct": 0.0,
+      "p8_pct": 100.0,
+      "avg_bits": 8.0,
+      "fpga_speedup": 1.804,
+      "outcome": "8-bit"
+    },
+    {
+      "beta": 1.4,
+      "threshold": 0.3743,
+      "p4_pct": 0.0,
+      "p8_pct": 100.0,
+      "avg_bits": 8.0,
+      "fpga_speedup": 1.804,
+      "outcome": "8-bit"
+    },
+    {
+      "beta": 1.5,
+      "threshold": 0.401,
+      "p4_pct": 0.0,
+      "p8_pct": 100.0,
+      "avg_bits": 8.0,
+      "fpga_speedup": 1.804,
+      "outcome": "8-bit"
+    },
+    {
+      "beta": 1.6,
+      "threshold": 0.4277,
+      "p4_pct": 68.4,
+      "p8_pct": 31.6,
+      "avg_bits": 5.263,
+      "fpga_speedup": 2.692,
+      "outcome": "mixed"
+    },
+    {
+      "beta": 2.0,
+      "threshold": 0.5347,
+      "p4_pct": 97.6,
+      "p8_pct": 2.4,
+      "avg_bits": 4.097,
+      "fpga_speedup": 3.406,
+      "outcome": "4-bit"
+    }
+  ]
+}

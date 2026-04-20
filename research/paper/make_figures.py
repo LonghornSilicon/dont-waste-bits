@@ -135,50 +135,58 @@ import numpy as np
 
 fig3, (ax4, ax5) = plt.subplots(1, 2, figsize=(9, 4))
 
-# Left: q8-q4 gap distribution at 360M (measured) and 1.7B (estimated)
-gap_360m_mean, gap_360m_std = 0.3367, 0.0501
-gap_1b7_mean,  gap_1b7_std  = 0.40,   0.058   # estimated: larger errors at 1.7B
+# Left: q8-q4 gap distribution — all three scales MEASURED
+gap_135m_mean_l, gap_135m_std_l = 0.3297, 0.0494  # measured
+gap_360m_mean, gap_360m_std = 0.3367, 0.0501        # measured
+gap_1b7_mean,  gap_1b7_std  = 0.4235, 0.0629        # MEASURED (was estimated 0.400)
 
-x = np.linspace(0.1, 0.7, 300)
+x = np.linspace(0.1, 0.8, 300)
 from scipy.stats import norm
+pdf_135m_l = norm.pdf(x, gap_135m_mean_l, gap_135m_std_l)
 pdf_360m = norm.pdf(x, gap_360m_mean, gap_360m_std)
 pdf_1b7  = norm.pdf(x, gap_1b7_mean,  gap_1b7_std)
 
-pdf_135m = norm.pdf(x, 0.3297, 0.0494)
-ax4.plot(x, pdf_135m, color="#805ad5", lw=2, label="SmolLM-135M (measured)")
-ax4.plot(x, pdf_360m, color="#4299e1", lw=2, label="SmolLM-360M (measured)")
-ax4.plot(x, pdf_1b7,  color="#e53e3e", lw=2, label="SmolLM-1.7B (estimated)")
+ax4.plot(x, pdf_135m_l, color="#805ad5", lw=2, label="SmolLM-135M (measured)")
+ax4.plot(x, pdf_360m,   color="#4299e1", lw=2, label="SmolLM-360M (measured)")
+ax4.plot(x, pdf_1b7,    color="#e53e3e", lw=2, label="SmolLM-1.7B (measured)")
 
-# Mark beta=1.5 threshold
+# Mark beta=1.5 threshold and beta=1.6 threshold
 thr15 = 1.5 * 0.270 / 1.01
-ax4.axvline(thr15, color="#38a169", lw=1.8, linestyle="--", label=f"beta=1.5 threshold ({thr15:.3f})")
-ax4.fill_betweenx([0, 8], 0.1, thr15, alpha=0.12, color="#38a169")
-ax4.text(thr15 - 0.005, 7.5, "4-bit\nzone", ha="right", fontsize=8, color="#38a169")
-ax4.text(thr15 + 0.005, 7.5, "8-bit\nzone", ha="left", fontsize=8, color="#718096")
+thr16 = 1.6 * 0.270 / 1.01
+ax4.axvline(thr15, color="#38a169", lw=1.8, linestyle="--", label=f"beta=1.5 thr ({thr15:.3f})")
+ax4.axvline(thr16, color="#d69e2e", lw=1.5, linestyle=":", label=f"beta=1.6 thr ({thr16:.3f})")
+ax4.fill_betweenx([0, 8], 0.1, thr15, alpha=0.10, color="#38a169")
+ax4.fill_betweenx([0, 8], thr15, thr16, alpha=0.10, color="#d69e2e")
+ax4.text(thr15 - 0.005, 7.0, "4-bit\nzone", ha="right", fontsize=7, color="#38a169")
+ax4.text((thr15+thr16)/2, 7.0, "1.7B\ntrans.", ha="center", fontsize=7, color="#d69e2e")
+ax4.text(thr16 + 0.005, 7.0, "8-bit\nzone", ha="left", fontsize=7, color="#718096")
 
 ax4.set_xlabel("q8_local - q4_local gap", fontsize=10)
 ax4.set_ylabel("Density", fontsize=10)
-ax4.set_title("Quality Gap Distribution\n(4-bit preferred when gap < threshold)", fontsize=10)
-ax4.legend(fontsize=8)
+ax4.set_title("Quality Gap Distribution (all three scales MEASURED)\n(4-bit preferred when gap < threshold)", fontsize=10)
+ax4.legend(fontsize=7.5)
 ax4.spines["top"].set_visible(False)
 ax4.spines["right"].set_visible(False)
 
-# Right: beta vs frac_4bit at 360M (actual controller outcomes) and predicted 1.7B
-# Actual controller training outcomes (coarse + fine sweep combined):
+# Right: beta vs frac_4bit at all three scales — all MEASURED
+# 360M coarse + fine sweep combined:
 betas_measured = [1.0, 1.1, 1.2, 1.25, 1.3, 1.4, 1.5, 2.0, 3.0]
 frac4_360m_actual = [0.0, 0.0, 0.0, 41.7, 58.7, 100.0, 100.0, 100.0, 100.0]
-# 135M measured points
+# 135M measured
 betas_135m = [0.9, 1.0, 1.1, 1.15, 1.2, 1.3, 1.5, 2.0]
 frac4_135m_actual = [0.0, 0.0, 0.0, 0.0, 0.0, 63.0, 100.0, 100.0]
+# 1.7B MEASURED (was "predicted")
+betas_1b7 = [1.0, 1.2, 1.3, 1.4, 1.5, 1.6, 2.0]
+frac4_1b7_actual = [0.0, 0.0, 0.0, 0.0, 0.0, 68.4, 97.6]
 
-# Theoretical curves for all scales
+# Theoretical curves
 betas_fine = np.linspace(0.5, 3.5, 200)
 gap_135m_mean, gap_135m_std = 0.3297, 0.0494
 frac4_135m_theory = [norm.cdf(b * 0.270/1.01, gap_135m_mean, gap_135m_std)*100
                      for b in betas_fine]
 frac4_360m_theory = [norm.cdf(b * 0.270/1.01, gap_360m_mean, gap_360m_std)*100
                      for b in betas_fine]
-frac4_1b7_pred    = [norm.cdf(b * 0.270/1.01, gap_1b7_mean, gap_1b7_std)*100
+frac4_1b7_theory  = [norm.cdf(b * 0.270/1.01, gap_1b7_mean, gap_1b7_std)*100
                      for b in betas_fine]
 
 ax5.plot(betas_fine, frac4_135m_theory, "-", color="#805ad5", lw=1.5, alpha=0.5)
@@ -187,24 +195,30 @@ ax5.plot(betas_135m, frac4_135m_actual, "^", color="#805ad5",
 ax5.plot(betas_fine, frac4_360m_theory, "-", color="#4299e1", lw=1.5, alpha=0.5)
 ax5.plot(betas_measured, frac4_360m_actual, "o", color="#4299e1",
          ms=8, zorder=6, label="360M measured")
-ax5.plot(betas_fine, frac4_1b7_pred, "--", color="#e53e3e",
-         lw=2, label="1.7B predicted")
+ax5.plot(betas_fine, frac4_1b7_theory, "-", color="#e53e3e", lw=1.5, alpha=0.5)
+ax5.plot(betas_1b7, frac4_1b7_actual, "s", color="#e53e3e",
+         ms=7, zorder=6, label="1.7B measured")
 
 ax5.axvline(1.5, color="#38a169", lw=1.5, linestyle=":", alpha=0.8, label="beta=1.5")
+ax5.axvline(1.6, color="#d69e2e", lw=1.5, linestyle=":", alpha=0.8, label="beta=1.6 (1.7B)")
 ax5.axhline(54.1, color="#718096", lw=1.2, linestyle=":", alpha=0.6,
-            label="Min 4-bit% to beat DWB (54.1%)")
+            label="Min 4-bit% to beat DWB")
 
-# annotate the phase transition
+# annotate phase transitions
 ax5.axvline(1.26, color="#38a169", lw=1.2, linestyle="-.", alpha=0.6)
-ax5.annotate("Phase\ntransition\n(beta=1.26)", xy=(1.26, 50), xytext=(1.7, 35),
+ax5.axvline(1.584, color="#e53e3e", lw=1.2, linestyle="-.", alpha=0.6)
+ax5.annotate("beta*=1.26\n(135M/360M)", xy=(1.26, 50), xytext=(1.05, 65),
              arrowprops=dict(arrowstyle="->", color="#38a169", lw=1.2),
-             fontsize=8, color="#38a169")
+             fontsize=7.5, color="#38a169")
+ax5.annotate("beta*=1.58\n(1.7B)", xy=(1.584, 30), xytext=(2.0, 20),
+             arrowprops=dict(arrowstyle="->", color="#e53e3e", lw=1.2),
+             fontsize=7.5, color="#e53e3e")
 
 ax5.set_xlabel("beta (FPGA penalty weight)", fontsize=10)
 ax5.set_ylabel("4-bit token fraction (%)", fontsize=10)
-ax5.set_title("Beta Calibration\n(4-bit% vs. penalty weight)", fontsize=10)
+ax5.set_title("Beta Calibration (all three scales MEASURED)\n(4-bit% vs. penalty weight)", fontsize=10)
 ax5.set_ylim(0, 115)
-ax5.legend(fontsize=7.5, loc="upper left")
+ax5.legend(fontsize=7, loc="upper left", ncol=1)
 ax5.spines["top"].set_visible(False)
 ax5.spines["right"].set_visible(False)
 
