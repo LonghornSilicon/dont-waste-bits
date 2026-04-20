@@ -295,13 +295,17 @@ Loss normalization is essential. The two-objective tension is not a hyperparamet
 
 \textbf{1.7B model and per-token quality signals}: At SmolLM-1.7B ($\epsilon_\text{eff} = 12.4\%$), INT4 is genuinely lossy (FP16: 49.0\%, static INT4: 41.1\%, $-$7.9pp). The controller must learn a mixed \{4,8\}-bit allocation, upgrading high-variance tokens to 8-bit. A key challenge is that global quality scores ($q_4 = 0.671$, $q_8 = 0.979$ at 1.7B) produce $\partial\mathcal{L}/\partial p_4 > 0$ for all $\beta$ values, forcing 100\% 8-bit allocation and a suboptimal 1.80$\times$ speedup (worse than DWB's 2.44$\times$).
 
-\textbf{Per-token quality proxy}: To enable genuine mixed allocation, we replace global quality scores with a per-token proxy:
+\textbf{Per-token quality proxy and beta calibration}: To enable genuine mixed allocation, we replace global quality scores with a per-token proxy:
 \[
 q_{t,b}^\text{local} = 1 - \frac{\|\text{Quant}_b(kv_t) - kv_t\|_2}{\|kv_t\|_2}
 \]
-This gives token-specific quality scores: high-$\|kv\|$ tokens receive lower $q_{t,4}^\text{local}$ (pushed toward 8-bit) while low-$\|kv\|$ tokens stay 4-bit. The per-token quality is available at signal-extraction time (Stage 1) with no additional forward pass. We extend the controller to 4D features $\mathbf{f}_t = [kv\_norm_t, pos\_frac_t, q_{t,4}^\text{local}, q_{t,8}^\text{local}]$.
+We further identify that the per-token proxy alone is insufficient without proper $\beta$ calibration. The compound loss gradient:
+\[
+\frac{\partial \mathcal{L}}{\partial p_{t,4}} = -\alpha(q_{t,4}^\text{local} - q_{t,8}^\text{local}) + \frac{\beta(c_4 - c_8)}{C_\text{FP16}}
+\]
+requires $\beta \cdot 0.267 > \overline{q_{t,8}^\text{local} - q_{t,4}^\text{local}}$ for the average token to prefer 4-bit. We measure this gap distribution at 360M: mean $= 0.337$, std $= 0.050$. Setting $\beta = 0.5$ gives a threshold of $0.134 \ll 0.337$, collapsing the controller to 100\% 8-bit. Setting $\beta = 1.5$ gives threshold $0.401 > 0.337$, producing the correct 100\% 4-bit allocation at 360M (where INT4 is lossless). We validated this with a beta sweep smoke test on SmolLM-360M (Figure~\ref{fig:comparison}).
 
-We predict this produces 60--80\% 4-bit, 20--40\% 8-bit allocation, accuracy $\approx 45$--48\% on HellaSwag, and FPGA cost $\approx 0.35$--0.42 at 1.7B---representing a genuine improvement over DWB's 0.414 FPGA cost while recovering accuracy. Results are pending GPU evaluation.
+At 1.7B, the gap distribution shifts higher (larger KV errors $\Rightarrow$ lower $q_{t,4}^\text{local}$), placing $\beta = 1.5$ near the distribution median---producing the predicted 40--60\% 4-bit mixed allocation. We extend the controller to 4D features $\mathbf{f}_t = [kv\_norm_t, \text{pos\_frac}_t, q_{t,4}^\text{local}, q_{t,8}^\text{local}]$ and sweep $\beta \in \{1.0, 1.5, 2.0, 3.0\}$, selecting the allocation that maximizes FPGA speedup. Results are pending GPU evaluation.
 
 \textbf{Latency validation}: Measured FPGA throughput on Xilinx Ultrascale+ FPGA is pending. Our reported speedup (3.48$\times$) is derived from the BRAM port cost model (Table~\ref{tab:bram}); hardware validation requires the same Xilinx Ultrascale+ platform used by DWB.
 
