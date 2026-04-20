@@ -365,3 +365,38 @@ INT4 is genuinely lossy at 1.7B (-7.9pp), forcing selective 8-bit upgrades.
 - Expected: mixed {4,8}-bit allocation, ~45-49% accuracy, FPGA cost ~0.30-0.40
 
 **Direction**: CONCLUDE after Phase 5 results arrive and paper is updated.
+
+---
+
+## 2026-04-19 — Session 8: Beta Calibration Discovery (Critical Fix)
+
+**Trigger**: Ran smoke test of pertok pipeline on 360M to validate code before Brev run.
+
+**Discovery**: Original Phase 5 pertok script (run_phase5_1b7_pertok.py) had beta=[0.3,0.5,0.7]
+sweep — ALL produce 100% 8-bit collapse even with per-token quality signals.
+
+**Root cause analysis**:
+- Per-token quality scores: avg q4_local=0.6418, avg q8_local=0.9785 at 360M
+- avg q8-q4 gap = 0.337, std = 0.050
+- For 4-bit: need q8-q4 < beta * 0.267
+- beta=0.5 → threshold=0.134 << 0.337 → 100% 8-bit (gradient always prefers 8-bit)
+- beta=1.5 → threshold=0.401 > 0.337 → mean gradient favors 4-bit
+
+**Validated beta sweep on 360M (smoke test PASS)**:
+| beta | result | FPGA speedup |
+|------|--------|-------------|
+| 1.0  | 100% 8-bit | 1.80× |
+| **1.5** | **100% 4-bit** | **3.48×** ← correct for 360M |
+| 2.0  | 100% 4-bit | 3.48× |
+| 3.0  | 100% 4-bit | 3.48× |
+
+**Fix applied**: Phase 5 script now sweeps [1.0, 1.5, 2.0, 3.0], picks best automatically.
+
+**Prediction at 1.7B**: q8-q4 gap distribution shifts higher (larger kv errors → lower q4_local).
+- With gap mean ≈ 0.40 at 1.7B and threshold=0.401 (beta=1.5): ~50% 4-bit → mixed allocation
+- Script will auto-select: beta=1.5 for mixed, or beta=2.0 for mostly-4-bit (higher speedup)
+
+**Paper updated**: Discussion section now includes formal gradient derivation of beta calibration.
+
+**Status**: All code validated locally. User runs Phase 5 pertok on Brev A4000 with corrected script.
+Expected runtime: 30-50 min. Results will update Table 1 + abstract when they arrive.

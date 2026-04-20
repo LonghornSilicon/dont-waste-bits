@@ -40,7 +40,7 @@
 <body>
 
 <h1>Don't Waste BRAM: FPGA-Aware KV Cache Quantization</h1>
-<p style="color:#718096; font-size:0.9em;">Research progress report — 2026-04-19 | Phases 1–4 complete on SmolLM-360M</p>
+<p style="color:#718096; font-size:0.9em;">Research progress report — 2026-04-19 | Phases 1–4 complete + Phase 5 script validated (commit 61cdf12)</p>
 
 <div class="abstract">
 <strong>Abstract</strong><br>
@@ -203,18 +203,23 @@ Both terms normalized to [0,1] — critical for gradient stability
 </table>
 
 <div class="result-box">
-<strong>🚀 Phase 5 script pushed to GitHub (commit 096ab5e)</strong><br>
-Run on Brev A4000: <code>git checkout fpga-controller &amp;&amp; git pull &amp;&amp; python research/experiments/fpga-controller/phase5-benchmark/code/run_phase5_1b7_pertok.py</code><br><br>
-<strong>CRITICAL:</strong> Use <code>run_phase5_1b7_pertok.py</code> (v2), NOT <code>run_phase5_1b7.py</code> (v1).<br>
-v1 uses global quality scores → dL/dp4 &gt; 0 for all β → 100% 8-bit → 1.80× speedup (worse than DWB 2.44×).<br>
-v2 uses per-token quality proxy (1 − ‖quant_err‖/‖kv_norm‖) → token-specific gradients → genuine mixed {4,8}-bit.<br>
-Expected: 60–80% 4-bit, ~45–48% HellaSwag acc, FPGA cost ~0.35–0.42. Runtime: ~30–50 min on A4000.
+<strong>Phase 5 script validated + beta fix (commit 61cdf12)</strong><br>
+<strong>New discovery: beta calibration is critical.</strong> Per-token quality proxy alone insufficient — need beta=1.5 so FPGA cost threshold (0.401) exceeds avg q8-q4 gap (0.337).<br><br>
+<strong>Smoke test PASSED on 360M:</strong>
+<table style="margin:8px 0">
+  <tr><th>beta</th><th>threshold</th><th>est. 4-bit%</th><th>result</th><th>speedup</th></tr>
+  <tr><td>1.0</td><td>0.267</td><td>6.7%</td><td>100% 8-bit</td><td>1.80x</td></tr>
+  <tr style="background:#f0fff4"><td><strong>1.5</strong></td><td>0.401</td><td>92%</td><td><strong>100% 4-bit</strong></td><td><strong>3.48x</strong></td></tr>
+  <tr><td>2.0</td><td>0.535</td><td>99%</td><td>100% 4-bit</td><td>3.48x</td></tr>
+</table>
+Script now sweeps [1.0, 1.5, 2.0, 3.0] and auto-selects best. At 1.7B (larger gap ~0.40), beta=1.5 should give ~50% 4-bit mixed allocation.<br><br>
+Run on Brev A4000: <code>git checkout fpga-controller &amp;&amp; git pull &amp;&amp; python research/experiments/fpga-controller/phase5-benchmark/code/run_phase5_1b7_pertok.py</code>
 </div>
 
 <div class="warning-box">
-<strong>⚠ Awaiting Brev results: SmolLM-1.7B per-token controller</strong><br>
-Script is pushed (fpga-controller branch, commit 096ab5e). User is running on Brev A4000.
-Once <code>phase5_1b7_pertok_results.json</code> arrives: update Table 1, abstract, and Discussion in paper.
+<strong>Awaiting Brev results: SmolLM-1.7B (commit 61cdf12 validated)</strong><br>
+Script smoke-tested locally. User runs on Brev A4000 (~30-50 min).<br>
+Once done: run <code>update_paper_1b7.py --results phase5_1b7_pertok_results.json</code> to auto-update Table 1.
 </div>
 </div>
 
