@@ -203,9 +203,9 @@ To fit within CPU memory constraints ($\approx$2.5GB free):
 
 \subsection{Setup}
 
-\textbf{Model}: SmolLM-360M (HuggingFaceTB/SmolLM-360M), 24 layers, 15 attention heads, hidden dim 960.
+\textbf{Model}: SmolLM-360M~\citep{smollm} (HuggingFaceTB/SmolLM-360M), 24 layers, 15 attention heads, hidden dim 960. We additionally evaluate SmolLM-1.7B (32 layers, 2048 hidden dim) to test the lossy regime.
 
-\textbf{Evaluation}: HellaSwag validation set, unnormalized log-likelihood (matching paper metric). 200 samples with 95\% CI $\approx \pm$7pp.
+\textbf{Evaluation}: HellaSwag~\citep{zellers2019hellaswag} validation set, unnormalized log-likelihood (matching paper metric). 200 samples with 95\% CI $\approx \pm$7pp.
 
 \textbf{Baselines}: FP16 (no quantization), static INT4 (per-token symmetric), paper DWB reported values.
 

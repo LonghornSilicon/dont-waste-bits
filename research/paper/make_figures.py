@@ -134,25 +134,39 @@ ax4.legend(fontsize=8)
 ax4.spines["top"].set_visible(False)
 ax4.spines["right"].set_visible(False)
 
-# Right: beta vs frac_4bit at 360M (from smoke test) and predicted 1.7B
-betas = [0.5, 1.0, 1.5, 2.0, 2.5, 3.0]
-frac4_360m_measured = [0.001, 0.067, 0.923, 0.999, 1.0, 1.0]  # from smoke test analysis
-# Predict 1.7B: same formula with higher mean gap (0.40)
-frac4_1b7_pred = [norm.cdf(b * 0.270/1.01, gap_1b7_mean, gap_1b7_std) for b in betas]
+# Right: beta vs frac_4bit at 360M (actual controller outcomes) and predicted 1.7B
+# Actual controller training outcomes from smoke test (hard 0/100% transitions):
+betas_measured = [1.0, 1.5, 2.0, 3.0]
+frac4_360m_actual = [0.0, 100.0, 100.0, 100.0]  # actual trained controller outputs
 
-ax5.plot(betas, [f*100 for f in frac4_360m_measured], "o-", color="#4299e1",
-         lw=2, ms=6, label="SmolLM-360M (smoke test)")
-ax5.plot(betas, [f*100 for f in frac4_1b7_pred], "s--", color="#e53e3e",
-         lw=2, ms=6, label="SmolLM-1.7B (predicted)")
+# Theoretical curve for 360M (fraction of tokens where gap < threshold)
+betas_fine = np.linspace(0.5, 3.5, 200)
+frac4_360m_theory = [norm.cdf(b * 0.270/1.01, gap_360m_mean, gap_360m_std)*100
+                     for b in betas_fine]
+# Predict 1.7B (estimated gap distribution)
+frac4_1b7_pred = [norm.cdf(b * 0.270/1.01, gap_1b7_mean, gap_1b7_std)*100
+                  for b in betas_fine]
+
+ax5.plot(betas_fine, frac4_360m_theory, "-", color="#4299e1", lw=1.5,
+         alpha=0.5, label="360M theoretical")
+ax5.plot(betas_measured, frac4_360m_actual, "o", color="#4299e1",
+         ms=8, zorder=6, label="360M measured (controller)")
+ax5.plot(betas_fine, frac4_1b7_pred, "--", color="#e53e3e",
+         lw=2, label="1.7B predicted")
 
 ax5.axvline(1.5, color="#38a169", lw=1.5, linestyle=":", alpha=0.8, label="beta=1.5")
 ax5.axhline(54.1, color="#718096", lw=1.2, linestyle=":", alpha=0.6,
             label="Min 4-bit% to beat DWB (54.1%)")
 
+# annotate the sharp transition point
+ax5.annotate("Phase\ntransition", xy=(1.5, 50), xytext=(2.0, 30),
+             arrowprops=dict(arrowstyle="->", color="#38a169", lw=1.2),
+             fontsize=8, color="#38a169")
+
 ax5.set_xlabel("beta (FPGA penalty weight)", fontsize=10)
 ax5.set_ylabel("4-bit token fraction (%)", fontsize=10)
 ax5.set_title("Beta Calibration\n(4-bit% vs. penalty weight)", fontsize=10)
-ax5.set_ylim(0, 105)
+ax5.set_ylim(0, 115)
 ax5.legend(fontsize=7.5, loc="upper left")
 ax5.spines["top"].set_visible(False)
 ax5.spines["right"].set_visible(False)
