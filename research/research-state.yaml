@@ -8,7 +8,7 @@ research_question: >
   Specifically: (H1) 17.75% latency reduction, (H2) +7.60 accuracy points over
   static 4-bit KV, (H3) within 0.30 points of FP16 — all on SmolLM-360M / HellaSwag.
 
-phase: CONCLUDED  # accuracy experiments complete; latency pending GPU
+phase: CPU_COMPLETE  # All CPU experiments done. 5 checkpoints/3 families/instruct validated. GPU (1.7B accuracy) + FPGA hardware (latency) are the only remaining blockers.
 
 hypotheses:
   H1:
