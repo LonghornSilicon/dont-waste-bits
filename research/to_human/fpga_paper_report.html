@@ -40,7 +40,7 @@
 <body>
 
 <h1>Don't Waste BRAM: FPGA-Aware KV Cache Quantization</h1>
-<p style="color:#718096; font-size:0.9em;">Research progress report — 2026-04-19 | Phases 1–4 complete + Phase 5 script validated + paper improved (commit 00be181)</p>
+<p style="color:#718096; font-size:0.9em;">Research progress report — 2026-04-19 | Session 10 | Latest: commit c660d2a — 1.7B simulation confirms mixed allocation prediction</p>
 
 <div class="abstract">
 <strong>Abstract</strong><br>
@@ -198,8 +198,9 @@ Both terms normalized to [0,1] — critical for gradient stability
   <tr><td>Experiments — per-token beta calibration (Section 5.3)</td><td>✅ Written (smoke test validated)</td></tr>
   <tr><td>Feature + Training Ablation</td><td>✅ Written</td></tr>
   <tr><td>Related Work</td><td>✅ Written</td></tr>
+  <tr><td>Discussion — 1.7B simulation (Table sim_1b7)</td><td>✅ Written (model-based prediction)</td></tr>
   <tr><td>Discussion + Future Work</td><td>✅ Written</td></tr>
-  <tr><td>1.7B experiments</td><td>⏳ Needs GPU (16GB)</td></tr>
+  <tr><td>1.7B hardware experiments</td><td>⏳ Awaiting Brev A4000 run</td></tr>
   <tr><td>Figures + LaTeX compilation</td><td>⏳ Pending Overleaf</td></tr>
 </table>
 
@@ -221,9 +222,22 @@ The clean phase transition at β=1.5 is now a standalone validated experiment in
 <strong>update_paper_1b7.py</strong> updated to match new TBD row format — will correctly patch Table 1 and both pending notes in Discussion + Section 5.3.
 </div>
 
+<div class="result-box">
+<strong>Session 10: 1.7B simulation — beta=1.5 gives genuine mixed allocation (commit fc1ff98)</strong><br>
+Used 90k synthetic tokens with predicted 1.7B gap distribution (mean=0.400, std=0.058). Controller training confirms gradient analysis:<br>
+<table style="margin:8px 0">
+  <tr><th>beta</th><th>4-bit%</th><th>8-bit%</th><th>avg_bits</th><th>FPGA speedup</th><th>acc (lower bound)</th></tr>
+  <tr><td>1.0</td><td>0%</td><td>100%</td><td>8.00</td><td>1.80×</td><td>48.0%</td></tr>
+  <tr style="background:#f0fff4"><td><strong>1.5</strong></td><td><strong>53.5%</strong></td><td><strong>46.5%</strong></td><td><strong>5.86</strong></td><td><strong>2.43×</strong></td><td><strong>44.3%*</strong></td></tr>
+  <tr><td>2.0</td><td>100%</td><td>0%</td><td>4.00</td><td>3.48×</td><td>41.1%</td></tr>
+</table>
+*Linear interpolation = lower bound. Intelligent token selection should exceed this. Paper DWB at 1.7B: 48.6% at 2.44×.
+<br>Beta=1.5 gives genuine mixed allocation — exactly as predicted. Added as Table tab:sim_1b7 in paper Discussion.
+</div>
+
 <div class="warning-box">
-<strong>Awaiting Brev results: SmolLM-1.7B (latest: commit 00be181)</strong><br>
-Script smoke-tested locally. Run on Brev A4000 (~30-50 min):<br>
+<strong>Awaiting Brev results: SmolLM-1.7B (latest: commit c660d2a)</strong><br>
+Run on Brev A4000 (~30-50 min):<br>
 <code>git checkout fpga-controller &amp;&amp; git pull &amp;&amp; python research/experiments/fpga-controller/phase5-benchmark/code/run_phase5_1b7_pertok.py</code><br><br>
 Once done: <code>python research/experiments/fpga-controller/phase5-benchmark/code/update_paper_1b7.py --results research/experiments/fpga-controller/phase5-benchmark/results/phase5_1b7_pertok_results.json</code>
 </div>
