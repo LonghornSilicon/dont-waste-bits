@@ -1,0 +1,20 @@
+{
+  "base_reference": {
+    "model": "HuggingFaceTB/SmolLM-360M",
+    "label": "SmolLM-360M Base (reference)",
+    "gap_mean": 0.3367,
+    "beta_star": 1.261,
+    "note": "Pre-measured in Session 13 (89,856 tokens)"
+  },
+  "instruct": {
+    "model": "HuggingFaceTB/SmolLM-360M-Instruct",
+    "label": "SmolLM-360M-Instruct (SFT)",
+    "n_tokens": 34752,
+    "gap_mean": 0.1941,
+    "gap_std": 0.0562,
+    "beta_star": 0.727,
+    "delta_from_base": -0.1426,
+    "transfers_to_instruct": false,
+    "elapsed_s": 5.2
+  }
+}

@@ -747,3 +747,26 @@ python research/experiments/fpga-controller/phase5-benchmark/code/update_paper_1
 - update_paper_1b7.py fixed for partial-TBD Table 1
 
 **Paper is now Overleaf-ready** with 5-model cross-arch table as the final CPU contribution.
+
+---
+
+## 2026-04-19 Session 25 — Instruct Calibration Transfer Test (Surprising Result)
+
+**Protocol**: Does beta* calibrated on SmolLM-360M base transfer to SmolLM-360M-Instruct?
+**Prediction**: |delta_gap_mean| < 0.02 (instruction tuning preserves KV statistics).
+
+**Result: REFUTED**
+- SmolLM-360M Base: gap_mean=0.337, beta*=1.261
+- SmolLM-360M Instruct: gap_mean=**0.194**, beta*=**0.727**
+- Delta: **-0.143** (43% shift!) — far larger than any cross-architecture difference
+
+**Key findings**:
+1. Instruction fine-tuning dramatically changes KV activation statistics (not just weights)
+2. The shift (0.143) is larger than all architectural differences measured (max OPT vs GPT-2: 0.017)
+3. Instruct gap_mean=0.194 ≈ GPT-2 Small (0.196) — coincidentally similar despite different arch
+4. Critical practical implication: ALWAYS calibrate on the exact deployed checkpoint, not the base model
+
+**Why this matters for the paper**: Our calibration criterion is valid, but practitioners must re-run it after fine-tuning. This is cheap (<3 sec) but non-obvious. Added paragraph to Discussion.
+
+**Paper update**: Added "Fine-tuning shifts the KV distribution" paragraph to Discussion Section.
+**Paper fix also committed**: ±0.083 → ±0.04 (true max error), 1.7B table row [1.5,1.6] → [1.55,1.57]

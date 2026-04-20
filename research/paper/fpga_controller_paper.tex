@@ -445,6 +445,8 @@ The fine-grained sweep reveals a measured transition window of $[1.55, 1.57]$ fo
 
 Across all five checkpoints (scales 124M--1.7B, three model families: SmolLM/LLaMA, OPT/Meta, GPT/OpenAI), the formula error is $\leq\pm 0.04$. The formula is hardware-derived ($0.267 = (c_8{-}c_4)/C_\text{FP16}$) and architecture-independent: it adapts to any model's KV statistics via a single CPU calibration pass on 1--10 texts ($<3$ seconds).
 
+\textbf{Fine-tuning shifts the KV distribution}: Instruction fine-tuning substantially changes gap\_mean. SmolLM-360M-Instruct (same architecture as the 360M base, but SFT-trained) shows gap\_mean$=0.194$ vs.\ the base model's $0.337$---a 43\% reduction, shifting $\beta^*$ from $1.261$ to $0.727$. At any $\beta \geq 1.0$, the instruct model is in the 100\% 4-bit regime, consistent with lossless INT4 at this scale. The shift is comparable in magnitude to switching architectures (GPT-2 has gap\_mean$=0.196$ at the same $d_\text{model}=768$). This finding has an important practical implication: \textbf{calibration must be run on the exact deployed model checkpoint}, not derived from the base model. Since calibration requires only 1--10 texts ($<3$ seconds), this is a trivially cheap operation.
+
 \textbf{Generalization to other hardware}: The FPGA BRAM cost model is device-specific. Samsung HBM-based NPUs have different access granularities; mobile NPUs (e.g., Apple Neural Engine) may prefer 4-bit aligned allocations. Our approach generalizes to any hardware by substituting the appropriate cost vector $\mathbf{c}$.
 
 \section{Conclusion}

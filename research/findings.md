@@ -628,4 +628,27 @@ This confirms that gap_mean depends on KV activation distribution (pre-training 
 The formula beta* = gap_mean/0.267 correctly accounts for this — empirical calibration is essential.
 
 **Paper updates**: tab:betastar expanded to 5 rows/3 families, Discussion extended with GPT-2 paragraph,
-Conclusion updated to "five checkpoints across three architectures (all within +-0.083)", GPT-2 BibTeX added.
+Conclusion updated to "five checkpoints across three architectures (all within +-0.04)", GPT-2 BibTeX added.
+
+---
+
+## Session 25: Instruct Model Calibration Transfer Test ★ SURPRISING
+
+**Date**: 2026-04-19 (Session 25)
+
+**Hypothesis**: Beta* calibrated on SmolLM-360M base transfers to SmolLM-360M-Instruct (same architecture, SFT weights). Predicted: |delta| < 0.02 (within calibration noise).
+
+**Result**: REFUTED — gap_mean dramatically different.
+
+| Model | gap_mean | beta* | delta |
+|-------|----------|-------|-------|
+| SmolLM-360M Base | 0.3367 | 1.261 | — |
+| SmolLM-360M Instruct | **0.1941** | **0.727** | **-0.143** |
+
+**Finding**: Instruction fine-tuning shifts gap_mean by 43% (0.337 → 0.194). This is larger than any cross-architecture difference we measured (OPT vs GPT-2: only 0.017). Instruct gap_mean=0.194 ≈ GPT-2 Small=0.196 despite being LLaMA-style architecture.
+
+**Mechanistic hypothesis**: Instruction tuning regularizes KV activations toward more uniform magnitudes. Structured instruction data (Q&A patterns) produces more focused attention distributions → smaller relative INT4 errors → lower q8-q4 gap. Similar to how GPT-2 (pre-trained on WebText, more structured than raw Wikipedia) also shows lower gap_mean.
+
+**Practical implication (critical)**: Calibration MUST be done on the deployed model checkpoint, not derived from the base. Using base beta*=1.261 for the instruct model would give correct behavior at 360M (100% 4-bit, INT4 lossless) but for 1.7B instruct models, would risk over-aggressive 4-bit assignment. Since calibration is <3 seconds, always re-calibrate on the exact deployed model.
+
+**Paper update**: Added "Fine-tuning shifts the KV distribution" paragraph to Discussion.

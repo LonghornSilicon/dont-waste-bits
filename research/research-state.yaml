@@ -276,6 +276,7 @@ final_status:
   beta_calibration_1b7: COMPLETE  # beta_calibration_1b7.json + beta_transition_fine_1b7.json — all measured on real model signals
   calibration_sensitivity: COMPLETE  # Session 20: 1 text (~1536 tok) gives beta* within +-0.015. 5 texts: +-0.005. Results: calibration_sensitivity_1b7.json
   cross_arch_gpt2: COMPLETE  # Session 24: GPT-2 (OpenAI, 124M) — gap_mean=0.196, beta*=0.733, transition [0.70,0.80], error=0.017 (best fit). 3 families confirmed.
+  instruct_calibration: COMPLETE  # Session 25: SmolLM-360M-Instruct gap_mean=0.194 vs base 0.337 — 43% shift! beta* 1.261→0.727. Fine-tuning changes KV distribution substantially. Must re-calibrate on deployed model.
   paper_status: NEAR_FINAL  # Session 24: GPT-2 (3rd model family) added to tab:betastar, error=0.017 (best fit). 5 checkpoints, 3 families, all within +-0.083. natbib[numbers] added. Overleaf-ready. Only TBDs: 1.7B HellaSwag (GPU) and FPGA latency (hardware).
   github: https://github.com/LonghornSilicon/dont-waste-bits
   git_heads:
