@@ -126,7 +126,7 @@ def extract_signals_pertok(model_name, n_texts, cache_path, device="cuda"):
     num_layers = len(model.model.layers)
 
     from datasets import load_dataset
-    ds = load_dataset("wikitext", "wikitext-2-raw-v1", split="train", trust_remote_code=True)
+    ds = load_dataset("wikitext", "wikitext-2-raw-v1", split="train")
     texts = [x["text"].strip() for x in ds if len(x["text"].strip()) > 50][:n_texts]
 
     kv_buf = {}
