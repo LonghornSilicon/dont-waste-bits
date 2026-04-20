@@ -1,0 +1,159 @@
+{
+  "model": "openai/gpt2 (GPT-2 Small, 124M)",
+  "architecture": "GPT-2 (OpenAI) \u2014 Conv1D combined QKV",
+  "gap_mean": 0.1956,
+  "predicted_beta_star": 0.733,
+  "measured_transition": [
+    0.6,
+    0.7
+  ],
+  "theory_error": 0.083,
+  "formula_confirmed": true,
+  "elapsed_s": 31.1,
+  "sweep": {
+    "0.3": {
+      "beta": 0.3,
+      "threshold": 0.0801,
+      "p4_runs": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "p4_mean": 0.0,
+      "speedup": 1.804,
+      "regime": "8-bit"
+    },
+    "0.5": {
+      "beta": 0.5,
+      "threshold": 0.1335,
+      "p4_runs": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "p4_mean": 0.0,
+      "speedup": 1.804,
+      "regime": "8-bit"
+    },
+    "0.6": {
+      "beta": 0.6,
+      "threshold": 0.1602,
+      "p4_runs": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "p4_mean": 0.0,
+      "speedup": 1.804,
+      "regime": "8-bit"
+    },
+    "0.7": {
+      "beta": 0.7,
+      "threshold": 0.1869,
+      "p4_runs": [
+        0.0,
+        0.0,
+        54.7
+      ],
+      "p4_mean": 18.2,
+      "speedup": 1.977,
+      "regime": "MIXED"
+    },
+    "0.75": {
+      "beta": 0.75,
+      "threshold": 0.2003,
+      "p4_runs": [
+        61.2,
+        68.4,
+        63.9
+      ],
+      "p4_mean": 64.5,
+      "speedup": 2.618,
+      "regime": "MIXED"
+    },
+    "0.8": {
+      "beta": 0.8,
+      "threshold": 0.2136,
+      "p4_runs": [
+        100.0,
+        100.0,
+        100.0
+      ],
+      "p4_mean": 100.0,
+      "speedup": 3.483,
+      "regime": "4-bit"
+    },
+    "0.85": {
+      "beta": 0.85,
+      "threshold": 0.227,
+      "p4_runs": [
+        100.0,
+        100.0,
+        100.0
+      ],
+      "p4_mean": 100.0,
+      "speedup": 3.483,
+      "regime": "4-bit"
+    },
+    "0.9": {
+      "beta": 0.9,
+      "threshold": 0.2403,
+      "p4_runs": [
+        100.0,
+        100.0,
+        100.0
+      ],
+      "p4_mean": 100.0,
+      "speedup": 3.483,
+      "regime": "4-bit"
+    },
+    "0.95": {
+      "beta": 0.95,
+      "threshold": 0.2536,
+      "p4_runs": [
+        100.0,
+        100.0,
+        100.0
+      ],
+      "p4_mean": 100.0,
+      "speedup": 3.483,
+      "regime": "4-bit"
+    },
+    "1.0": {
+      "beta": 1.0,
+      "threshold": 0.267,
+      "p4_runs": [
+        100.0,
+        100.0,
+        100.0
+      ],
+      "p4_mean": 100.0,
+      "speedup": 3.483,
+      "regime": "4-bit"
+    },
+    "1.2": {
+      "beta": 1.2,
+      "threshold": 0.3204,
+      "p4_runs": [
+        100.0,
+        100.0,
+        100.0
+      ],
+      "p4_mean": 100.0,
+      "speedup": 3.483,
+      "regime": "4-bit"
+    },
+    "1.5": {
+      "beta": 1.5,
+      "threshold": 0.4005,
+      "p4_runs": [
+        100.0,
+        100.0,
+        100.0
+      ],
+      "p4_mean": 100.0,
+      "speedup": 3.483,
+      "regime": "4-bit"
+    }
+  }
+}

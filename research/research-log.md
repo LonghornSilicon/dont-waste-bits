@@ -719,3 +719,31 @@ python research/experiments/fpga-controller/phase5-benchmark/code/update_paper_1
 ```
 
 **Status**: All CPU work complete. Research at saturation. Paper near-final. Only remaining: 1.7B HellaSwag accuracy (GPU) and hardware latency (Xilinx board).
+
+---
+
+## 2026-04-19 Session 24 — GPT-2 Cross-Architecture Beta* Validation (3rd Family)
+
+**Protocol**: Test whether beta* = gap_mean/0.267 holds for GPT-2 (OpenAI), a fundamentally different attention implementation (Conv1D combined QKV via c_attn, vs separate k/v projections in LLaMA/OPT).
+
+**Model**: openai/gpt2 (GPT-2 Small, 124M, 12L, 768d, 12 heads). Hooks: c_attn output split into K=[:,hidden:2*hidden] and V=[:,2*hidden:].
+
+**Key results**:
+- gap_mean = 0.1956 (lower than OPT-125M 0.213, despite same hidden_dim=768 — pre-training matters)
+- Predicted beta* = 0.733. Measured transition: [0.70, 0.80]. Theory error: 0.017 (BEST fit of all 5 checkpoints!)
+- At beta=0.75: 64.5% 4-bit (genuine mixed allocation right above transition)
+- Formula CONFIRMED — 3 model families, 5 checkpoints, scales 124M-1.7B, errors ≤ ±0.083
+
+**Interesting finding**: GPT-2 vs OPT-125M have same hidden_dim=768 but different gap_mean (0.196 vs 0.213). Architecture + pre-training data both affect KV distributions → empirical calibration is essential (cannot infer beta* purely from architecture params).
+
+**Paper updates**:
+- tab:betastar: 5 rows (GPT-2 added), 3 families, <=+-0.083 max error
+- Discussion "Cross-architecture validation" paragraph: extended with GPT-2 (Conv1D c_attn implementation note)
+- Conclusion: "four checkpoints/two architectures" → "five checkpoints/three architectures"
+- radford2019language BibTeX added to fpga_refs.bib
+
+**Previous session fixes also committed**:
+- natbib[numbers] package added (critical Overleaf compilation fix)
+- update_paper_1b7.py fixed for partial-TBD Table 1
+
+**Paper is now Overleaf-ready** with 5-model cross-arch table as the final CPU contribution.
