@@ -278,7 +278,7 @@ def eval_hellaswag(controller, device="cuda", n_samples=EVAL_SAMPLES):
         handles.append(layer.self_attn.v_proj.register_forward_hook(make_v_hook(li)))
 
     from datasets import load_dataset
-    ds = load_dataset("Rowan/hellaswag", split="validation", trust_remote_code=True)
+    ds = load_dataset("Rowan/hellaswag", split="validation")
     correct, total, all_bits, all_costs = 0, 0, [], []
 
     for item in list(ds)[:n_samples]:
@@ -328,9 +328,26 @@ def main():
     print(f"Mean q4_local={q4_mean:.4f}  q8_local={q8_mean:.4f}", flush=True)
     print(f"Tokens with q4 < 0.85 (high error): {(q_tensor[:,0] < 0.85).float().mean().item()*100:.1f}%", flush=True)
 
-    print("\nBeta sweep {0.3, 0.5, 0.7}...", flush=True)
+    # Analyze q8-q4 gap distribution to understand the scale
+    q4_all = q_tensor[:, 0].numpy() if hasattr(q_tensor[:, 0], 'numpy') else q_tensor[:, 0].cpu().numpy()
+    q8_all = q_tensor[:, 1].numpy() if hasattr(q_tensor[:, 1], 'numpy') else q_tensor[:, 1].cpu().numpy()
+    gap = q8_all - q4_all
+    import numpy as np
+    print(f"q8-q4 gap: mean={gap.mean():.4f} std={gap.std():.4f} "
+          f"p50={np.percentile(gap,50):.4f} p75={np.percentile(gap,75):.4f} "
+          f"p90={np.percentile(gap,90):.4f}", flush=True)
+    # For 4-bit: need q8-q4 < beta*0.2673. Show theoretical frac_4bit per beta.
+    for b_test in [0.5, 1.0, 1.5, 2.0, 3.0]:
+        thr = b_test * (0.560 - 0.290) / 1.01
+        f4 = (gap < thr).mean()
+        print(f"  beta={b_test}: threshold={thr:.4f} → est. {f4*100:.1f}% 4-bit", flush=True)
+
+    # Sweep betas from low to high — find mixed allocation regime
+    # Need threshold > avg gap for meaningful 4-bit assignment.
+    # Based on distribution analysis: betas [1.0, 1.5, 2.0, 3.0] cover the useful range.
+    print("\nBeta sweep {1.0, 1.5, 2.0, 3.0}...", flush=True)
     sweep = []
-    for beta in [0.3, 0.5, 0.7]:
+    for beta in [1.0, 1.5, 2.0, 3.0]:
         ctrl = train_controller(sig_tensor, q_tensor, beta=beta, epochs=8)
         ctrl.eval()
         with torch.no_grad():
@@ -340,14 +357,28 @@ def main():
             fcost = (probs * FPGA_COSTS).sum(dim=-1).mean().item()
             hi = probs.argmax(dim=-1)
             dist = {b: (hi==i).float().mean().item()*100 for i,b in enumerate(BIT_CLASSES)}
-        print(f"  beta={beta}: avg_bits={avg_bits:.2f} fpga_cost={fcost:.3f} dist={dist}", flush=True)
+        speedup = 1.010 / fcost if fcost > 0 else 0
+        print(f"  beta={beta}: avg_bits={avg_bits:.2f} fpga_cost={fcost:.3f} "
+              f"speedup={speedup:.2f}x dist={dist}", flush=True)
         sweep.append({"beta": beta, "avg_bits": round(avg_bits,3),
-                      "fpga_cost": round(fcost,3), "bit_dist": dist})
+                      "fpga_cost": round(fcost,3),
+                      "fpga_speedup": round(speedup, 3),
+                      "bit_dist": dist})
 
-    # Pick best beta: lowest FPGA cost (or closest to target if all similar)
-    best = min(sweep, key=lambda r: r["fpga_cost"])
-    best_beta = best["beta"]
-    print(f"\nBest beta: {best_beta} (fpga_cost={best['fpga_cost']:.3f})", flush=True)
+    # Pick best beta: prefer mixed allocation (20-90% 4-bit) for maximum interest;
+    # if all collapse to one class, pick lowest FPGA cost.
+    def score(r):
+        p4 = r["bit_dist"].get(4, 0)
+        # Prefer genuine mixed (20-90% 4-bit), then pure 4-bit, then pure 8-bit
+        if 20 <= p4 <= 90:
+            return (0, -r["fpga_speedup"])   # mixed → ranked by speedup
+        elif p4 > 90:
+            return (1, -r["fpga_speedup"])   # mostly 4-bit → also good
+        else:
+            return (2, -r["fpga_speedup"])   # mostly 8-bit → last resort
+    sweep_sorted = sorted(sweep, key=score)
+    best_beta = sweep_sorted[0]["beta"]
+    print(f"\nBest beta: {best_beta} (fpga_speedup={sweep_sorted[0]['fpga_speedup']:.2f}x)", flush=True)
 
     controller = train_controller(sig_tensor, q_tensor, beta=best_beta)
     accuracy, avg_bits, avg_fpga, speedup, bit_dist = eval_hellaswag(controller, device)
