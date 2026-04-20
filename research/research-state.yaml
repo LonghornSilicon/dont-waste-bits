@@ -274,13 +274,14 @@ final_status:
   fpga_controller_360m: COMPLETE  # Phase 1-4 all show 100% 4-bit at 360M — correct and expected
   fpga_controller_1b7: CPU_COMPLETE_GPU_PENDING  # MEASURED: gap=0.4235, beta*=1.584, transition [1.55,1.57]. beta=1.70 (5-seed mean): 79.9% 4-bit, 4.80 bits, 2.93x speedup (+20% vs DWB at fewer bits). Only 1.7B HellaSwag accuracy pending GPU.
   beta_calibration_1b7: COMPLETE  # beta_calibration_1b7.json + beta_transition_fine_1b7.json — all measured on real model signals
-  paper_status: NEAR_FINAL  # all three scales MEASURED, simulation replaced with real data, beta* formula confirmed. Table 1: 360M 3.48x (+43%), 1.7B 2.93x (+20% at fewer bits). Only gap: 1.7B HellaSwag accuracy (GPU eval). Session 19 final consistency pass complete.
+  calibration_sensitivity: COMPLETE  # Session 20: 1 text (~1536 tok) gives beta* within +-0.015. 5 texts: +-0.005. Results: calibration_sensitivity_1b7.json
+  paper_status: NEAR_FINAL  # all three scales MEASURED, calibration sensitivity added to Discussion. Table 1: 360M 3.48x (+43%), 1.7B 2.93x (+20% at fewer bits). Only gap: 1.7B HellaSwag accuracy (GPU eval). All CPU experiments concluded.
   github: https://github.com/LonghornSilicon/dont-waste-bits
   git_heads:
     main: fe6e2ed
     turboquant-integration: dd78315
     gumbel-controller: fec47ec  # concluded — superseded by fpga-controller
-    fpga-controller: HEAD  # session 17 — 1.7B MEASURED beta cal (gap=0.424, beta*=1.584, 2.69x at beta=1.6)
+    fpga-controller: HEAD  # session 20 — calibration sensitivity + paper Discussion update
   branches:
     main: verification + ablation + 1.7B mechanistic + paper
     turboquant-integration: all of main + DWB-TurboQuant + controller analysis + HTML report

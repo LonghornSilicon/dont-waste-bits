@@ -1,0 +1,62 @@
+{
+  "model": "HuggingFaceTB/SmolLM-1.7B",
+  "n_total_tokens": 15360,
+  "n_reps": 20,
+  "true_beta_star": 1.584,
+  "results": {
+    "1": {
+      "n_texts": 1,
+      "n_tokens": 1536,
+      "gap_mean_mean": 0.4231,
+      "gap_mean_std": 0.0016,
+      "beta_star_mean": 1.585,
+      "beta_star_std": 0.006,
+      "beta_star_max_err": 0.015
+    },
+    "2": {
+      "n_texts": 2,
+      "n_tokens": 3072,
+      "gap_mean_mean": 0.4234,
+      "gap_mean_std": 0.0011,
+      "beta_star_mean": 1.586,
+      "beta_star_std": 0.004,
+      "beta_star_max_err": 0.009
+    },
+    "3": {
+      "n_texts": 3,
+      "n_tokens": 4608,
+      "gap_mean_mean": 0.4236,
+      "gap_mean_std": 0.0008,
+      "beta_star_mean": 1.587,
+      "beta_star_std": 0.003,
+      "beta_star_max_err": 0.01
+    },
+    "5": {
+      "n_texts": 5,
+      "n_tokens": 7680,
+      "gap_mean_mean": 0.4232,
+      "gap_mean_std": 0.0005,
+      "beta_star_mean": 1.585,
+      "beta_star_std": 0.002,
+      "beta_star_max_err": 0.005
+    },
+    "7": {
+      "n_texts": 7,
+      "n_tokens": 10752,
+      "gap_mean_mean": 0.4234,
+      "gap_mean_std": 0.0004,
+      "beta_star_mean": 1.586,
+      "beta_star_std": 0.001,
+      "beta_star_max_err": 0.005
+    },
+    "10": {
+      "n_texts": 10,
+      "n_tokens": 15360,
+      "gap_mean_mean": 0.4235,
+      "gap_mean_std": 0.0,
+      "beta_star_mean": 1.586,
+      "beta_star_std": 0.0,
+      "beta_star_max_err": 0.002
+    }
+  }
+}

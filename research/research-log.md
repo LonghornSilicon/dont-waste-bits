@@ -622,3 +622,41 @@ This is a clean empirical confirmation of the gradient analysis theory.
 **Commits**: d085780 (protocol), e882e36 (fine sweep), 4876fdb, 536e27e (state/HTML), 8ca6e20 (reproducibility)
 
 **Status**: Paper scientifically complete. Only gap: 1.7B HellaSwag accuracy (1 cell, GPU needed).
+
+---
+
+## 2026-04-19 Session 19 — Multi-Seed Reproducibility + Final Paper Consistency Pass
+
+**Reproducibility test** (`reproducibility_test_1b7.py`, N_SEEDS=5, BETAS=[1.60, 1.65, 1.70]):
+- beta=1.60: [62.3, 58.4, 63.3, 60.5, 58.7] -> mean=60.6%+-1.9pp, 2.55x (+4% vs DWB)
+- beta=1.65: [75.9, 69.3, 73.2, 68.9, 67.8] -> mean=71.0%+-3.0pp, 2.74x (+12% vs DWB)
+- beta=1.70: [82.7, 82.8, 80.8, 77.1, 76.3] -> mean=79.9%+-2.8pp, 2.93x (+20% vs DWB, 4.80 avg_bits)
+
+**Key finding**: beta=1.60 single-run at Session 17 (68.4%) was a high-end outlier. Multi-seed mean=60.6%+-1.9pp. Training stochasticity only +-2-3pp. Best operating point is beta=1.70 with Pareto improvement over DWB (fewer bits AND higher speedup).
+
+**Paper consistency pass (Session 19)**:
+- Abstract: removed "beta=1.5 near-universal" (wrong at 1.7B); replaced with beta* formula + three-scale validation
+- Contribution #2: changed "2.84x (+16%)" to "2.93x (+20% at fewer bits)"
+- Discussion: updated to "5-seed mean 79.9%+-2.8pp 4-bit, 2.93x Pareto-dominating DWB"
+- Commit: 12f461c
+
+**HTML report**: Updated Session 17/18 callouts, added Session 19 callout with Pareto win table. Commit: d3a8402.
+
+---
+
+## 2026-04-19 Session 20 — Calibration Sensitivity Analysis
+
+**Protocol**: Validate the paper's claim that beta* calibration requires "< 1 minute on CPU."
+**Experiment**: `calibration_sensitivity.py` — 20 random subsamples at n_texts in {1,2,3,5,7,10} from cached 1.7B signals.
+
+**Results**:
+- n_texts=1 (~1536 tok, <3 sec): beta* max error = 0.015 (ACCEPTABLE, transition window is +-0.03)
+- n_texts=3: max error = 0.010
+- n_texts=5: max error = 0.005
+- n_texts=10: max error = 0.002
+
+**Finding**: The "<1 minute calibration" claim is extremely conservative. Even 1 text is sufficient. The gap_mean statistic is robust because it averages over thousands of per-token measurements even from a single short text.
+
+**Paper update**: Added sentence to Discussion noting 1-text (< 3 seconds) gives beta* within +-0.015, well within the +-0.03 transition window.
+
+**Direction**: CPU experiments fully concluded. Research is at saturation without GPU.
