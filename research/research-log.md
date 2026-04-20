@@ -400,3 +400,36 @@ sweep — ALL produce 100% 8-bit collapse even with per-token quality signals.
 
 **Status**: All code validated locally. User runs Phase 5 pertok on Brev A4000 with corrected script.
 Expected runtime: 30-50 min. Results will update Table 1 + abstract when they arrive.
+
+---
+
+## 2026-04-19 — Session 9: Outer Loop + Paper Polish
+
+**Trigger**: Autoresearch loop tick. No Brev 1.7B results yet.
+
+**Outer-loop reflection**: Paper is publication-ready modulo 1.7B row. Verification tracks:
+- H1 (latency): still awaiting GPU. Arithmetic verified.
+- H2 (accuracy gap): fully explained (int4_int3range baseline, Insight 5).
+- H3 (FP16 parity): partial — impl gap at 500 samples (−4.2pp best, paper 41.2%). Root cause identified (undisclosed compound-loss training in paper).
+- H4 (cross-model): confirmed at 135M, 360M, 1.7B FP16/INT4 baselines.
+- FPGA extension: fully validated at 360M. 1.7B pending Brev A4000 run.
+
+**Paper improvements this session**:
+1. **Citations**: Added `\citep{smollm}` and `\citep{zellers2019hellaswag}` in Setup section.
+   Previously both were in bib but uncited (zero unused entries now).
+2. **Beta calibration figure**: Updated to show actual controller training outcomes
+   (hard 0/100% transitions at beta=1.0/1.5) as measured points, overlaid on
+   theoretical CDF curve. Distinguishes measured vs estimated clearly.
+3. **Pareto frontier figure**: Right panel of Figure 1 now shows full Pareto
+   frontier for binary {4,8} controller, 2-bit as strictly dominated point
+   (same BRAM cost, −16.6pp accuracy), DWB vs ours comparison arrow.
+4. **Figure 1 caption**: Updated to describe Pareto dominance argument explicitly.
+
+**Commits this session**: 97e122e (citations+beta fig), e1ece3b (Pareto frontier)
+
+**Remaining before submission**:
+- Fill Table 1 1.7B row with Brev results (update_paper_1b7.py ready)
+- Hardware FPGA latency validation (needs Xilinx Ultrascale+ board)
+- Overleaf compilation to verify LaTeX
+
+**Status**: Waiting for Brev A4000 results. Paper is otherwise complete.
