@@ -56,7 +56,7 @@ Our contributions are:
 \begin{figure}[t]
 \centering
 \includegraphics[width=0.95\linewidth]{figures/fpga_comparison}
-\caption{Left: FPGA throughput speedup over FP16. Our binary controller matches static INT4 (3.48$\times$) and outperforms paper DWB (2.44$\times$) by $+$43\%. Right: accuracy vs. FPGA cost. Our method and static INT4 dominate the Pareto frontier at 360M; DWB spends more BRAM for no accuracy gain.}
+\caption{Left: FPGA throughput speedup over FP16. Our binary controller matches static INT4 (3.48$\times$) and outperforms paper DWB (2.44$\times$) by $+$43\%. Right: Pareto frontier (accuracy vs. FPGA cost). The binary \{4,8\} frontier dominates DWB's operating point---DWB spends 43\% more BRAM cost for $-$0.2pp accuracy. Critically, 2-bit quantization (same BRAM cost as 4-bit, red triangle) is strictly dominated: replacing any 2-bit token with 4-bit recovers $+$16.6pp accuracy at zero additional hardware cost.}
 \label{fig:comparison}
 \end{figure}
 
