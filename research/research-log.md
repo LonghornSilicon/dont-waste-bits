@@ -467,3 +467,24 @@ ours=0.290, speedup=3.48×; advantage=42.6%≈43%; beta=1.5 threshold=0.401>mean
 - FPGA extension: 360M complete (3.48× vs 2.44×), 1.7B simulated (53.5% 4-bit at beta=1.5).
 
 **Remaining**: Brev 1.7B hardware run to fill Table 1 TBD row and confirm simulation.
+
+---
+
+## 2026-04-19 — Session 12 (autoresearch tick)
+
+**Trigger**: Autoresearch loop tick. No Brev 1.7B results yet.
+
+**Outer-loop reflection (session 12)**:
+Paper polish pass with no new experimental data (waiting for Brev A4000).
+
+**Changes made**:
+1. Added Algorithm 1 pseudocode (two-stage binary FPGA controller training) — makes the training procedure reviewer-reproducible
+2. Table 1 footnote correction: DWB's 1.7B avg_bits=5.05 and FPGA cost=0.414 are *assumed* from the 360M bit distribution (paper doesn't report 1.7B bit dist). Added clear ‡ footnote.
+3. Discussion: quantified global vs per-token quality proxy speedup contrast at 1.7B (1.80× global → 2.43× per-token, −26% → matching DWB). This makes the per-token proxy contribution concrete.
+4. Committed all pending files: final_summary.html, smoke results, paper polish.
+
+**Commit**: 7f6d3a2
+
+**Assessment**: Paper is near-final and complete as a standalone contribution. Only outstanding item is the Brev A4000 hardware run to fill Table 1's 1.7B "Ours" row.
+
+**Remaining**: Brev 1.7B hardware run. Paper otherwise publication-ready.
