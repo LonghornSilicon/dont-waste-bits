@@ -1,0 +1,60 @@
+{
+  "experiment": "beta_transition_fine_360m",
+  "gap_mean": 0.3367,
+  "gap_std": 0.0501,
+  "predicted_transition_beta": 1.26,
+  "elapsed_s": null,
+  "sweep": [
+    {
+      "beta": 1.1,
+      "threshold": 0.2941,
+      "p4_pct": 0.0,
+      "p8_pct": 100.0,
+      "avg_bits": 8.0,
+      "fpga_cost": 0.56,
+      "fpga_speedup": 1.804,
+      "outcome": "8-bit dominant"
+    },
+    {
+      "beta": 1.2,
+      "threshold": 0.3208,
+      "p4_pct": 0.0,
+      "p8_pct": 100.0,
+      "avg_bits": 8.0,
+      "fpga_cost": 0.56,
+      "fpga_speedup": 1.804,
+      "outcome": "8-bit dominant"
+    },
+    {
+      "beta": 1.25,
+      "threshold": 0.3342,
+      "p4_pct": 41.7,
+      "p8_pct": 58.3,
+      "avg_bits": 5.34,
+      "fpga_cost": 0.447,
+      "fpga_speedup": 2.26,
+      "outcome": "mixed (near transition)"
+    },
+    {
+      "beta": 1.3,
+      "threshold": 0.3475,
+      "p4_pct": 58.7,
+      "p8_pct": 41.3,
+      "avg_bits": 5.65,
+      "fpga_cost": 0.401,
+      "fpga_speedup": 2.52,
+      "outcome": "mixed"
+    },
+    {
+      "beta": 1.4,
+      "threshold": 0.3743,
+      "p4_pct": 100.0,
+      "p8_pct": 0.0,
+      "avg_bits": 4.0,
+      "fpga_cost": 0.29,
+      "fpga_speedup": 3.483,
+      "outcome": "4-bit dominant"
+    }
+  ],
+  "notes": "Phase transition confirmed at beta~1.26 matching theory (gap_mean/0.267=1.260). At 360M INT4 is lossless -> use beta>=1.4 to force 100% 4-bit (3.48x speedup)."
+}

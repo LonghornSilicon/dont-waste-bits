@@ -162,9 +162,9 @@ ax4.spines["top"].set_visible(False)
 ax4.spines["right"].set_visible(False)
 
 # Right: beta vs frac_4bit at 360M (actual controller outcomes) and predicted 1.7B
-# Actual controller training outcomes from smoke test (hard 0/100% transitions):
-betas_measured = [1.0, 1.5, 2.0, 3.0]
-frac4_360m_actual = [0.0, 100.0, 100.0, 100.0]  # actual trained controller outputs
+# Actual controller training outcomes (coarse + fine sweep combined):
+betas_measured = [1.0, 1.1, 1.2, 1.25, 1.3, 1.4, 1.5, 2.0, 3.0]
+frac4_360m_actual = [0.0, 0.0, 0.0, 41.7, 58.7, 100.0, 100.0, 100.0, 100.0]
 
 # Theoretical curve for 360M (fraction of tokens where gap < threshold)
 betas_fine = np.linspace(0.5, 3.5, 200)
@@ -185,8 +185,9 @@ ax5.axvline(1.5, color="#38a169", lw=1.5, linestyle=":", alpha=0.8, label="beta=
 ax5.axhline(54.1, color="#718096", lw=1.2, linestyle=":", alpha=0.6,
             label="Min 4-bit% to beat DWB (54.1%)")
 
-# annotate the sharp transition point
-ax5.annotate("Phase\ntransition", xy=(1.5, 50), xytext=(2.0, 30),
+# annotate the phase transition
+ax5.axvline(1.26, color="#38a169", lw=1.2, linestyle="-.", alpha=0.6)
+ax5.annotate("Phase\ntransition\n(beta=1.26)", xy=(1.26, 50), xytext=(1.7, 35),
              arrowprops=dict(arrowstyle="->", color="#38a169", lw=1.2),
              fontsize=8, color="#38a169")
 
