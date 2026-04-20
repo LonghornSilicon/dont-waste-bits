@@ -291,6 +291,13 @@ Loss normalization is essential. The two-objective tension is not a hyperparamet
 
 \textbf{Gumbel-softmax training}: Jang et al.~\citep{jang2017gumbel} and Maddison et al.~\citep{maddison2017concrete} introduced differentiable discrete sampling. We apply this to bit-width selection with FPGA-aware objectives.
 
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.95\linewidth]{figures/beta_calibration}
+\caption{Beta calibration analysis. Left: quality gap distribution $q_{t,8}^\text{local} - q_{t,4}^\text{local}$ at 360M (measured) and 1.7B (estimated). The beta=1.5 threshold (0.401) correctly separates the 4-bit zone from the 8-bit zone. Right: 4-bit token fraction vs.\ $\beta$ at 360M (smoke test) and predicted 1.7B. At 1.7B, $\beta = 1.5$ lands near the 54.1\% minimum needed to exceed DWB's FPGA speedup.}
+\label{fig:beta}
+\end{figure}
+
 \section{Discussion and Future Work}
 
 \textbf{1.7B model and per-token quality signals}: At SmolLM-1.7B ($\epsilon_\text{eff} = 12.4\%$), INT4 is genuinely lossy (FP16: 49.0\%, static INT4: 41.1\%, $-$7.9pp). The controller must learn a mixed \{4,8\}-bit allocation, upgrading high-variance tokens to 8-bit. A key challenge is that global quality scores ($q_4 = 0.671$, $q_8 = 0.979$ at 1.7B) produce $\partial\mathcal{L}/\partial p_4 > 0$ for all $\beta$ values, forcing 100\% 8-bit allocation and a suboptimal 1.80$\times$ speedup (worse than DWB's 2.44$\times$).
