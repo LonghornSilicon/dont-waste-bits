@@ -433,3 +433,37 @@ Expected runtime: 30-50 min. Results will update Table 1 + abstract when they ar
 - Overleaf compilation to verify LaTeX
 
 **Status**: Waiting for Brev A4000 results. Paper is otherwise complete.
+
+---
+
+## 2026-04-19 — Session 11: Reviewer Analysis + Final Paper Polish
+
+**Trigger**: Autoresearch loop tick. No Brev 1.7B results yet.
+
+**Outer-loop reflection**: Paper is near-final. All local experiments complete.
+Verified all numerical claims computationally (DWB cost=0.414, speedup=2.44×;
+ours=0.290, speedup=3.48×; advantage=42.6%≈43%; beta=1.5 threshold=0.401>mean=0.337).
+
+**Reviewer analysis — issues found and fixed**:
+1. Abstract: "prior to CVPR code release" was speculative → replaced with direct GitHub URL
+2. Introduction: 25.0% accuracy is full 2-bit quantization, not DWB's specifically selected
+   2-bit tokens. Added clarification: FPGA argument holds regardless (same BRAM cost means
+   replacing 2-bit with 4-bit gives strictly better accuracy at zero hardware cost).
+
+**Numerical validation** (all pass):
+- DWB: cost=0.414, speedup=2.44×, avg_bits=5.026 ✓
+- Ours 360M: cost=0.290, speedup=3.48×, advantage=42.6%≈+43% ✓
+- Sim 1.7B beta=1.5: cost=0.416, speedup=2.43×, avg_bits=5.86 ✓
+- Beta=1.5 threshold (0.401) > 360M gap mean (0.337) ✓
+- Bits reduction (4.0 vs 5.05) = 20.8%≈21% ✓
+
+**Commits**: 0b1612e (abstract fix + state update)
+
+**Assessment**: Research is substantially complete.
+- H1 (latency): Arithmetic verified, hardware measurement pending GPU.
+- H2 (accuracy gap): Fully explained by int3range baseline.
+- H3 (FP16 parity): Implementation gap explained (undisclosed compound-loss training).
+- H4 (cross-model): Confirmed at 135M, 360M, 1.7B baselines.
+- FPGA extension: 360M complete (3.48× vs 2.44×), 1.7B simulated (53.5% 4-bit at beta=1.5).
+
+**Remaining**: Brev 1.7B hardware run to fill Table 1 TBD row and confirm simulation.
