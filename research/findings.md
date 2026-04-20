@@ -1,6 +1,6 @@
 # Research Findings — Don't Waste Bits! Verification
 
-**Last updated**: 2026-04-19 (Phase 2+4 FPGA controller results added; paper TBD)  
+**Last updated**: 2026-04-19 (Session 16: paper formula bug fixed r_cancel→r_survive; Table 1 FPGA metrics from 1.7B simulation; figure caption corrected)  
 **Phase**: EXTENDED — FPGA controller experiments complete; paper pending
 
 ---
@@ -378,7 +378,8 @@ Phase 5 script now sweeps [1.0, 1.5, 2.0, 3.0] and selects best. Code validated 
 - **Per-token quality proxy requires correct beta**: q_local alone doesn't fix it — need beta≥1.5 so FPGA threshold (beta*0.267) exceeds avg quality gap (0.337).
 - **beta=1.5 validated**: Smoke test on 360M shows clean flip from 100% 8-bit (beta=1.0) to 100% 4-bit (beta=1.5). Phase 5 script sweeps [1.0,1.5,2.0,3.0] automatically.
 - **Phase 5 script**: Use `run_phase5_1b7_pertok.py` (latest commit). v1 (`run_phase5_1b7.py`) is broken: wrong betas + global quality scores.
-- **Paper (commit 00be181)**: Two quality regimes formally defined in controller section. Table 1 has 1.7B TBD row. Section 5.3 is a standalone validated per-token beta calibration experiment. `update_paper_1b7.py` will auto-fill TBDs when Brev results arrive.
+- **Paper (commit b66d30c)**: Two quality regimes formally defined in controller section. Table 1 has 1.7B accuracy TBD but FPGA metrics (5.86 bits, 0.415 cost, 2.43× speedup) filled from simulation. `update_paper_1b7.py` will auto-fill accuracy TBD when Brev results arrive.
+- **Formula consistency**: ε_eff = ε_rel × r_survive. All three rows now consistent: 135M: 0.249×0.28=0.069 ✓, 360M: 0.270×0.30=0.081 ✓, 1.7B: 0.353×0.351=0.124 ✓. Table column was incorrectly labeled r_cancel (fixed in session 16).
 - **Lessons for paper writing**: The fact that 2-bit is dominated is the core contribution — state it in abstract, intro bullet 1, and conclusion. The per-token proxy and beta calibration are the technical enablers for 1.7B (scale-generalization). These are independent contributions, both novel relative to DWB.
 
 ---
