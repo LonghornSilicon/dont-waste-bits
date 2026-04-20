@@ -1,0 +1,72 @@
+{
+  "experiment": "phase7e_split_sweep",
+  "model": "HuggingFaceTB/SmolLM-1.7B",
+  "n_samples": 200,
+  "seed": 0,
+  "p4_sweep": [
+    0.6,
+    0.67,
+    0.81,
+    0.88
+  ],
+  "strategy": "random routing (Bernoulli(p4))",
+  "per_p4": {
+    "0.60": {
+      "accuracy_pct": 48.0,
+      "avg_bits": 5.604,
+      "fpga_cost": 0.3983,
+      "fpga_speedup": 2.536,
+      "p4_pct": 59.89,
+      "p8_pct": 40.11,
+      "n_tokens": 209880,
+      "elapsed_s": 308.1
+    },
+    "0.67": {
+      "accuracy_pct": 48.0,
+      "avg_bits": 5.323,
+      "fpga_cost": 0.3793,
+      "fpga_speedup": 2.663,
+      "p4_pct": 66.92,
+      "p8_pct": 33.08,
+      "n_tokens": 209880,
+      "elapsed_s": 304.1
+    },
+    "0.81": {
+      "accuracy_pct": 48.0,
+      "avg_bits": 4.759,
+      "fpga_cost": 0.3413,
+      "fpga_speedup": 2.96,
+      "p4_pct": 81.01,
+      "p8_pct": 18.99,
+      "n_tokens": 209880,
+      "elapsed_s": 300.3
+    },
+    "0.88": {
+      "accuracy_pct": 47.0,
+      "avg_bits": 4.477,
+      "fpga_cost": 0.3222,
+      "fpga_speedup": 3.135,
+      "p4_pct": 88.07,
+      "p8_pct": 11.93,
+      "n_tokens": 209880,
+      "elapsed_s": 318.7
+    }
+  },
+  "reference_points": {
+    "p4_0.00_static_int8": {
+      "accuracy_pct_paper": 48.5,
+      "fpga_speedup": 1.8
+    },
+    "p4_0.74_phase7d": {
+      "accuracy_pct": 48.04,
+      "std_pp": 0.75,
+      "fpga_speedup": 2.8,
+      "source": "5-seed n=500"
+    },
+    "p4_1.00_static_int4": {
+      "accuracy_pct_paper": 41.1,
+      "fpga_speedup": 3.48
+    }
+  },
+  "elapsed_s": 1235.7
+}

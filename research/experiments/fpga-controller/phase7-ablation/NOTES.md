@@ -59,6 +59,22 @@ routing being **systematic** (norm-based clustering makes 4-bit errors correlate
 tokens, whereas random routing decorrelates them). KV L2 norm carries no usable
 direction signal at this split on SmolLM-1.7B.
 
+## Phase 7e — split-ratio sweep (n=200, seed 0, random routing)
+| p4    | accuracy | avg_bits | FPGA cost | speedup | elapsed |
+|-------|----------|----------|-----------|---------|---------|
+| 0.00 (static INT8, paper) | 48.5%    | 8.00     | 0.560     | 1.80×   | —       |
+| 0.60                      | 48.0%    | 5.60     | 0.398     | 2.54×   |  5.1 m  |
+| 0.67                      | 48.0%    | 5.32     | 0.379     | 2.66×   |  5.1 m  |
+| **0.74 (Phase 7d 5-seed)**| **48.04%±0.75** | 5.04 | 0.360 | **2.80×** | —       |
+| **0.81** 🎯               | **48.0%** | **4.76** | **0.341** | **2.96×** |  5.0 m  |
+| 0.88                      | 47.0%    | 4.48     | 0.322     | 3.13×   |  5.3 m  |
+| 1.00 (static INT4, paper) | 41.1%    | 4.00     | 0.290     | 3.48×   | —       |
+
+**Reading**: the accuracy Pareto is *flat at 48.0%* across p4 ∈ [0.60, 0.81], then drops
+−1pp at 0.88 (within n=200 noise) and cliffs −7pp at 1.00. **Free +16% speedup from
+shifting headline operating point 0.74 → 0.81.** But 0.81 is a single-seed n=200 point;
+needs 5-seed n=500 validation (Phase 7g) before the paper claims it.
+
 ## Running final table (3 + inverted + 5-seed random)
 | strategy                     | acc    | p4     | speedup | notes                                        |
 |------------------------------|--------|--------|---------|----------------------------------------------|
