@@ -1041,3 +1041,27 @@ TinyLlama has gap_std=0.051 (similar to SmolLM2's 0.052) but max_error_1text=0.0
 **Finding 9 confirmed within-family**: GPT-2 Medium has HIGHER gap_std (0.052 vs 0.033) but LOWER max_error (0.011 vs 0.018) than GPT-2 Small. Within a single architecture family, scale increases gap_std but decreases calibration sensitivity — another expression of the orthogonality. Finding 9 now supported across 6 data points / 4 architecture types / 2 GPT-2 scales.
 
 **Finding 10 corroborated**: Technical texts give gap_mean=0.2419 vs wikitext calibration value of 0.188 (Δ=0.054). Corpus dependency grows with scale within GPT-2 (Small: Δ=0.037; Medium: Δ=0.054), consistent with larger models being more sensitive to text domain in KV activation statistics.
+
+---
+
+## Session 38 — GPT-2 Large Sensitivity: Completes Full Family Sweep ★★
+
+**Date**: 2026-04-20 (Session 38)
+
+**Experiment**: `gpt2_large_cal_sensitivity.py` — completes the GPT-2 family (Small/Medium/Large all tested).
+
+**Result**: gap_std=0.026, max_error_1text=**0.004**, mean_error=**0.003** — best single-text calibration accuracy of all 7 models tested.
+
+**Complete GPT-2 family sweep (Finding 9 within-family):**
+
+| Model | Params | gap_std | max_error_1text | mean_error_1text |
+|---|---|---|---|---|
+| GPT-2 Small | 124M | 0.033 | 0.018 | 0.009 |
+| GPT-2 Medium | 345M | **0.052** | 0.011 | 0.005 |
+| GPT-2 Large | 774M | 0.026 | **0.004** | **0.003** |
+
+**Key insight**: gap_std is NON-MONOTONIC with scale within GPT-2 (Small=0.033, Medium=0.052, Large=0.026). Despite this, max_error MONOTONICALLY IMPROVES with scale (0.018 → 0.011 → 0.004). This fully decouples the two concepts: gap_std variance reflects per-token quantization diversity; calibration sensitivity reflects the model's KV distribution stability — driven by scale, not by gap_std.
+
+**Finding 9 is now the strongest finding**: 7 data points / 4 architecture types. gap_std ranges from 0.026 to 0.063 across models. max_error ranges from 0.004 to 0.018. Rank correlation between the two: near-zero (Medium has highest gap_std but not worst max_error; Large has lowest gap_std and best max_error, but SmolLM2 has second-highest gap_std and second-lowest max_error — no consistent ordering).
+
+**This is the final CPU experiment.** All cached models tested. GPU/FPGA hardware required for remaining work.

@@ -1013,3 +1013,25 @@ OPT family converges DOWN toward the floor from above with model scale, opposite
 **Key finding**: GPT-2 Medium (gap_std=0.052, max_error=0.011) beats GPT-2 Small (gap_std=0.033, max_error=0.018) despite higher within-text variance. Scale increases gap_std but decreases calibration sensitivity within GPT-2 family — third instance of Finding 9 (gap_std ⊥ sensitivity). Finding 9 now supported by 6 data points / 4 architecture types.
 
 **Paper update**: Sensitivity list updated to include GPT-2 Medium; "five models" → "six models"; within-family GPT-2 comparison noted.
+
+---
+
+## Session 38 — 2026-04-20 — GPT-2 Large Sensitivity: Completes Full Family Sweep
+
+**Task**: GPT-2 Large (774M) calibration sensitivity — final CPU experiment, completes GPT-2 family.
+
+**Result**: gap_mean=0.1923, gap_std=0.0255, beta*=0.720, n=4680 token-vectors.
+- max_error_1text=0.004, mean_error=0.003 — BEST single-text calibration accuracy of all 7 models.
+- All within ±0.015 ✓, all within ±0.020 ✓
+
+**Key findings**:
+1. gap_std is NON-MONOTONIC within GPT-2 family: Small=0.033, Medium=0.052, Large=0.026. Gap_std peaks at Medium then drops.
+2. max_error MONOTONICALLY IMPROVES with scale: 0.018 → 0.011 → 0.004. Scale reduces calibration sensitivity regardless of gap_std.
+3. GPT-2 Large converges to floor (gap_mean=0.192), joining Medium (0.188) and Small (0.196) in the 0.008-range cluster.
+
+**Finding 9 update**: Now 7 data points / 4 architecture types. Non-monotonic gap_std vs monotonic max_error definitively breaks any causal link. Gap_std is scale-confounded; the actual driver is scale itself.
+
+**Paper update**: "six models" → "seven models"; added GPT-2 Large/Conv1D = 0.004 to deviations list.
+
+**Status**: All cached models tested. CPU verification loop exhausted. GPU/FPGA awaiting hardware.
+

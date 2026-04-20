@@ -1,0 +1,94 @@
+{
+  "model": "gpt2-large",
+  "architecture": "GPT-2/Conv1D (774M, 36L, 20H)",
+  "note": "Completes GPT-2 family sweep. gap_std=0.026 is NON-MONOTONIC (M=0.052 > S=0.033 > L=0.026).",
+  "gap_mean_10text": 0.1923,
+  "gap_std_10text": 0.0255,
+  "beta_star_10text": 0.72,
+  "per_text_results": [
+    {
+      "text_idx": 0,
+      "n_tokens": 360,
+      "gap_mean": 0.1913,
+      "gap_std": 0.0247,
+      "beta_star": 0.717,
+      "error_vs_10text": 0.004
+    },
+    {
+      "text_idx": 1,
+      "n_tokens": 504,
+      "gap_mean": 0.1935,
+      "gap_std": 0.0257,
+      "beta_star": 0.725,
+      "error_vs_10text": 0.004
+    },
+    {
+      "text_idx": 2,
+      "n_tokens": 360,
+      "gap_mean": 0.1915,
+      "gap_std": 0.026,
+      "beta_star": 0.717,
+      "error_vs_10text": 0.003
+    },
+    {
+      "text_idx": 3,
+      "n_tokens": 360,
+      "gap_mean": 0.1935,
+      "gap_std": 0.0274,
+      "beta_star": 0.725,
+      "error_vs_10text": 0.004
+    },
+    {
+      "text_idx": 4,
+      "n_tokens": 432,
+      "gap_mean": 0.1927,
+      "gap_std": 0.0262,
+      "beta_star": 0.722,
+      "error_vs_10text": 0.002
+    },
+    {
+      "text_idx": 5,
+      "n_tokens": 360,
+      "gap_mean": 0.1927,
+      "gap_std": 0.0269,
+      "beta_star": 0.722,
+      "error_vs_10text": 0.001
+    },
+    {
+      "text_idx": 6,
+      "n_tokens": 468,
+      "gap_mean": 0.1915,
+      "gap_std": 0.0248,
+      "beta_star": 0.717,
+      "error_vs_10text": 0.003
+    },
+    {
+      "text_idx": 7,
+      "n_tokens": 612,
+      "gap_mean": 0.1923,
+      "gap_std": 0.0247,
+      "beta_star": 0.72,
+      "error_vs_10text": 0.0
+    },
+    {
+      "text_idx": 8,
+      "n_tokens": 720,
+      "gap_mean": 0.1926,
+      "gap_std": 0.025,
+      "beta_star": 0.721,
+      "error_vs_10text": 0.001
+    },
+    {
+      "text_idx": 9,
+      "n_tokens": 504,
+      "gap_mean": 0.1913,
+      "gap_std": 0.0248,
+      "beta_star": 0.716,
+      "error_vs_10text": 0.004
+    }
+  ],
+  "max_error_1text": 0.004,
+  "mean_error_1text": 0.0026,
+  "confirmed_015": true,
+  "confirmed_020": true
+}
