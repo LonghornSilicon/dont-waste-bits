@@ -380,3 +380,37 @@ Phase 5 script now sweeps [1.0, 1.5, 2.0, 3.0] and selects best. Code validated 
 - **Phase 5 script**: Use `run_phase5_1b7_pertok.py` (latest commit). v1 (`run_phase5_1b7.py`) is broken: wrong betas + global quality scores.
 - **Paper (commit 00be181)**: Two quality regimes formally defined in controller section. Table 1 has 1.7B TBD row. Section 5.3 is a standalone validated per-token beta calibration experiment. `update_paper_1b7.py` will auto-fill TBDs when Brev results arrive.
 - **Lessons for paper writing**: The fact that 2-bit is dominated is the core contribution — state it in abstract, intro bullet 1, and conclusion. The per-token proxy and beta calibration are the technical enablers for 1.7B (scale-generalization). These are independent contributions, both novel relative to DWB.
+
+---
+
+## 1.7B Simulation: Genuine Mixed Allocation Confirmed (Predicted) ★ NEW
+
+**Date**: 2026-04-19 (Session 10)
+
+**Method**: Generated 90,000 synthetic tokens with predicted 1.7B gap distribution
+(mean=0.400, std=0.058, derived from eff_residual scaling: 8.1%→12.4%).
+Trained binary {4,8} controller on synthetic signals. This is a MODEL-BASED PREDICTION
+— not a hardware measurement. Validates gradient analysis.
+
+**Simulation results**:
+
+| beta | 4-bit% | 8-bit% | avg_bits | FPGA speedup | Outcome |
+|------|--------|--------|----------|-------------|---------|
+| 1.0  | 0%     | 100%   | 8.00     | 1.80×       | All 8-bit (too conservative) |
+| **1.5** | **53.5%** | **46.5%** | **5.86** | **2.43×** | **Genuine mixed allocation** |
+| 2.0  | 100%   | 0%     | 4.00     | 3.48×       | All 4-bit (max FPGA speed) |
+| 3.0  | 100%   | 0%     | 4.00     | 3.48×       | All 4-bit |
+
+**Key findings**:
+1. **beta=1.5 produces genuine mixed {4,8}-bit allocation** at predicted 1.7B scale (53.5% 4-bit, 46.5% 8-bit). This confirms the gradient analysis: gap mean=0.400 ≈ threshold=0.401 at beta=1.5.
+2. **FPGA speedup 2.43×** is nearly identical to DWB (2.44×) at similar avg_bits (5.86 vs 5.05), but WITHOUT any 2-bit tokens.
+3. **Accuracy lower bound 44.3%** (linear interpolation). With intelligent token selection, actual accuracy should exceed this (controller finds optimal assignment). DWB achieves 48.6% at 1.7B.
+4. **beta=2.0 → 100% 4-bit (3.48×)** — highest FPGA throughput but predicted accuracy drops to 41.1% (same as static INT4, as expected when INT4 is lossy).
+
+**Script**: `research/experiments/fpga-controller/phase5-benchmark/code/simulate_1b7_prediction.py`
+**Results**: `research/experiments/fpga-controller/phase5-benchmark/results/sim_1b7_prediction.json`
+
+**Implications for paper**:
+- The simulation is added as Table tab:sim_1b7 in the Discussion section
+- Pareto dominance argument is nuanced: at 1.7B, we eliminate the dominated 2-bit option, but the overall accuracy-FPGA tradeoff depends on controller quality
+- GPU measurement (Brev A4000) will determine whether beta=1.5 achieves competitive accuracy
