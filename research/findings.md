@@ -1,6 +1,6 @@
 # Research Findings — Don't Waste Bits! Verification
 
-**Last updated**: 2026-04-20 (Session 36: OPT-125M formal sensitivity JSON complete — 4-arch set closed. Finding 10: gap_mean is corpus-dependent for OPT/GPT-2; calibration sensitivity is within-corpus. Paper clarified.)  
+**Last updated**: 2026-04-20 (Session 37: GPT-2 Medium sensitivity — Finding 9 confirmed within GPT-2 family. Higher gap_std (0.052) → lower max_error (0.011) vs Small. 6 data points / 4 arch types now support Finding 9.)  
 **Phase**: CPU_COMPLETE — 10 checkpoints / 5 model families / 2×2 instruct matrix. GPU (1.7B HellaSwag accuracy) + FPGA hardware (latency) are only remaining blockers.
 
 ---
@@ -1020,3 +1020,24 @@ TinyLlama has gap_std=0.051 (similar to SmolLM2's 0.052) but max_error_1text=0.0
 **Implication**: The calibration sensitivity claim "single text estimates β* within ±0.020 of 10-text aggregate" is WITHIN-CORPUS. Cross-corpus gap_mean can differ by 0.04+ for OPT and GPT-2. The recommendation is: calibrate on a corpus representative of your deployment domain. This makes the formula practically actionable — the user brings their own representative texts.
 
 **Paper update**: Added clarifying note that calibration corpus should be deployment-representative. The sensitivity claim stands for within-corpus consistency.
+
+---
+
+## Session 37 — GPT-2 Medium Calibration Sensitivity: Within-Family Scale Test ★
+
+**Date**: 2026-04-20 (Session 37)
+
+**Experiment**: `gpt2_medium_cal_sensitivity.py` — 10-text sensitivity for GPT-2 Medium (345M, Conv1D). Tests whether calibration sensitivity scales with model size within GPT-2 family.
+
+**Result**: max_error_1text=0.011, mean_error=0.005. All within ±0.015. ✓
+
+**Within-GPT-2-family comparison (same architecture, different scale):**
+
+| Model | gap_std | max_error_1text | mean_error_1text |
+|---|---|---|---|
+| GPT-2 Small (124M) | 0.033 | 0.018 | 0.009 |
+| GPT-2 Medium (345M) | **0.052** | **0.011** | **0.005** |
+
+**Finding 9 confirmed within-family**: GPT-2 Medium has HIGHER gap_std (0.052 vs 0.033) but LOWER max_error (0.011 vs 0.018) than GPT-2 Small. Within a single architecture family, scale increases gap_std but decreases calibration sensitivity — another expression of the orthogonality. Finding 9 now supported across 6 data points / 4 architecture types / 2 GPT-2 scales.
+
+**Finding 10 corroborated**: Technical texts give gap_mean=0.2419 vs wikitext calibration value of 0.188 (Δ=0.054). Corpus dependency grows with scale within GPT-2 (Small: Δ=0.037; Medium: Δ=0.054), consistent with larger models being more sensitive to text domain in KV activation statistics.

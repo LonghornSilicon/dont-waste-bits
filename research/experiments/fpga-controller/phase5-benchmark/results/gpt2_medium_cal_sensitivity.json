@@ -1,0 +1,94 @@
+{
+  "model": "gpt2-medium",
+  "architecture": "GPT-2/Conv1D (OpenAI, 345M, 24L, 16H)",
+  "note": "Within-GPT2-family sensitivity. Gap_mean at floor (0.188). Tests scale-invariance of calibration sensitivity.",
+  "gap_mean_10text": 0.2419,
+  "gap_std_10text": 0.0524,
+  "beta_star_10text": 0.906,
+  "per_text_results": [
+    {
+      "text_idx": 0,
+      "n_tokens": 240,
+      "gap_mean": 0.2393,
+      "gap_std": 0.0508,
+      "beta_star": 0.896,
+      "error_vs_10text": 0.01
+    },
+    {
+      "text_idx": 1,
+      "n_tokens": 336,
+      "gap_mean": 0.2443,
+      "gap_std": 0.0517,
+      "beta_star": 0.915,
+      "error_vs_10text": 0.009
+    },
+    {
+      "text_idx": 2,
+      "n_tokens": 240,
+      "gap_mean": 0.2421,
+      "gap_std": 0.0512,
+      "beta_star": 0.907,
+      "error_vs_10text": 0.001
+    },
+    {
+      "text_idx": 3,
+      "n_tokens": 240,
+      "gap_mean": 0.2412,
+      "gap_std": 0.0524,
+      "beta_star": 0.903,
+      "error_vs_10text": 0.002
+    },
+    {
+      "text_idx": 4,
+      "n_tokens": 288,
+      "gap_mean": 0.239,
+      "gap_std": 0.0516,
+      "beta_star": 0.895,
+      "error_vs_10text": 0.011
+    },
+    {
+      "text_idx": 5,
+      "n_tokens": 240,
+      "gap_mean": 0.2414,
+      "gap_std": 0.0521,
+      "beta_star": 0.904,
+      "error_vs_10text": 0.002
+    },
+    {
+      "text_idx": 6,
+      "n_tokens": 312,
+      "gap_mean": 0.2423,
+      "gap_std": 0.0525,
+      "beta_star": 0.908,
+      "error_vs_10text": 0.002
+    },
+    {
+      "text_idx": 7,
+      "n_tokens": 408,
+      "gap_mean": 0.2434,
+      "gap_std": 0.0546,
+      "beta_star": 0.912,
+      "error_vs_10text": 0.006
+    },
+    {
+      "text_idx": 8,
+      "n_tokens": 480,
+      "gap_mean": 0.2426,
+      "gap_std": 0.0531,
+      "beta_star": 0.909,
+      "error_vs_10text": 0.003
+    },
+    {
+      "text_idx": 9,
+      "n_tokens": 336,
+      "gap_mean": 0.2408,
+      "gap_std": 0.0523,
+      "beta_star": 0.902,
+      "error_vs_10text": 0.004
+    }
+  ],
+  "max_error_1text": 0.011,
+  "mean_error_1text": 0.005,
+  "confirmed_015": true,
+  "confirmed_020": true
+}

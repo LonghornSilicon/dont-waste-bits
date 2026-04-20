@@ -1001,3 +1001,15 @@ OPT family converges DOWN toward the floor from above with model scale, opposite
 **Secondary finding (Finding 10)**: gap_mean is corpus-dependent. OPT-125M gives 0.1700 (technical texts) vs 0.2131 (wikitext-2). GPT-2 Small shows same pattern (0.233 vs 0.196). The sensitivity claim (±0.006) is within-corpus consistency. Cross-corpus: user must calibrate on deployment-representative text.
 
 **Paper update**: Added "practical note" sentence clarifying within-corpus scope of sensitivity claim.
+
+---
+
+## Session 37 — 2026-04-20 — GPT-2 Medium Sensitivity: Within-Family Scale Test
+
+**Task**: GPT-2 Medium (345M) calibration sensitivity using Conv1D c_attn hook. Within-GPT-2-family comparison with Small (124M).
+
+**Result**: gap_mean=0.2419 (technical corpus), gap_std=0.0524, max_error=0.011, mean_error=0.005.
+
+**Key finding**: GPT-2 Medium (gap_std=0.052, max_error=0.011) beats GPT-2 Small (gap_std=0.033, max_error=0.018) despite higher within-text variance. Scale increases gap_std but decreases calibration sensitivity within GPT-2 family — third instance of Finding 9 (gap_std ⊥ sensitivity). Finding 9 now supported by 6 data points / 4 architecture types.
+
+**Paper update**: Sensitivity list updated to include GPT-2 Medium; "five models" → "six models"; within-family GPT-2 comparison noted.
