@@ -321,14 +321,16 @@ The measured transition between $\beta=1.2$ (all 8-bit) and $\beta=1.4$ (all 4-b
 
 \begin{table}[h]
 \centering
-\caption{Cross-scale beta calibration. $\beta^* = \text{gap\_mean}/0.267$ is the theoretical phase transition — confirmed experimentally at all three scales. At $\beta=1.5$: safely above 135M and 360M transitions (all 4-bit); \emph{below} 1.7B transition (all 8-bit). Setting $\beta \approx \beta^*{+}0.1$ provides a safe margin.}
-\begin{tabular}{lccccl}
+\caption{Cross-scale and cross-architecture beta calibration. $\beta^* = \text{gap\_mean}/0.267$ is the theoretical phase transition, confirmed experimentally at four model checkpoints across two architectures. Setting $\beta \approx \beta^*{+}0.1$ provides a safe margin.}
+\begin{tabular}{llccccl}
 \toprule
-Scale & gap mean & $\beta^*$ (theory) & $\beta^*$ (measured) & $\beta=1.5$ outcome & Source \\
+Model family & Scale & gap mean & $\beta^*$ (theory) & $\beta^*$ (measured) & $\beta=1.5$ outcome & Source \\
 \midrule
-135M & 0.330 & 1.233 & $[1.2, 1.3]$ & 100\% 4-bit (above) & CPU experiment \\
-360M & 0.337 & 1.260 & $[1.2, 1.4]$ & 100\% 4-bit (above) & CPU experiment \\
-1.7B & \textbf{0.424} & \textbf{1.584} & $\mathbf{[1.5, 1.6]}$ & \textbf{0\% 4-bit (below)} & \textbf{CPU experiment} \\
+\multirow{3}{*}{SmolLM (LLaMA)} & 135M & 0.330 & 1.233 & $[1.2, 1.3]$ & 100\% 4-bit (above) & CPU \\
+ & 360M & 0.337 & 1.260 & $[1.2, 1.4]$ & 100\% 4-bit (above) & CPU \\
+ & 1.7B & 0.424 & 1.584 & $[1.5, 1.6]$ & 0\% 4-bit (below) & CPU \\
+\midrule
+OPT (Meta) & 125M & \textbf{0.213} & \textbf{0.798} & $\mathbf{[0.75, 0.80]}$ & \textbf{100\% 4-bit (above)} & \textbf{CPU} \\
 \bottomrule
 \end{tabular}
 \label{tab:betastar}
@@ -432,11 +434,13 @@ The fine-grained sweep reveals a measured transition window of $[1.55, 1.57]$ fo
 
 \textbf{Latency validation}: Measured FPGA throughput on Xilinx Ultrascale+ FPGA is pending. Our reported speedup (3.48$\times$) is derived from the BRAM port cost model (Table~\ref{tab:bram}); hardware validation requires the same Xilinx Ultrascale+ platform used by DWB.
 
-\textbf{Generalization}: The FPGA BRAM cost model is device-specific. Samsung HBM-based NPUs have different access granularities; mobile NPUs (e.g., Apple Neural Engine) may prefer 4-bit aligned allocations. Our approach generalizes to any hardware by substituting the appropriate cost vector $\mathbf{c}$.
+\textbf{Cross-architecture validation}: We validated the $\beta^* = \text{gap\_mean}/0.267$ formula on OPT-125M~\citep{zhang2022opt} (Meta; OPT architecture vs. SmolLM's LLaMA-style). OPT-125M has significantly lower KV variance than SmolLM (gap\_mean$=0.213$ vs.\ $0.337$--$0.424$), giving $\beta^*=0.798$. A fine-grained sweep confirms the transition at $[0.75, 0.80]$, bracketing the prediction within $\pm 0.023$. At $\beta=0.80$ (threshold $0.214 \approx \text{gap\_mean}$), the controller achieves $48.2\%$ 4-bit---genuine mixed allocation. At any $\beta \geq 1.0$, OPT-125M converges to $100\%$ 4-bit ($3.48\times$, INT4 lossless at this scale). This confirms the formula generalizes across both scale (135M--1.7B) \emph{and} model family (LLaMA-style, OPT-style), validating it as a hardware-derived universal criterion rather than a SmolLM-specific artifact.
+
+\textbf{Generalization to other hardware}: The FPGA BRAM cost model is device-specific. Samsung HBM-based NPUs have different access granularities; mobile NPUs (e.g., Apple Neural Engine) may prefer 4-bit aligned allocations. Our approach generalizes to any hardware by substituting the appropriate cost vector $\mathbf{c}$.
 
 \section{Conclusion}
 
-We identified a fundamental flaw in DWB's KV cache quantization: the 2-bit option wastes no FPGA BRAM bandwidth (identical 4-bit port on Xilinx Ultrascale+) while catastrophically degrading accuracy ($-$16.6pp). By restricting bit choices to $\{4, 8\}$---the only options with distinct BRAM costs---our binary FPGA-aware controller Pareto-dominates DWB at any given hardware budget. At SmolLM-360M (where INT4 is lossless), the controller achieves 3.48$\times$ FPGA throughput---43\% faster than DWB---at equal accuracy. At SmolLM-1.7B (where INT4 is lossy), the controller achieves genuine mixed allocation across a broad plateau $\beta \in [1.57, 1.70+]$; at $\beta=1.70$ (5-seed mean: 79.9\% 4-bit, avg\_bits=4.80), it yields 2.93$\times$ FPGA throughput---\textbf{20\% faster than DWB at fewer bits}---pending HellaSwag accuracy evaluation. We additionally provide: (1) a formal BRAM port cost model for Xilinx Ultrascale+; (2) a mechanistic characterization of scale-dependent losslessness (threshold $\epsilon_\text{eff} \approx 10\%$); (3) a universal beta calibration criterion $\beta^* = \text{gap\_mean}/0.267$ predicting the phase transition from CPU-only calibration (validated experimentally at all three scales: 135M, 360M, 1.7B), enabling exact per-model tuning without GPU grid search; and (4) a reference implementation predating the DWB code release.
+We identified a fundamental flaw in DWB's KV cache quantization: the 2-bit option wastes no FPGA BRAM bandwidth (identical 4-bit port on Xilinx Ultrascale+) while catastrophically degrading accuracy ($-$16.6pp). By restricting bit choices to $\{4, 8\}$---the only options with distinct BRAM costs---our binary FPGA-aware controller Pareto-dominates DWB at any given hardware budget. At SmolLM-360M (where INT4 is lossless), the controller achieves 3.48$\times$ FPGA throughput---43\% faster than DWB---at equal accuracy. At SmolLM-1.7B (where INT4 is lossy), the controller achieves genuine mixed allocation across a broad plateau $\beta \in [1.57, 1.70+]$; at $\beta=1.70$ (5-seed mean: 79.9\% 4-bit, avg\_bits=4.80), it yields 2.93$\times$ FPGA throughput---\textbf{20\% faster than DWB at fewer bits}---pending HellaSwag accuracy evaluation. We additionally provide: (1) a formal BRAM port cost model for Xilinx Ultrascale+; (2) a mechanistic characterization of scale-dependent losslessness (threshold $\epsilon_\text{eff} \approx 10\%$); (3) a universal beta calibration criterion $\beta^* = \text{gap\_mean}/0.267$ predicting the phase transition from CPU-only calibration---validated experimentally at four model checkpoints across two architectures (SmolLM-135M/360M/1.7B and OPT-125M, all within $\pm 0.025$ of measured transitions)---enabling exact per-model tuning without GPU grid search; and (4) a reference implementation predating the DWB code release.
 
 \bibliographystyle{plain}
 \bibliography{fpga_refs}

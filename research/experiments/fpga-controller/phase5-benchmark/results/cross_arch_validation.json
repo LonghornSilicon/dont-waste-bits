@@ -1,0 +1,74 @@
+{
+  "opt125m": {
+    "model": "facebook/opt-125m",
+    "n_tokens": 7680,
+    "gap_mean": 0.2131,
+    "gap_std": 0.0389,
+    "beta_star_theory": 0.798,
+    "measured_transition": [
+      1.0,
+      1.0
+    ],
+    "theory_error": 0.202,
+    "sweep": {
+      "1.0": {
+        "p4_pct": 100.0,
+        "speedup": 3.483
+      },
+      "1.2": {
+        "p4_pct": 100.0,
+        "speedup": 3.483
+      },
+      "1.4": {
+        "p4_pct": 100.0,
+        "speedup": 3.483
+      },
+      "1.6": {
+        "p4_pct": 100.0,
+        "speedup": 3.483
+      },
+      "1.8": {
+        "p4_pct": 100.0,
+        "speedup": 3.483
+      },
+      "2.0": {
+        "p4_pct": 100.0,
+        "speedup": 3.483
+      },
+      "2.5": {
+        "p4_pct": 100.0,
+        "speedup": 3.483
+      },
+      "3.0": {
+        "p4_pct": 100.0,
+        "speedup": 3.483
+      }
+    }
+  },
+  "smollm_reference": {
+    "135M": {
+      "gap_mean": 0.3297,
+      "beta_star": 1.234,
+      "measured": [
+        1.2,
+        1.3
+      ]
+    },
+    "360M": {
+      "gap_mean": 0.3367,
+      "beta_star": 1.261,
+      "measured": [
+        1.2,
+        1.4
+      ]
+    },
+    "1.7B": {
+      "gap_mean": 0.4235,
+      "beta_star": 1.584,
+      "measured": [
+        1.55,
+        1.57
+      ]
+    }
+  }
+}
