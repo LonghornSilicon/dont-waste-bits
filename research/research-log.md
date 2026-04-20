@@ -1071,3 +1071,18 @@ OPT family converges DOWN toward the floor from above with model scale, opposite
 
 **Paper update**: "eight" -> "nine" models; SmolLM-135M and 360M added to table (with gap_mean column); new Finding A9 observation about above-floor corpus dependency; rho updated 0.70->0.64.
 
+
+---
+
+## Session 41 -- 2026-04-20 -- SmolLM-360M-Instruct: Instruct Effect is Corpus-Dependent
+
+**Hypothesis**: SmolLM-360M-Instruct (at floor on wikitext, gap_mean~0.19) would show smaller corpus-dependency than above-floor base (0.265).
+
+**Result**: gap_mean=0.2653 on technical texts -- essentially IDENTICAL to base (0.2651, delta=0.0002).
+
+**Finding**: The instruct-tuning floor effect is corpus-dependent. On technical ML texts, base and instruct converge to the same gap_mean. The 44% instruct reduction seen in earlier sessions was measured on the original calibration corpus (general/wikitext texts). Both models shift to ~0.265 on technical texts, from very different wikitext starting points (0.337 base vs 0.189 instruct). 
+
+**Implication**: "Above-floor vs floor" classification is domain-specific. Extended Finding 10 with corpus x instruct interaction.
+
+**Sensitivity**: max_error=0.014 (within +-0.015). JSON saved.
+

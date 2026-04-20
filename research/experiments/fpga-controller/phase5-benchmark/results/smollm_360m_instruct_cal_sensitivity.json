@@ -1,0 +1,94 @@
+{
+  "model": "HuggingFaceTB/SmolLM-360M-Instruct",
+  "architecture": "LLaMA-MHA/SmolLM-Instruct (360M, 32L)",
+  "note": "Instruct-tuned counterpart to SmolLM-360M base. Tests floor vs above-floor corpus dependency hypothesis.",
+  "gap_mean_10text": 0.2653,
+  "gap_std_10text": 0.0546,
+  "beta_star_10text": 0.993,
+  "per_text_results": [
+    {
+      "text_idx": 0,
+      "n_tokens": 288,
+      "gap_mean": 0.2614,
+      "gap_std": 0.0561,
+      "beta_star": 0.979,
+      "error_vs_10text": 0.014
+    },
+    {
+      "text_idx": 1,
+      "n_tokens": 416,
+      "gap_mean": 0.267,
+      "gap_std": 0.0547,
+      "beta_star": 1.0,
+      "error_vs_10text": 0.007
+    },
+    {
+      "text_idx": 2,
+      "n_tokens": 320,
+      "gap_mean": 0.2659,
+      "gap_std": 0.0572,
+      "beta_star": 0.996,
+      "error_vs_10text": 0.002
+    },
+    {
+      "text_idx": 3,
+      "n_tokens": 320,
+      "gap_mean": 0.2671,
+      "gap_std": 0.0561,
+      "beta_star": 1.0,
+      "error_vs_10text": 0.007
+    },
+    {
+      "text_idx": 4,
+      "n_tokens": 384,
+      "gap_mean": 0.2635,
+      "gap_std": 0.0539,
+      "beta_star": 0.987,
+      "error_vs_10text": 0.006
+    },
+    {
+      "text_idx": 5,
+      "n_tokens": 352,
+      "gap_mean": 0.2675,
+      "gap_std": 0.0562,
+      "beta_star": 1.002,
+      "error_vs_10text": 0.008
+    },
+    {
+      "text_idx": 6,
+      "n_tokens": 416,
+      "gap_mean": 0.2644,
+      "gap_std": 0.0543,
+      "beta_star": 0.99,
+      "error_vs_10text": 0.003
+    },
+    {
+      "text_idx": 7,
+      "n_tokens": 448,
+      "gap_mean": 0.2647,
+      "gap_std": 0.054,
+      "beta_star": 0.991,
+      "error_vs_10text": 0.002
+    },
+    {
+      "text_idx": 8,
+      "n_tokens": 608,
+      "gap_mean": 0.2654,
+      "gap_std": 0.0511,
+      "beta_star": 0.994,
+      "error_vs_10text": 0.001
+    },
+    {
+      "text_idx": 9,
+      "n_tokens": 384,
+      "gap_mean": 0.2652,
+      "gap_std": 0.0549,
+      "beta_star": 0.993,
+      "error_vs_10text": 0.0
+    }
+  ],
+  "max_error_1text": 0.014,
+  "mean_error_1text": 0.005,
+  "confirmed_015": true,
+  "confirmed_020": true
+}

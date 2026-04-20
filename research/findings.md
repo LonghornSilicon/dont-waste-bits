@@ -1128,3 +1128,37 @@ SmolLM-135M: max_error=0.017 -- outside +-0.015 but within +-0.020. Just one tex
 
 **Scientific note**: SmolLM-1.7B sensitivity (calibration_sensitivity_1b7.json) used a bootstrapping methodology from cached wikitext data -- NOT directly comparable to the 9 technical-text models here. It is listed in the main paper separately.
 
+
+---
+
+## Session 41 -- SmolLM-360M-Instruct Sensitivity: Instruct Effect is Corpus-Dependent
+
+**Date**: 2026-04-20 (Session 41)
+
+**Experiment**: SmolLM-360M-Instruct sensitivity on 10 technical ML texts.
+
+**Result**: gap_mean=0.2653, gap_std=0.0546, beta*=0.993, max_error=0.014, mean_error=0.005
+
+**KEY FINDING -- Instruct gap_mean effect is corpus-dependent:**
+
+| Model | Domain | gap_mean | Delta |
+|---|---|---|---|
+| SmolLM-360M base | Technical texts | 0.2651 | — |
+| SmolLM-360M-Instruct | Technical texts | 0.2653 | +0.0002 (negligible) |
+| SmolLM-360M base | Original calibration (est. wikitext) | ~0.337 | — |
+| SmolLM-360M-Instruct | Original calibration (est. wikitext) | ~0.189 (floor) | -0.148 (-44%) |
+
+On technical ML texts: base and instruct have IDENTICAL gap_mean (delta=0.0002).
+On general/wikitext texts: instruct reaches the floor (gap_mean~0.19 vs base ~0.337, -44%).
+
+**Interpretation**: Instruction fine-tuning's effect on KV distributions is domain-specific. Technical ML texts yield an intermediate gap_mean (~0.265) for BOTH models, below the base's general-text value (0.337) but above the instruct model's general-text floor (0.189). The "instruct reaches floor" finding from earlier sessions was calibrated on general/wikitext text where the effect is visible.
+
+**Extension of Finding 10**: Corpus dependency affects BASE and INSTRUCT models differently:
+- Base: large corpus shift (0.337 wikitext -> 0.265 technical, delta=0.072)
+- Instruct: also shifts (0.189 wikitext -> 0.265 technical, delta=+0.076)
+Both models converge to ~0.265 on technical ML texts, despite being far apart on wikitext.
+
+**Practical implication**: For deployment calibration, the corpus MUST be representative of the actual deployment domain. On technical text deployments, base and instruct models calibrate identically; on general text deployments, instruct models require lower beta* (floor cluster vs above-floor).
+
+**Sensitivity**: max_error=0.014, within +-0.015. No degradation from base (0.012). Single text still suffices.
+

@@ -1,6 +1,6 @@
 project: dont-waste-bits-verification
 created: "2026-04-19"
-last_updated: "2026-04-20"  # Session 40 — SmolLM-135M (max_error=0.017) + SmolLM-360M (max_error=0.012) sensitivity. 9-model table (same technical-text methodology). Corpus dependency extension: SmolLM above-floor shows larger domain delta (~0.07) than OPT/GPT-2 (0.04). rho=0.639, p=0.064 (n=9, n.s.). Paper updated to nine models + Finding A9. Appendix table now includes gap_mean column. 11 formal sensitivity JSONs total.
+last_updated: "2026-04-20"  # Session 41 — SmolLM-360M-Instruct: gap_mean=0.265 on technical texts, IDENTICAL to base (delta=0.0002). Instruct floor effect is corpus-dependent: visible on wikitext (-44%), absent on technical texts. Extends Finding 10 with corpus x instruct interaction. 12 formal sensitivity JSONs. Paper updated: corpus dependency paragraph extended with instruct-base convergence finding.
 
 research_question: >
   Can we independently reproduce the claims of "Don't Waste Bits! Adaptive KV-Cache
