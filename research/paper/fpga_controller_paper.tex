@@ -449,26 +449,31 @@ The fine-grained sweep reveals a measured transition window of $[1.55, 1.57]$ fo
 
 Across all six checkpoints (scales 124M--1.7B, four model families: SmolLM/LLaMA-MHA, TinyLlama/LLaMA-GQA, OPT/Meta, GPT/OpenAI), the formula error is $\leq\pm 0.04$. The formula is hardware-derived ($0.267 = (c_8{-}c_4)/C_\text{FP16}$) and architecture-independent: it adapts to any model's KV statistics via a single CPU calibration pass on 1--10 texts ($<3$ seconds).
 
-\textbf{Fine-tuning shifts the KV distribution}: Instruction fine-tuning substantially changes gap\_mean, consistently across scales. SmolLM-135M-Instruct and SmolLM-360M-Instruct (same architectures as their base models, SFT-trained) both show $\approx$44\% lower gap\_mean than their base counterparts (Table~\ref{tab:instruct}):
+\textbf{Fine-tuning and architecture both shape gap\_mean}: SFT substantially lowers gap\_mean in MHA models, but not in GQA models. Table~\ref{tab:instruct} shows the contrast across architectures:
 
 \begin{table}[h]
 \centering
-\caption{Base vs.\ instruction-tuned gap\_mean and $\beta^*$. SFT reduces gap\_mean by $\approx$44\% at both scales. Transition window for 360M-Instruct verified by empirical controller sweep (3 seeds, 5 betas): predicted $\beta^*=0.727$, measured $[0.70, 0.80]$, error$=0.023$---within the $\pm 0.04$ bound established for base models.}
-\begin{tabular}{llccccc}
+\caption{Base vs.\ instruction-tuned gap\_mean and $\beta^*$ for MHA and GQA architectures. SFT reduces gap\_mean by $\approx$44\% in MHA models (SmolLM). GQA models (TinyLlama) show \emph{no measurable shift} ($\Delta=-0.3\%$) because GQA already places gap\_mean at the ``instruction-level floor'' ($\approx$0.18--0.19) by architecture. This floor coincides with SFT-instruct values, GPT-2 Small (0.196), and OPT-125M (0.213)---suggesting $\approx$0.19 is a natural lower bound for well-trained models. Transition window for 360M-Instruct verified by sweep: predicted $\beta^*=0.727$, measured $[0.70, 0.80]$, error$=0.023$.}
+\begin{tabular}{llcccccc}
 \toprule
-Model & Variant & gap mean & $\beta^*$ (theory) & Measured transition & $\Delta$gap & $\Delta\beta^*$ \\
+Model & Attn & Variant & gap mean & $\beta^*$ & Measured transition & $\Delta$gap & $\Delta\beta^*$ \\
 \midrule
-\multirow{2}{*}{SmolLM-135M} & Base & 0.330 & 1.233 & $[1.2, 1.3]$ & — & — \\
- & Instruct (SFT) & \textbf{0.181} & \textbf{0.677} & — & $-45\%$ & $-0.556$ \\
+\multirow{2}{*}{SmolLM-135M} & \multirow{2}{*}{MHA} & Base & 0.330 & 1.233 & $[1.2, 1.3]$ & — & — \\
+ & & Instruct (SFT) & \textbf{0.181} & \textbf{0.677} & — & $\mathbf{-45\%}$ & $-0.556$ \\
 \midrule
-\multirow{2}{*}{SmolLM-360M} & Base & 0.337 & 1.261 & $[1.2, 1.4]$ & — & — \\
- & Instruct (SFT) & \textbf{0.194} & \textbf{0.727} & $\mathbf{[0.70, 0.80]}$ & $-43\%$ & $-0.534$ \\
+\multirow{2}{*}{SmolLM-360M} & \multirow{2}{*}{MHA} & Base & 0.337 & 1.261 & $[1.2, 1.4]$ & — & — \\
+ & & Instruct (SFT) & \textbf{0.194} & \textbf{0.727} & $[0.70, 0.80]$ & $\mathbf{-43\%}$ & $-0.534$ \\
+\midrule
+\multirow{2}{*}{TinyLlama-1.1B} & \multirow{2}{*}{\textbf{GQA}} & Base & 0.189 & 0.707 & $[0.68, 0.74]$ & — & — \\
+ & & Chat (SFT) & \textbf{0.188} & \textbf{0.705} & — & $\mathbf{-0.3\%}$ & $-0.002$ \\
 \bottomrule
 \end{tabular}
 \label{tab:instruct}
 \end{table}
 
-The shift ($-44\%$) exceeds any cross-architecture gap measured (max: $0.040$ between LLaMA and OPT). Instruct models show gap\_mean values ($0.181$--$0.194$) similar to GPT-2 Small ($0.196$, trained on structured WebText), consistent with instruction data regularizing KV activations toward more uniform magnitudes. For SmolLM-360M-Instruct, we verified the predicted transition empirically with a controller sweep: at $\beta=0.70$ (threshold $0.187 < 0.194$) the controller is 15.6\% 4-bit (entering mixed), at $\beta=0.75$ it is 52.6\% 4-bit, and at $\beta \geq 0.80$ it is 100\% 4-bit---bracketing the predicted $\beta^*=0.727$ with error $0.023$, consistent with the $\leq\pm 0.04$ bound. At $\beta \geq 1.0$, both instruct models converge to 100\% 4-bit, consistent with INT4 being lossless at these scales. \textbf{Practical implication}: calibration must be run on the exact deployed model checkpoint---not derived from the base. Since calibration requires only 1--10 texts ($<3$ seconds), this is trivially cheap.
+\emph{MHA models} (SmolLM): SFT reduces gap\_mean by $\approx$44\% consistently---the instruct values ($0.181$--$0.194$) resemble GPT-2 Small ($0.196$, WebText) and OPT-125M ($0.213$), consistent with instruction data regularizing KV activations toward more uniform magnitudes. For SmolLM-360M-Instruct: at $\beta=0.70$, controller is 15.6\% 4-bit; at $\beta=0.75$, 52.6\%; at $\beta \geq 0.80$, 100\%---error $0.023 \leq \pm 0.04$.
+
+\emph{GQA models} (TinyLlama-1.1B Chat): SFT has essentially no effect ($\Delta=-0.3\%$, gap\_mean $0.189 \to 0.188$). The GQA architecture with $n_\text{kv}=4$ already limits K/V head dimensionality (256-dim per token) to the point where KV quantization error is inherently small---reaching the same $\approx$0.19 floor that MHA models achieve only through instruction fine-tuning. \textbf{Practical implication}: for MHA models, calibration must be re-run after SFT. For GQA models, base-model calibration transfers to the instruct variant without re-calibration.
 
 \textbf{Generalization to other hardware}: The FPGA BRAM cost model is device-specific. Samsung HBM-based NPUs have different access granularities; mobile NPUs (e.g., Apple Neural Engine) may prefer 4-bit aligned allocations. Our approach generalizes to any hardware by substituting the appropriate cost vector $\mathbf{c}$.
 

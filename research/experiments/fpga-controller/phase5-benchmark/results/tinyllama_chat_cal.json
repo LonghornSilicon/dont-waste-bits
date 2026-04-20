@@ -1,0 +1,14 @@
+{
+  "model": "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
+  "variant": "instruct/chat",
+  "n_kv_heads": 4,
+  "architecture": "TinyLlama-GQA",
+  "gap_mean": 0.1883,
+  "gap_std": 0.0471,
+  "predicted_beta_star": 0.705,
+  "base_gap_mean": 0.1888,
+  "delta_gap": -0.0005,
+  "delta_pct": -0.3,
+  "n_tokens": 24904,
+  "elapsed_s": 57.3
+}
