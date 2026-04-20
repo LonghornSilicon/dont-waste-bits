@@ -1,6 +1,6 @@
 project: dont-waste-bits-verification
 created: "2026-04-19"
-last_updated: "2026-04-20"  # Session 35 — TinyLlama calibration sensitivity: gap_std=0.051, max_error=0.008, mean=0.004. Finding 9 confirmed across 5 data points / 3 arch types. CPU verification COMPLETE.
+last_updated: "2026-04-20"  # Session 36 — OPT-125M formal sensitivity: max_error=0.006. 4-arch formal set complete. Finding 10: gap_mean corpus-dependent (OPT technical=0.170 vs wikitext=0.213). Paper clarified: within-corpus sensitivity.
 
 research_question: >
   Can we independently reproduce the claims of "Don't Waste Bits! Adaptive KV-Cache

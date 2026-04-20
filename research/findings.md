@@ -1,6 +1,6 @@
 # Research Findings — Don't Waste Bits! Verification
 
-**Last updated**: 2026-04-20 (Session 35: TinyLlama sensitivity confirmed — Finding 9 generalized across 5 data points / 3 architecture types. All ≤±0.020. CPU verification fully complete.)  
+**Last updated**: 2026-04-20 (Session 36: OPT-125M formal sensitivity JSON complete — 4-arch set closed. Finding 10: gap_mean is corpus-dependent for OPT/GPT-2; calibration sensitivity is within-corpus. Paper clarified.)  
 **Phase**: CPU_COMPLETE — 10 checkpoints / 5 model families / 2×2 instruct matrix. GPU (1.7B HellaSwag accuracy) + FPGA hardware (latency) are only remaining blockers.
 
 ---
@@ -989,3 +989,34 @@ TinyLlama has gap_std=0.051 (similar to SmolLM2's 0.052) but max_error_1text=0.0
 **Notable**: 10-text gap_mean=0.1962 vs original calibration's 0.189 — a 0.007 difference attributable to per-token (this script) vs per-head (original calibration) quantization granularity. The calibration sensitivity result (max_error=0.008) is unaffected by this measurement-level difference: within-methodology consistency is what matters for the calibration claim.
 
 **CPU verification status**: All major experiments complete. TinyLlama adds the 5th data point confirming ≤±0.020 single-text calibration sensitivity. Finding 9 is now supported across 3 architecture types with 4 explicit measurements.
+
+---
+
+## Session 36 — OPT-125M Formal Sensitivity + Domain Sensitivity Discovery ★
+
+**Date**: 2026-04-20 (Session 36)
+
+**Experiment**: `opt125m_cal_sensitivity.py` — formal verification of inline paper claim (max_error~=0.006).
+
+**Primary result**: CONFIRMED — max_error_1text=0.006, mean_error=0.002. All within ±0.015. This formally closes the 4-architecture verification set (LLaMA-MHA, LLaMA-GQA, Conv1D, OPT all have JSON results).
+
+**Calibration sensitivity (4-architecture formal set — all within ±0.020):**
+
+| Architecture | Model | gap_std | max_error_1text | mean_error_1text | JSON |
+|---|---|---|---|---|---|
+| LLaMA-MHA | SmolLM-1.7B | 0.063 | 0.015 | ~0.005 | calibration_sensitivity_1b7.json |
+| LLaMA-GQA | SmolLM2-360M | 0.052 | 0.013 | 0.004 | smollm2_360m_cal_sensitivity.json |
+| LLaMA-GQA | TinyLlama-1.1B | 0.051 | 0.008 | 0.004 | tinyllama_cal_sensitivity.json |
+| Conv1D | GPT-2 Small | 0.033 | 0.018 | 0.009 | gpt2_cal_sensitivity.json |
+| OPT/Meta | OPT-125M | 0.028 | **0.006** | **0.002** | opt125m_cal_sensitivity.json |
+
+**Secondary discovery — Finding 10**: gap_mean is corpus-dependent for OPT-125M.
+- Technical ML texts (our sensitivity corpus): gap_mean=0.1700, β*=0.637
+- Wikitext-2 (original calibration corpus): gap_mean=0.2131, β*=0.798
+- Measured transition: [0.75, 0.80] — matches wikitext calibration (error=0.023), not technical texts (error≈0.113)
+
+**Mechanism**: OPT-125M KV statistics shift significantly between text domains. Technical ML texts (short, specialized) produce lower gap_mean than wikitext (natural language, diverse). The same pattern appears in GPT-2 Small (technical: gap_mean=0.233, original: gap_mean=0.196).
+
+**Implication**: The calibration sensitivity claim "single text estimates β* within ±0.020 of 10-text aggregate" is WITHIN-CORPUS. Cross-corpus gap_mean can differ by 0.04+ for OPT and GPT-2. The recommendation is: calibrate on a corpus representative of your deployment domain. This makes the formula practically actionable — the user brings their own representative texts.
+
+**Paper update**: Added clarifying note that calibration corpus should be deployment-representative. The sensitivity claim stands for within-corpus consistency.

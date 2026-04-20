@@ -989,3 +989,15 @@ OPT family converges DOWN toward the floor from above with model scale, opposite
 **Paper update**: Added TinyLlama to per-text max deviations list. Updated counter-intuitive finding sentence to mention both GQA models.
 
 **Status**: CPU verification fully complete. GPU/FPGA hardware awaiting.
+
+---
+
+## Session 36 — 2026-04-20 — OPT-125M Formal Sensitivity + Domain Discovery
+
+**Task**: Formally verify OPT inline sensitivity claim (max_error~=0.006) and close 4-arch formal JSON set.
+
+**Result**: max_error_1text=0.006, mean_error=0.002. Confirmed. All 4 architecture types now have formal JSON files.
+
+**Secondary finding (Finding 10)**: gap_mean is corpus-dependent. OPT-125M gives 0.1700 (technical texts) vs 0.2131 (wikitext-2). GPT-2 Small shows same pattern (0.233 vs 0.196). The sensitivity claim (±0.006) is within-corpus consistency. Cross-corpus: user must calibrate on deployment-representative text.
+
+**Paper update**: Added "practical note" sentence clarifying within-corpus scope of sensitivity claim.
