@@ -547,3 +547,20 @@ This is a clean empirical confirmation of the gradient analysis theory.
 - Updated beta_calibration figure: 135M points + theory curve + updated left panel
 
 **Commit**: 1801538
+
+---
+
+## 2026-04-19 — Session 16 (autoresearch tick)
+
+**Trigger**: Autoresearch loop tick. Context continued from session 15.
+
+**Work done**: Paper consistency fixes (no new experiments run).
+
+**Paper fixes**:
+1. **Formula bug fully resolved**: `r_cancel` → `r_survive` in table column header (line 140). 135M row value 0.32 → 0.28 (correct: 0.069/0.249=0.277≈0.28). "cancellation ratios" → "survival fractions" in discussion text. All three rows verified consistent with ε_eff = ε_rel × r_survive.
+2. **Table 1 1.7B FPGA metrics filled**: avg_bits=5.86, cost=0.415, speedup=2.43× from simulation (β=1.5, 53.5%/46.5% split). Only accuracy remains TBD pending GPU. Added footnote §.
+3. **Figure 3 caption corrected**: Added 135M to left panel description (matching what make_figures.py actually plots).
+
+**Commits**: f72018d, 859fb22, b66d30c, cec8a3d, b3abcd4
+
+**Status**: Paper is in consistent, near-final state. Only remaining gap: 1.7B accuracy (needs Brev GPU).
