@@ -675,3 +675,47 @@ This is a clean empirical confirmation of the gradient analysis theory.
 7. Discussion paragraph text "2.52--2.84x (+3% to +16%)" → "2.52--2.93x (+3% to +20%)".
 
 **Paper status after audit**: Internally consistent, all TBD markers are honest GPU/hardware blockers.
+
+---
+
+## 2026-04-19 Session 21 — Cross-Architecture Beta Calibration (OPT-125M)
+
+**Protocol**: Test whether beta* = gap_mean/0.267 holds across model architectures (not just SmolLM LLaMA-style family).
+**Model**: facebook/opt-125m (Meta OPT decoder architecture, different attention/MLP structure than SmolLM).
+
+**Experiment**: `cross_arch_beta_cal.py` — broad sweep betas [1.0, 1.5, 2.0] on OPT-125M signals.
+**Problem found**: Lowest beta=1.0 already above beta*=0.798 → all 100% 4-bit, transition not visible.
+
+**Fix**: Created `cross_arch_fine_sweep.py` — fine sweep [0.3, 0.5, 0.6, 0.7, 0.75, 0.80, 0.85, 0.90, 0.95, 1.0, 1.2, 1.5], 3 seeds each.
+
+**Key results**:
+- OPT-125M gap_mean = 0.2131 (lower than SmolLM because ε_rel=0.228 < 0.270)
+- Theoretical beta* = 0.2131/0.267 = 0.798
+- Measured transition: [0.75, 0.80] — theory error = 0.023 (CONFIRMED)
+- At beta=1.5: 100% 4-bit (well above transition, as expected)
+
+**Mechanistic explanation**: OPT-125M ε_rel=0.228 < SmolLM-360M (0.270) → ε_eff ≈ 6.8% < 8.1% threshold → confirms lossless INT4. Lower gap_mean means beta* is lower; formula is hardware-derived and architecture-independent.
+
+**Paper updates**:
+- tab:betastar expanded to 4 rows: added OPT-125M row, added model family column
+- Discussion: added "Cross-architecture validation" paragraph with OPT-125M, ε_rel=0.228, ε_eff≈6.8%, transition [0.75,0.80]
+- Conclusion: "three scales" → "four model checkpoints across two architectures, all within ±0.025"
+- Session 22 noted (audited immediately after): missing zhang2022opt BibTeX and other inconsistencies
+
+**Commits**: Session 22 audit commit f88ce8d (includes OPT analysis paragraph)
+
+---
+
+## 2026-04-19 Session 23 — update_paper_1b7.py Fix
+
+**Issue**: `update_paper_1b7.py` searched for a fully-TBD Table 1 row but actual paper has only accuracy TBD; FPGA metrics (4.80 bits, 0.344 cost, 2.93×) were filled in Session 18.
+
+**Fix**: Updated `tbd_row` search pattern in script to match the partial-TBD row; `filled_row` keeps fixed FPGA metrics and only substitutes measured accuracy.
+
+**Script is now GPU-ready**: When 1.7B HellaSwag results arrive from Brev A4000, run:
+```
+python research/experiments/fpga-controller/phase5-benchmark/code/update_paper_1b7.py \
+  --results research/experiments/fpga-controller/phase5-benchmark/results/phase5_1b7_pertok_results.json
+```
+
+**Status**: All CPU work complete. Research at saturation. Paper near-final. Only remaining: 1.7B HellaSwag accuracy (GPU) and hardware latency (Xilinx board).

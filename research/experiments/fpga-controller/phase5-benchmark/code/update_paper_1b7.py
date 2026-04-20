@@ -40,19 +40,22 @@ def update_paper(results: dict):
     print(f"Results: acc={acc:.1f}%, avg_bits={avg_bits:.2f}, fpga_cost={fpga_cost:.3f}, speedup={speedup:.2f}x")
     print(f"Bit dist: {bit_dist}")
 
-    # 1. Update Table 1: replace the TBD 1.7B row with actual results
-    # Table now has two scales (360M + 1.7B) with multirow; replace the TBD row
+    # 1. Update Table 1: replace the partial-TBD 1.7B row with actual results.
+    # FPGA metrics (4.80, 0.344, 2.93x) are already filled; only accuracy is TBD.
     pareto = "surpasses" if speedup > 2.44 else "matches"
-    tbd_row = " & \\textbf{Ours (Binary ctrl.)}$^\\star$ & \\textbf{TBD} & \\textbf{TBD} & \\textbf{TBD} & \\textbf{TBD} \\\\"
+    tbd_row = (
+        " & \\textbf{Ours (Binary ctrl.)}$^\\star$ & \\textbf{TBD} & "
+        "\\textbf{4.80}$^\\S$ & \\textbf{0.344}$^\\S$ & \\textbf{2.93}$\\times$$^\\S$ \\\\"
+    )
     filled_row = (
         f" & \\textbf{{Ours (Binary ctrl.)}} & \\textbf{{{acc:.1f}\\%}} & "
-        f"\\textbf{{{avg_bits:.2f}}} & \\textbf{{{fpga_cost:.3f}}} & \\textbf{{{speedup:.2f}}}$\\times$ \\\\"
+        "\\textbf{4.80}$^\\S$ & \\textbf{0.344}$^\\S$ & \\textbf{2.93}$\\times$$^\\S$ \\\\"
     )
     if tbd_row in tex:
         tex = tex.replace(tbd_row, filled_row)
         print("Replaced TBD row in Table 1.")
     else:
-        print("WARNING: Could not find TBD row in Table 1 — check tex manually.")
+        print("WARNING: Could not find partial-TBD row in Table 1 — check tex manually.")
 
     # 2. Replace ALL occurrences of "Results are pending GPU evaluation."
     new_result = (
