@@ -2,6 +2,7 @@
 \usepackage[margin=1in]{geometry}
 \usepackage{amsmath,amssymb}
 \usepackage{booktabs}
+\usepackage{multirow}
 \usepackage{graphicx}
 \usepackage{xcolor}
 \usepackage{url}
@@ -174,20 +175,28 @@ We define a differentiable FPGA cost and optimize it directly:
 \]
 where:
 \begin{align}
-\mathcal{L}_\text{quality} &= 1 - \mathbb{E}_t\left[\mathbf{p}_t^\top \mathbf{q}\right], \quad \mathbf{q} = [0.943, 0.966] \\
+\mathcal{L}_\text{quality} &= 1 - \mathbb{E}_t\left[\mathbf{p}_t^\top \mathbf{q}_t\right] \\
 \mathcal{L}_\text{fpga} &= \frac{\mathbb{E}_t[\mathbf{p}_t^\top \mathbf{c}]}{C_\text{FP16}}
 \end{align}
 
-Quality scores $\mathbf{q}$ are normalized from empirical HellaSwag accuracy: $q_b = (\text{Acc}_b - \text{Acc}_\text{random}) / (\text{Acc}_\text{FP16} - \text{Acc}_\text{random})$.
+We use two variants of the quality scores $\mathbf{q}_t$:
 
-\textbf{Critical distinction from prior work}: We penalize FPGA BRAM cost (Table~\ref{tab:bram}), not average bits. This means 2-bit tokens receive no cost credit vs. 4-bit---correctly reflecting hardware reality. The compound loss is fully normalized to $[0,1]$, avoiding gradient scale mismatches that caused training collapse in earlier experiments~(cf. Section~\ref{sec:ablation}).
+\textbf{Global quality (lossless regime, e.g., 360M)}: $\mathbf{q} = [q_4, q_8]$ are constants derived from empirical HellaSwag accuracy: $q_b = (\text{Acc}_b - \text{Acc}_\text{random}) / (\text{Acc}_\text{FP16} - \text{Acc}_\text{random})$, giving $[0.943, 0.966]$.
+
+\textbf{Per-token quality proxy (lossy regime, e.g., 1.7B)}: When INT4 is lossy, per-token proxies are required for genuine mixed allocation:
+\[
+q_{t,b}^\text{local} = 1 - \frac{\|\text{Quant}_b(kv_t) - kv_t\|_2}{\|kv_t\|_2}, \quad b \in \{4, 8\}
+\]
+These are computed for each token during Stage 1 signal extraction using the actual quantization error---not a global proxy. At SmolLM-360M, we measure avg $q_{t,4}^\text{local} = 0.642$, avg $q_{t,8}^\text{local} = 0.979$, gap mean $= 0.337$, std $= 0.050$.
+
+\textbf{Critical distinction from prior work}: We penalize FPGA BRAM cost (Table~\ref{tab:bram}), not average bits. The compound loss is fully normalized to $[0,1]$, avoiding gradient scale mismatches that caused training collapse in earlier experiments~(cf. Section~\ref{sec:ablation}).
 
 \subsection{Two-Stage Training}
 
 To fit within CPU memory constraints ($\approx$2.5GB free):
 \begin{enumerate}
-\item \textbf{Stage 1 (Signal Extraction)}: Load model, run 200 WikiText-2 texts through forward hooks to collect $\{kv\_norm, pos\_frac\}$ signals. Cache to disk. Free model.
-\item \textbf{Stage 2 (Controller Training)}: Train on cached signals. No model in memory. Batch size 512, Adam optimizer, $lr=10^{-3}$, 15 epochs.
+\item \textbf{Stage 1 (Signal Extraction)}: Load model, run WikiText-2 texts through forward hooks to collect $\{kv\_norm, pos\_frac, q_{t,4}^\text{local}, q_{t,8}^\text{local}\}$ signals (4D). Cache to disk. Free model.
+\item \textbf{Stage 2 (Controller Training)}: Train on cached signals. No model in memory. Batch size 256, Adam optimizer, $lr=10^{-3}$, 10 epochs.
 \end{enumerate}
 
 \section{Experiments}
@@ -206,16 +215,20 @@ To fit within CPU memory constraints ($\approx$2.5GB free):
 
 \begin{table}[h]
 \centering
-\caption{SmolLM-360M HellaSwag results. FPGA speedup vs. FP16 computed from BRAM cost model.}
-\begin{tabular}{lcccc}
+\caption{HellaSwag results. FPGA speedup vs. FP16 computed from BRAM cost model. $\dagger$: Paper DWB values from Table 3 of~\cite{haeri2026dwb}. $\star$: 1.7B GPU evaluation pending; row will be populated after Brev A4000 run.}
+\begin{tabular}{llcccc}
 \toprule
-Method & Acc. & avg\_bits & FPGA cost & FPGA speedup \\
+Scale & Method & Acc. & avg\_bits & FPGA cost & FPGA speedup \\
 \midrule
-FP16 (no quant) & 42.6\% & 16.0 & 1.010 & 1.00$\times$ \\
-Static INT4 (standard) & 41.6\% & 4.0 & 0.290 & 3.48$\times$ \\
-Paper DWB~\citep{haeri2026dwb} & 41.2\% & 5.05 & 0.414 & 2.44$\times$ \\
+\multirow{4}{*}{360M} & FP16 (no quant) & 42.6\% & 16.0 & 1.010 & 1.00$\times$ \\
+ & Static INT4 (standard) & 41.6\% & 4.0 & 0.290 & 3.48$\times$ \\
+ & Paper DWB$^\dagger$ & 41.2\% & 5.05 & 0.414 & 2.44$\times$ \\
+ & \textbf{Ours (Binary ctrl.)} & \textbf{41.0\%} & \textbf{4.0} & \textbf{0.290} & \textbf{3.48}$\times$ \\
 \midrule
-\textbf{Ours (Binary FPGA ctrl.)} & \textbf{41.0\%} & \textbf{4.0} & \textbf{0.290} & \textbf{3.48}$\times$ \\
+\multirow{4}{*}{1.7B} & FP16 (no quant) & 49.0\% & 16.0 & 1.010 & 1.00$\times$ \\
+ & Static INT4 (standard) & 41.1\% & 4.0 & 0.290 & 3.48$\times$ \\
+ & Paper DWB$^\dagger$ & 48.6\% & 5.05$^\dagger$ & 0.414$^\dagger$ & 2.44$\times$$^\dagger$ \\
+ & \textbf{Ours (Binary ctrl.)}$^\star$ & \textbf{TBD} & \textbf{TBD} & \textbf{TBD} & \textbf{TBD} \\
 \bottomrule
 \end{tabular}
 \label{tab:main}
@@ -230,13 +243,13 @@ Our binary FPGA controller achieves accuracy statistically indistinguishable fro
 
 \noindent\textbf{Note on 360M result}: At SmolLM-360M the controller converges to 100\% 4-bit, matching static INT4. This is not a limitation---it is the \emph{correct answer}: INT4 is lossless at this scale (Section~\ref{sec:scale}), and any deviation toward 8-bit would waste BRAM bandwidth with no accuracy benefit. The controller's value is (1) verifying this optimality automatically via learned allocation, and (2) generalizing to 1.7B+ where INT4 is lossy and the controller must learn a non-trivial mixed allocation. The advantage over paper DWB at 360M comes entirely from not wasting BRAM on 2-bit tokens.
 
-\subsection{Controller Convergence}
+\subsection{Controller Convergence (Global Quality)}
 
-Beta sweep ($\beta \in \{0.3, 0.5, 0.7\}$) shows all values converge to 100\% 4-bit at 360M---confirming that 4-bit is the FPGA-optimal allocation for this scale (Table~\ref{tab:sweep}).
+With global quality scores $\mathbf{q} = [0.943, 0.966]$, beta sweep ($\beta \in \{0.3, 0.5, 0.7\}$) shows all values converge to 100\% 4-bit at 360M---confirming that 4-bit is FPGA-optimal at this scale (Table~\ref{tab:sweep}). The quality gap (0.966$-$0.943$=0.023$) is small relative to the cost gap ($0.267 \times \beta$), so even $\beta=0.3$ produces threshold $0.080 > 0.023$, favoring 4-bit.
 
 \begin{table}[h]
 \centering
-\caption{Beta sweep results on SmolLM-360M. All betas converge to 100\% 4-bit.}
+\caption{Beta sweep on SmolLM-360M with \emph{global} quality scores $[0.943, 0.966]$. All betas converge to 100\% 4-bit (global quality gap $= 0.023 \ll \beta \times 0.267$ for any $\beta \ge 0.3$).}
 \begin{tabular}{lccc}
 \toprule
 $\beta$ & avg\_bits & FPGA cost & 4-bit \% \\
@@ -248,6 +261,29 @@ $\beta$ & avg\_bits & FPGA cost & 4-bit \% \\
 \end{tabular}
 \label{tab:sweep}
 \end{table}
+
+\subsection{Per-Token Quality Proxy: Beta Calibration Validation}
+\label{sec:pertok}
+
+With per-token quality proxies, the gradient analysis (Section~\ref{sec:scale}) predicts that $\beta \approx 1.5$ is the transition point at 360M. We validate this with a CPU smoke test on 200 WikiText-2 texts through the two-stage pipeline (Table~\ref{tab:pertok_sweep}).
+
+\begin{table}[h]
+\centering
+\caption{Per-token quality proxy beta sweep on SmolLM-360M. Measured gap mean$=0.337$, std$=0.050$. At $\beta=1.5$: threshold $=0.401 > 0.337 \Rightarrow$ correct 100\% 4-bit (optimal at this scale). At $\beta=1.0$: threshold $=0.267 < 0.337 \Rightarrow$ collapses to 100\% 8-bit.}
+\begin{tabular}{lcccc}
+\toprule
+$\beta$ & threshold & avg\_bits & FPGA cost & 4-bit \% \\
+\midrule
+1.0 & 0.267 & 8.00 & 0.560 & 0\% \\
+1.5 & 0.401 & 4.00 & 0.290 & 100\% \\
+2.0 & 0.534 & 4.00 & 0.290 & 100\% \\
+3.0 & 0.802 & 4.00 & 0.290 & 100\% \\
+\bottomrule
+\end{tabular}
+\label{tab:pertok_sweep}
+\end{table}
+
+The clean phase transition at $\beta = 1.5$ confirms the gradient analysis: below threshold the controller collapses to 8-bit; above threshold it converges to 4-bit. At SmolLM-1.7B, the gap distribution shifts higher (larger KV variance), placing $\beta=1.5$ near the distribution median and predicting mixed \{4,8\}-bit allocation. Results are pending GPU evaluation.
 
 \subsection{Feature Ablation} \label{sec:ablation}
 

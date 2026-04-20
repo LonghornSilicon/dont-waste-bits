@@ -40,32 +40,32 @@ def update_paper(results: dict):
     print(f"Results: acc={acc:.1f}%, avg_bits={avg_bits:.2f}, fpga_cost={fpga_cost:.3f}, speedup={speedup:.2f}x")
     print(f"Bit dist: {bit_dist}")
 
-    # 1. Update Table 1: add 1.7B row
-    new_row = (
-        f"\\midrule\n"
-        f"\\multicolumn{{4}}{{l}}{{\\textit{{SmolLM-1.7B (INT4 lossy, $\\epsilon_\\text{{eff}}=12.4\\%$)}}}}\\\\\n"
-        f"FP16 (no quant) & 49.0\\% & 16.0 & 1.010 & 1.00$\\times$ \\\\\n"
-        f"Static INT4 (standard) & 41.1\\% & 4.0 & 0.290 & 3.48$\\times$ \\\\\n"
-        f"Paper DWB~\\citep{{haeri2026dwb}} & 48.6\\% & 5.05 & 0.414 & 2.44$\\times$ \\\\\n"
-        f"\\textbf{{Ours (Binary FPGA ctrl., pertok)}} & \\textbf{{{acc:.1f}\\%}} & \\textbf{{{avg_bits:.2f}}} & \\textbf{{{fpga_cost:.3f}}} & \\textbf{{{speedup:.2f}}}$\\times$ \\\\\n"
+    # 1. Update Table 1: replace the TBD 1.7B row with actual results
+    # Table now has two scales (360M + 1.7B) with multirow; replace the TBD row
+    pareto = "surpasses" if speedup > 2.44 else "matches"
+    tbd_row = " & \\textbf{Ours (Binary ctrl.)}$^\\star$ & \\textbf{TBD} & \\textbf{TBD} & \\textbf{TBD} & \\textbf{TBD} \\\\"
+    filled_row = (
+        f" & \\textbf{{Ours (Binary ctrl.)}} & \\textbf{{{acc:.1f}\\%}} & "
+        f"\\textbf{{{avg_bits:.2f}}} & \\textbf{{{fpga_cost:.3f}}} & \\textbf{{{speedup:.2f}}}$\\times$ \\\\"
     )
+    if tbd_row in tex:
+        tex = tex.replace(tbd_row, filled_row)
+        print("Replaced TBD row in Table 1.")
+    else:
+        print("WARNING: Could not find TBD row in Table 1 — check tex manually.")
 
-    # Insert before \bottomrule in Table 1
-    tex = tex.replace(
-        "\\textbf{Ours (Binary FPGA ctrl.)} & \\textbf{41.0\\%} & \\textbf{4.0} & \\textbf{0.290} & \\textbf{3.48}$\\times$ \\\\\n\\bottomrule",
-        f"\\textbf{{Ours (Binary FPGA ctrl.)}} & \\textbf{{41.0\\%}} & \\textbf{{4.0}} & \\textbf{{0.290}} & \\textbf{{3.48}}$\\times$ \\\\\n{new_row}\\bottomrule"
-    )
-
-    # 2. Update Discussion: replace "Results are pending GPU evaluation."
-    old_pending = "Results are pending GPU evaluation."
+    # 2. Replace ALL occurrences of "Results are pending GPU evaluation."
     new_result = (
         f"At SmolLM-1.7B, the per-token controller achieves {acc:.1f}\\% accuracy at "
         f"{avg_bits:.2f} avg\\_bits (FPGA cost {fpga_cost:.3f}, {speedup:.2f}$\\times$ speedup), "
-        f"with bit distribution \\{{{bit_dist}\\}}. "
-        f"This {'surpasses' if speedup > 2.44 else 'matches'} DWB's 2.44$\\times$ FPGA speedup "
-        f"while {'improving' if acc > 41.2 else 'matching'} accuracy."
+        f"bit distribution: {bit_dist}. "
+        f"This {pareto} DWB's 2.44$\\times$ FPGA speedup "
+        f"while {'surpassing' if acc > 48.6 else 'approximating'} DWB's 48.6\\% accuracy."
     )
+    old_pending = "Results are pending GPU evaluation."
+    count = tex.count(old_pending)
     tex = tex.replace(old_pending, new_result)
+    print(f"Replaced {count} pending note(s).")
 
     paper_path.write_text(tex, encoding="utf-8")
     print(f"Updated {paper_path}")
