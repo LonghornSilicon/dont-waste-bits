@@ -7,13 +7,26 @@
 
 ## Summary
 
-We independently reproduced the key accuracy claims of "Don't Waste Bits!" (arXiv:2604.04722)
-and identified seven methodological insights including a novel finding about INT4 quantization,
-a mechanistically verified losslessness mechanism, and a dual-objective controller training constraint.
-Cross-model validation across SmolLM-135M, 360M, and 1.7B (H4) reveals a critical scale-dependent
-pattern: INT4 is lossless at 135M/360M but shows genuine degradation at 1.7B.
+We independently verified the claims of "Don't Waste Bits!" (arXiv:2604.04722) across 41 sessions
+and ~80 CPU experiments, covering 10 checkpoints / 5 model families / 12 formal sensitivity tests.
 
-> **Novel extension**: DWB-TurboQuant achieves 42.0% ≈ FP16 at 5.05 avg_bits (+2pp HellaSwag, +3pp ARC-Challenge vs DWB-scalar). **BoolQ caveat**: DWB-TurboQuant shows -20pp on BoolQ (41% vs 61% DWB-scalar). WHT rotation is task-specific — helps open-ended generation, hurts closed-form yes/no QA.
+**Key verified claims**: FP16 baselines confirmed across all three model sizes (135M/360M/1.7B).
+The paper's +7.6pp accuracy claim is explained (INT3-range baseline, not standard INT4). INT4 is
+genuinely lossless at ≤360M; lossy at 1.7B (effective residual 8.1% vs 12.4%). The binary {4,8}
+controller Pareto-dominates DWB's {2,4,8,16} scheme on Xilinx Ultrascale+ (2-bit port = 4-bit port).
+
+**Ten findings documented**, including:
+- F1–F4: Evaluation metric, KV hook, INT4 losslessness, controller training constraints
+- F5: Standard INT4 is lossless at 360M — the paper's baseline uses INT3-range (8 levels, scale=max/3)
+- F6: Scale-dependent INT4 losslessness — threshold between 360M (eff_residual 8.1%) and 1.7B (12.4%)
+- F7: Floor gap_mean ≈ 0.18–0.19 — representation quality attractor reached via 4 independent routes
+- F8: GQA-scale interaction — GQA alone insufficient; requires ≥1B for floor convergence
+- F9: gap_std ⊥ calibration sensitivity — ρ=0.64, p=0.064 (n=9, n.s.); 5 direct counter-examples
+- F10: Corpus dependency — gap_mean shifts across domains; above-floor models shift more (Δ~0.07); instruct floor effect is corpus-dependent (invisible in technical texts)
+
+**Novel extension**: DWB-TurboQuant achieves 42.0% ≈ FP16 at 5.05 avg_bits (+2pp HellaSwag, +3pp ARC-Challenge vs DWB-scalar). **BoolQ caveat**: DWB-TurboQuant shows -20pp on BoolQ. WHT rotation is task-specific.
+
+**Remaining (hardware required)**: H1 latency (FPGA), 1.7B binary controller HellaSwag accuracy (GPU).
 
 **Status of claims:**
 

@@ -5,7 +5,7 @@
 **Accepted**: CVPR 2026 · Original code releases June 3–7, 2026
 
 **Verification by**: themoddedcube / LonghornSilicon  
-**Status**: CPU verification complete (36 sessions, 10 findings). FPGA extension paper written. Latency + 1.7B accuracy awaiting GPU/FPGA hardware.
+**Status**: CPU verification complete (41 sessions, 10 findings, 12 sensitivity JSONs across 5 arch types). FPGA extension paper written. Latency + 1.7B HellaSwag accuracy awaiting GPU/FPGA hardware.
 
 **Branch**: `fpga-controller` — full FPGA extension work  
 **Extension paper**: `research/paper/fpga_controller_paper.tex`
