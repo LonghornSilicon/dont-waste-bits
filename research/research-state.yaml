@@ -277,13 +277,13 @@ final_status:
   calibration_sensitivity: COMPLETE  # Session 20: 1 text (~1536 tok) gives beta* within +-0.015. 5 texts: +-0.005. Results: calibration_sensitivity_1b7.json
   cross_arch_gpt2: COMPLETE  # Session 24: GPT-2 (OpenAI, 124M) — gap_mean=0.196, beta*=0.733, transition [0.70,0.80], error=0.017 (best fit). 3 families confirmed.
   instruct_calibration: COMPLETE  # Session 25: 135M-Instruct=0.181, 360M-Instruct=0.194. Both ~44% below base. Pattern scale-independent. Added tab:instruct to paper. Must re-calibrate on deployed model.
-  paper_status: NEAR_FINAL  # Session 24: GPT-2 (3rd model family) added to tab:betastar, error=0.017 (best fit). 5 checkpoints, 3 families, all within +-0.083. natbib[numbers] added. Overleaf-ready. Only TBDs: 1.7B HellaSwag (GPU) and FPGA latency (hardware).
+  paper_status: NEAR_FINAL  # Session 25: GPT-2 (3rd family) in tab:betastar, error=0.017. tab:instruct added (135M/360M instruct, 44% gap shift). All within ±0.04 (corrected from ±0.083). natbib[numbers] added. Overleaf-ready. Only TBDs: 1.7B HellaSwag (GPU) and FPGA latency (hardware).
   github: https://github.com/LonghornSilicon/dont-waste-bits
   git_heads:
     main: fe6e2ed
     turboquant-integration: dd78315
     gumbel-controller: fec47ec  # concluded — superseded by fpga-controller
-    fpga-controller: HEAD  # session 20 — calibration sensitivity + paper Discussion update
+    fpga-controller: HEAD  # b9d2e7d — CPU_COMPLETE (session 25); all CPU experiments exhausted
   branches:
     main: verification + ablation + 1.7B mechanistic + paper
     turboquant-integration: all of main + DWB-TurboQuant + controller analysis + HTML report
