@@ -9,7 +9,7 @@ import json
 import numpy as np
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
-MODEL_ID = "openai/gpt2-large"
+MODEL_ID = "gpt2-large"
 N_TEXTS = 10
 MAX_LEN = 128
 RESULTS_DIR = r"C:\Users\themo\Desktop\Dont Waste Bits!\research\experiments\fpga-controller\phase5-benchmark\results"

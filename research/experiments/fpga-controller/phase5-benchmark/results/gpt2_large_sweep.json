@@ -1,0 +1,45 @@
+{
+  "0.6": {
+    "threshold": 0.1602,
+    "p4_pct": 3.8,
+    "regime": "8-bit"
+  },
+  "0.65": {
+    "threshold": 0.1736,
+    "p4_pct": 19.4,
+    "regime": "MIXED"
+  },
+  "0.68": {
+    "threshold": 0.1816,
+    "p4_pct": 35.2,
+    "regime": "MIXED"
+  },
+  "0.7": {
+    "threshold": 0.1869,
+    "p4_pct": 46.4,
+    "regime": "MIXED"
+  },
+  "0.72": {
+    "threshold": 0.1922,
+    "p4_pct": 57.0,
+    "regime": "MIXED"
+  },
+  "0.74": {
+    "threshold": 0.1976,
+    "p4_pct": 66.6,
+    "regime": "MIXED"
+  },
+  "0.76": {
+    "threshold": 0.2029,
+    "p4_pct": 74.3,
+    "regime": "MIXED"
+  },
+  "0.8": {
+    "threshold": 0.2136,
+    "p4_pct": 85.7,
+    "regime": "MIXED"
+  },
+  "transition_start": 0.65,
+  "formula_error": 0.07,
+  "confirmed": false
+}

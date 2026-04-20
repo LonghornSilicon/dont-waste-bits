@@ -1,0 +1,13 @@
+{
+  "model": "gpt2-large",
+  "n_params": "774M",
+  "n_embd": 1280,
+  "n_heads": 20,
+  "head_dim": 64,
+  "n_layers": 36,
+  "n_signals": 4680,
+  "gap_mean": 0.19229533238033963,
+  "gap_std": 0.025513579305379917,
+  "beta_star": 0.7202072373795492,
+  "formula": "beta* = gap_mean / 0.267"
+}

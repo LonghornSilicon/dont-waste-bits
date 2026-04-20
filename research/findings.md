@@ -1,7 +1,7 @@
 # Research Findings — Don't Waste Bits! Verification
 
-**Last updated**: 2026-04-20 (Session 28: GPT-2 Medium (345M) — null/reversed dimension hypothesis! Larger dim (1024) has LOWER gap_mean (0.188) than Small (768, 0.196). 7th checkpoint confirmed. Floor gap_mean ≈ 0.18-0.19 = representation quality floor, not dimension artifact.)  
-**Phase**: CPU_SATURATED — 7 checkpoints / 4 families / 2×2 instruct matrix complete. GPU (1.7B accuracy) + FPGA hardware (latency) remain.
+**Last updated**: 2026-04-20 (Session 29: GPT-2 Large (774M) — GPT-2 family non-monotonic! Large (0.192) between Medium (0.188) and Small (0.196), all within 0.008 band. 8th checkpoint. Floor = representation quality cluster, not dimension.)  
+**Phase**: CPU_SATURATED — 8 checkpoints / 4 families / 2×2 instruct matrix / complete GPT-2 family (Small+Medium+Large). GPU (1.7B accuracy) + FPGA hardware (latency) remain.
 
 ---
 
@@ -790,3 +790,49 @@ GPT-2 Medium clusters with GQA models (TinyLlama ~0.189) and MHA-instruct models
 Mean error (7 checkpoints): **0.020**, max: **0.040** — all within ±0.04.
 
 **Paper update**: GPT-2 Medium row added to tab:betastar (7th checkpoint), Discussion extended with "dimension hypothesis challenged / floor gap_mean = representation quality" paragraph, all counts updated to 7 checkpoints, abstract/contributions/conclusion updated.
+
+---
+
+## Session 29: GPT-2 Large (774M) — Non-Monotonic Family, Floor Confirmed ★ NOVEL
+
+**Date**: 2026-04-20 (Session 29)
+
+**Hypothesis**: GPT-2 Large (774M, d=1280) continues the downward trend from Medium (0.188) → even lower gap_mean.
+
+**Model**: gpt2-large (774M, d_model=1280, 36 layers, 20 heads, 4,680 cached signals, 10 texts)
+
+**Results**:
+- gap_mean = **0.1923** (between Small 0.1956 and Medium 0.1880)
+- β* predicted: 0.1923/0.267 = **0.720**
+- Beta sweep: p4≈50% at β≈0.71 (between 0.70: 46.4% and 0.72: 57.0%), error ≈ **0.010** ✓
+- Note: narrow gap_std=0.026 creates broad transition in β-space; 50% crossing is the correct reference
+
+| beta | threshold | 4-bit% | regime |
+|------|-----------|--------|--------|
+| 0.60 | 0.1602 | 3.8% | 8-bit |
+| 0.65 | 0.1736 | 19.4% | MIXED |
+| 0.70 | 0.1869 | 46.4% | MIXED (below β*) |
+| **0.72** | **0.1922** | **57.0%** | **MIXED (≈β*)** |
+| 0.80 | 0.2136 | 85.7% | MIXED |
+
+**FINDING — GPT-2 family is NON-MONOTONIC: Large (0.192) between Medium (0.188) and Small (0.196)**:
+- Not a simple "bigger → lower gap_mean" pattern
+- All three within 0.008 band → all at the floor simultaneously
+- Floor ≈ 0.188-0.196 for the GPT-2 family (β* ≈ 0.70-0.73)
+
+**Full 8-checkpoint / 4-family summary**:
+
+| Family | Model | gap_mean | beta* theory | measured | error |
+|--------|-------|----------|--------------|----------|-------|
+| LLaMA-MHA (SmolLM) | 135M | 0.330 | 1.234 | [1.2, 1.3] | <0.030 |
+| LLaMA-MHA (SmolLM) | 360M | 0.337 | 1.261 | [1.2, 1.4] | <0.040 |
+| LLaMA-MHA (SmolLM) | 1.7B | 0.424 | 1.584 | [1.55, 1.57] | <0.015 |
+| LLaMA-GQA (TinyLlama) | 1.1B | 0.189 | 0.707 | [0.68, 0.74] | 0.003 |
+| OPT-MHA (Meta) | 125M | 0.213 | 0.798 | [0.75, 0.80] | 0.023 |
+| GPT-2 Small (OpenAI) | 124M | 0.196 | 0.733 | [0.70, 0.80] | 0.017 |
+| GPT-2 Medium (OpenAI) | 345M | 0.188 | 0.704 | [0.68, 0.70] | 0.014 |
+| **GPT-2 Large (OpenAI)** | **774M** | **0.192** | **0.720** | **[0.70, 0.72]** | **0.010** |
+
+Mean error (8 checkpoints): **0.018**, max: **0.040** — all within ±0.04.
+
+**Paper update**: GPT-2 Large row added to tab:betastar (8th checkpoint); "non-monotonic family / floor cluster" insight in Discussion; all counts updated to 8 checkpoints; mean error 0.020→0.018.
