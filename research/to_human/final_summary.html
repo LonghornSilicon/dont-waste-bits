@@ -51,7 +51,7 @@
 <!-- ===== CPU COMPLETE BANNER ===== -->
 <div style="background:#22543d; color:white; border-radius:10px; padding:18px 22px; margin:18px 0; text-align:center;">
   <div style="font-size:1.5em; font-weight:bold; margin-bottom:6px;">✓ CPU RESEARCH PHASE COMPLETE</div>
-  <div style="font-size:0.95em; opacity:0.9;">32 sessions · 10 checkpoints · 5 model families · 9 of 10 within ±0.04 · GQA-scale interaction · floor via 4 routes · paper near-final</div>
+  <div style="font-size:0.95em; opacity:0.9;">33 sessions · 10 checkpoints · 5 families · calibration validated 3 architectures · paper complete · awaiting GPU + FPGA</div>
   <div style="margin-top:8px; font-size:0.88em; opacity:0.8;">Paper ready for Overleaf · GPU needed for 1.7B HellaSwag · FPGA board for latency</div>
 </div>
 
@@ -633,6 +633,21 @@ research/
 <p><strong>New figure</strong> (<code>figures/all_checkpoints_summary.pdf</code>) — floor attractor + formula accuracy bar chart — added to paper Discussion section.</p>
 <p>Paper polish: three stale "six/four" count references updated; figure \ref{fig:all_checkpoints} added after cross-architecture summary.</p>
 <p style="color:#718096; font-size:0.85em;">Commit: df91a6a. CPU research phase DEFINITIVELY COMPLETE — all cached models tested, formula validated, paper consistent.</p>
+</div>
+
+<!-- ===== SESSION 33 ===== -->
+<div class="callout blue">
+<h2>Session 33 — Calibration Sensitivity Cross-Arch + Final Paper Polish</h2>
+<p><strong>Cross-architecture validation of the "1-text corpus" calibration robustness claim. Validated on GPT-2 (Conv1D) and OPT (Meta decoder-only). Paper's cross-arch count fixed; all_checkpoints figure cross-referenced.</strong></p>
+<table>
+  <tr><th>Architecture</th><th>Family</th><th>Max 1-text error vs 10-text β*</th><th>Mean error</th><th>Within ±0.020?</th></tr>
+  <tr class="best"><td>LLaMA (SmolLM)</td><td>MHA</td><td>≤0.015</td><td>~0.005</td><td>✓</td></tr>
+  <tr class="best"><td>Conv1D (GPT-2 Small)</td><td>OpenAI</td><td>0.018</td><td>0.009</td><td>✓</td></tr>
+  <tr class="best"><td>Decoder MHA (OPT-125M)</td><td>Meta</td><td>0.006</td><td>0.002</td><td>✓</td></tr>
+</table>
+<p>All errors are negligible vs the ±0.5 inter-regime gap between 4-bit and 8-bit allocation regimes. A single sentence (~3 seconds on CPU) suffices for calibration in practice across all tested architectures.</p>
+<p><strong>Paper fixes</strong>: "three additional architectures" → "four additional model families"; cross-reference to Figure~\ref{fig:all_checkpoints} added. Sensitivity paragraph updated with cross-arch numbers.</p>
+<p style="color:#718096; font-size:0.85em;">Commits: c85fe3c (sensitivity results), e497bb0 (paper polish). No new experiments planned — all cached models exhausted. GPU/FPGA hardware required for remaining items.</p>
 </div>
 
 <!-- ===== PENDING ITEMS ===== -->
