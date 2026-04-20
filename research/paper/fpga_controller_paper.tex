@@ -381,7 +381,7 @@ Loss normalization is essential. The two-objective tension is not a hyperparamet
 \begin{figure}[t]
 \centering
 \includegraphics[width=0.95\linewidth]{figures/beta_calibration}
-\caption{Beta calibration analysis. Left: quality gap distribution $q_{t,8}^\text{local} - q_{t,4}^\text{local}$ at 360M (measured) and 1.7B (estimated). The beta=1.5 threshold (0.401) correctly separates the 4-bit zone from the 8-bit zone. Right: 4-bit token fraction vs.\ $\beta$ at 360M (smoke test) and predicted 1.7B. At 1.7B, $\beta = 1.5$ lands near the 54.1\% minimum needed to exceed DWB's FPGA speedup.}
+\caption{Beta calibration analysis. Left: quality gap distribution $q_{t,8}^\text{local} - q_{t,4}^\text{local}$ at 135M, 360M (measured) and 1.7B (estimated). The $\beta{=}1.5$ threshold (0.401) correctly separates the 4-bit zone from the 8-bit zone. Right: 4-bit token fraction vs.\ $\beta$ at 135M (measured), 360M (measured) and predicted 1.7B, with theoretical curves overlaid. At 1.7B, $\beta = 1.5$ lands near the 54.1\% minimum needed to exceed DWB's FPGA speedup.}
 \label{fig:beta}
 \end{figure}
 
