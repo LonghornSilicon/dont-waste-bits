@@ -651,4 +651,15 @@ Conclusion updated to "five checkpoints across three architectures (all within +
 
 **Practical implication (critical)**: Calibration MUST be done on the deployed model checkpoint, not derived from the base. Using base beta*=1.261 for the instruct model would give correct behavior at 360M (100% 4-bit, INT4 lossless) but for 1.7B instruct models, would risk over-aggressive 4-bit assignment. Since calibration is <3 seconds, always re-calibrate on the exact deployed model.
 
-**Paper update**: Added "Fine-tuning shifts the KV distribution" paragraph to Discussion.
+**Session 25b**: Also tested SmolLM-135M-Instruct: gap_mean=0.181, beta*=0.677, delta=-0.149 (-45.2%).
+
+**Pattern confirmed across scales**:
+
+| Model | Base gap_mean | Instruct gap_mean | Delta | beta* shift |
+|-------|--------------|-------------------|-------|------------|
+| SmolLM-135M | 0.330 | 0.181 | -45% | 1.233 → 0.677 |
+| SmolLM-360M | 0.337 | 0.194 | -43% | 1.261 → 0.727 |
+
+The ~44% reduction in gap_mean is scale-independent and reproducible. The shift exceeds any cross-architecture difference measured. Instruct models converge to 0.18-0.19 gap_mean regardless of scale.
+
+**Paper update**: Added "Fine-tuning shifts the KV distribution" paragraph + Table tab:instruct (2 rows showing base vs instruct for 135M and 360M) to Discussion.
