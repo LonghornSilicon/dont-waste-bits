@@ -274,13 +274,13 @@ final_status:
   fpga_controller_360m: COMPLETE  # Phase 1-4 all show 100% 4-bit at 360M — correct and expected
   fpga_controller_1b7: AWAITING_BREV  # Simulation run. Beta sweep [1.0,1.5,2.0,3.0] on synthetic 1.7B signals confirms: beta=1.5 -> 53.5% 4-bit mixed, 2.43x speedup. Hardware validation pending Brev A4000.
   simulation_1b7: COMPLETE  # sim_1b7_prediction.json — confirms gradient analysis; beta=1.5 genuine mixed; added as Table tab:sim_1b7 in paper Discussion
-  paper_status: NEAR_FINAL  # abstract fixed, citations complete, dual-scale Table 1 (1.7B TBD), 3 figures, simulation table
+  paper_status: NEAR_FINAL  # abstract fixed, citations complete, dual-scale Table 1 (1.7B TBD), 3 figures, simulation table, formula bug fixed (r_cancel->r_survive, 135M value 0.32->0.28)
   github: https://github.com/LonghornSilicon/dont-waste-bits
   git_heads:
     main: fe6e2ed
     turboquant-integration: dd78315
     gumbel-controller: fec47ec  # concluded — superseded by fpga-controller
-    fpga-controller: 1801538   # session 15 — 135M beta calibration + cross-scale table
+    fpga-controller: f72018d   # session 16 — formula bug fix r_cancel->r_survive complete
   branches:
     main: verification + ablation + 1.7B mechanistic + paper
     turboquant-integration: all of main + DWB-TurboQuant + controller analysis + HTML report
