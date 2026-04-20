@@ -5,7 +5,7 @@
 **Accepted**: CVPR 2026 · Original code releases June 3–7, 2026
 
 **Verification by**: themoddedcube / LonghornSilicon  
-**Status**: CPU verification complete (33 sessions). FPGA extension paper written. Latency + 1.7B accuracy awaiting GPU/FPGA hardware.
+**Status**: CPU verification complete (34 sessions). FPGA extension paper written. Latency + 1.7B accuracy awaiting GPU/FPGA hardware.
 
 **Branch**: `fpga-controller` — full FPGA extension work  
 **Extension paper**: `research/paper/fpga_controller_paper.tex`
@@ -157,6 +157,9 @@ Validated across 10 checkpoints, 5 families. See table above.
 ### Finding 8 (New): Floor gap_mean ≈ 0.18–0.19 is a representation quality attractor ★★
 Confirmed via 4 independent routes. GQA-scale interaction: both GQA architecture AND ≥1B scale required for floor convergence.
 
+### Finding 9 (New): Between-token gap variance and calibration sensitivity are orthogonal ★
+Validated across 4 architectures (LLaMA-MHA, LLaMA-GQA, GPT-2/Conv1D, OPT): the model with the highest gap_std (SmolLM2-360M, σ=0.052) shows the lowest mean 1-text calibration error (0.004, max=0.013). gap_std reflects within-text token diversity; gap_mean is a stable domain-invariant KV property that a single sentence estimates accurately. This separates two distinct concepts that were previously conflated.
+
 ---
 
 ## Repository Structure
@@ -168,7 +171,7 @@ dont-waste-bits/
 ├── requirements_gpu.txt
 └── research/
     ├── research-state.yaml             # Experiment state
-    ├── research-log.md                 # Decision timeline (33 sessions)
+    ├── research-log.md                 # Decision timeline (34 sessions)
     ├── findings.md                     # Synthesis (primary doc)
     ├── paper/
     │   ├── fpga_controller_paper.tex   # FPGA extension paper (submission-ready)
@@ -227,6 +230,7 @@ python research/experiments/fpga-controller/phase5-benchmark/code/smollm2_360m_c
 - [x] **Beta calibration formula** — β*=gap_mean/0.267, validated 10 checkpoints/5 families (Finding 7)
 - [x] **Floor gap_mean attractor** — 0.18–0.19 confirmed via 4 routes (Finding 8)
 - [x] **GQA-scale interaction** — GQA alone insufficient; requires ≥1B scale for floor
+- [x] **Calibration sensitivity universality** — gap_std ⊥ calibration sensitivity, 4 architectures all ≤±0.020 (Finding 9)
 - [x] **FPGA extension paper written** — `research/paper/fpga_controller_paper.tex`
 - [ ] Latency experiments (H1) — RTX 4090 / Xilinx Ultrascale+ required
 - [ ] SmolLM-1.7B HellaSwag accuracy (binary controller) — GPU eval ~30 min
