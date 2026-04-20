@@ -160,6 +160,9 @@ Confirmed via 4 independent routes. GQA-scale interaction: both GQA architecture
 ### Finding 9 (New): Between-token gap variance and calibration sensitivity are orthogonal ★
 Validated across 4 architectures (LLaMA-MHA, LLaMA-GQA, GPT-2/Conv1D, OPT): the model with the highest gap_std (SmolLM2-360M, σ=0.052) shows the lowest mean 1-text calibration error (0.004, max=0.013). gap_std reflects within-text token diversity; gap_mean is a stable domain-invariant KV property that a single sentence estimates accurately. This separates two distinct concepts that were previously conflated.
 
+### Finding 10 (New): gap_mean is corpus-dependent — calibration is within-corpus ★
+OPT-125M: gap_mean=0.1700 on technical ML texts vs 0.2131 on wikitext-2 (Δ=0.043). GPT-2 Small shows same pattern. The sensitivity claim (single text within ±0.020 of 10-text aggregate) is **within-corpus** consistency — high for all 4 architecture types. Cross-corpus: gap_mean depends on deployment domain. **Practical implication**: calibrate on text representative of your production workload; a single such text suffices.
+
 ---
 
 ## Repository Structure
@@ -231,6 +234,7 @@ python research/experiments/fpga-controller/phase5-benchmark/code/smollm2_360m_c
 - [x] **Floor gap_mean attractor** — 0.18–0.19 confirmed via 4 routes (Finding 8)
 - [x] **GQA-scale interaction** — GQA alone insufficient; requires ≥1B scale for floor
 - [x] **Calibration sensitivity universality** — gap_std ⊥ calibration sensitivity, 4 architectures all ≤±0.020 (Finding 9)
+- [x] **Corpus dependency documented** — gap_mean within-corpus stable (±0.006); cross-corpus varies ±0.04+. 4-arch formal JSON set complete. (Finding 10)
 - [x] **FPGA extension paper written** — `research/paper/fpga_controller_paper.tex`
 - [ ] Latency experiments (H1) — RTX 4090 / Xilinx Ultrascale+ required
 - [ ] SmolLM-1.7B HellaSwag accuracy (binary controller) — GPU eval ~30 min

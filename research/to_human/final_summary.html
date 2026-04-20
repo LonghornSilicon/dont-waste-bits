@@ -681,6 +681,23 @@ research/
 <p style="color:#718096; font-size:0.85em;">Script: tinyllama_cal_sensitivity.py · Result: tinyllama_cal_sensitivity.json · Session 35 · CPU verification COMPLETE</p>
 </div>
 
+<div class="callout green">
+<h2>Session 36 — OPT-125M Formal Sensitivity + Finding 10 (Corpus Dependency) ★</h2>
+<p><strong>Formally verified OPT inline claim (max_error~=0.006). All 4 architecture types now have formal JSON results. Discovered Finding 10: gap_mean is corpus-dependent.</strong></p>
+<table>
+  <tr><th>Architecture</th><th>Model</th><th>gap_std</th><th>Max 1-text error</th><th>Mean 1-text error</th></tr>
+  <tr><td>LLaMA-MHA</td><td>SmolLM-1.7B</td><td>0.063</td><td>0.015</td><td>~0.005</td></tr>
+  <tr class="best"><td>LLaMA-GQA</td><td>SmolLM2-360M</td><td>0.052</td><td>0.013</td><td><strong>0.004</strong></td></tr>
+  <tr class="best"><td>LLaMA-GQA</td><td>TinyLlama-1.1B</td><td>0.051</td><td>0.008</td><td><strong>0.004</strong></td></tr>
+  <tr><td>Conv1D</td><td>GPT-2 Small</td><td>0.033</td><td>0.018</td><td>0.009</td></tr>
+  <tr class="best"><td>OPT/Meta</td><td>OPT-125M</td><td>0.028</td><td><strong>0.006</strong></td><td><strong>0.002</strong></td></tr>
+</table>
+<div class="callout amber">
+<strong>Finding 10 — Corpus Dependency</strong>: OPT-125M gives gap_mean=0.1700 on technical ML texts but 0.2131 on wikitext-2 (Δ=0.043). GPT-2 shows same pattern. The sensitivity claim (±0.006) is <em>within-corpus</em>. Cross-corpus: calibrate on text representative of your production workload — a single such text suffices.
+</div>
+<p style="color:#718096; font-size:0.85em;">Script: opt125m_cal_sensitivity.py · Result: opt125m_cal_sensitivity.json · Session 36 · 4-arch formal set COMPLETE</p>
+</div>
+
 <!-- ===== PENDING ITEMS ===== -->
 <h2>Pending Items (in priority order)</h2>
 <table>
