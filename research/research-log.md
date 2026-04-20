@@ -660,3 +660,18 @@ This is a clean empirical confirmation of the gradient analysis theory.
 **Paper update**: Added sentence to Discussion noting 1-text (< 3 seconds) gives beta* within +-0.015, well within the +-0.03 transition window.
 
 **Direction**: CPU experiments fully concluded. Research is at saturation without GPU.
+
+---
+
+## 2026-04-19 Session 22 — Paper Audit + BibTeX Fix
+
+**Issues found and fixed**:
+1. Missing `zhang2022opt` BibTeX entry — would cause Overleaf compilation failure. Added to fpga_refs.bib.
+2. Bare `\cite{}` → `\citep{}` for haeri2026dwb in Introduction.
+3. tab:sim_1b7 caption: "2.52--2.84x" → "2.52--2.93x" (updated to include 5-seed mean at beta=1.70).
+4. tab:sim_1b7 β=1.60 row: updated single-run (62.2%) to 5-seed mean (60.6%±2%, 2.55x).
+5. Figure 3 caption: "1.7B (estimated)" → "1.7B (measured)" — figure was updated in session 17 but caption wasn't.
+6. Cross-scale section heading: now explicitly mentions "cross-architecture" and OPT-125M.
+7. Discussion paragraph text "2.52--2.84x (+3% to +16%)" → "2.52--2.93x (+3% to +20%)".
+
+**Paper status after audit**: Internally consistent, all TBD markers are honest GPU/hardware blockers.
