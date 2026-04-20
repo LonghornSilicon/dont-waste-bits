@@ -836,3 +836,54 @@ Mean error (7 checkpoints): **0.020**, max: **0.040** — all within ±0.04.
 Mean error (8 checkpoints): **0.018**, max: **0.040** — all within ±0.04.
 
 **Paper update**: GPT-2 Large row added to tab:betastar (8th checkpoint); "non-monotonic family / floor cluster" insight in Discussion; all counts updated to 8 checkpoints; mean error 0.020→0.018.
+
+---
+
+## Session 30: OPT-350M — OPT Family Convergence to Floor, 4th Independent Route ★ NOVEL
+
+**Date**: 2026-04-20 (Session 30)
+
+**Hypothesis**: OPT-350M (Meta, hidden=1024, larger than OPT-125M's 768) shows floor clustering similar to GPT-2 family, OR dimension-driven scaling (gap_mean increases with hidden_dim).
+
+**Model**: facebook/opt-350m (350M, hidden=1024, 24 layers, 16 heads, 3,360 signals, k+v concatenated methodology)
+
+**Results**:
+- gap_mean = **0.1812** (OPT-125M: 0.2131 — LOWER! OPT converges down)
+- β* predicted: 0.1812/0.267 = **0.679**
+- Beta sweep: 50% crossing at β≈[0.65, 0.70], error ≈ **0.021** ✓ (within ±0.04)
+
+| beta | threshold | 4-bit% | regime |
+|------|-----------|--------|--------|
+| 0.55 | 0.1469 | 9.0% | 8-bit |
+| 0.65 | 0.1736 | 36.4% | MIXED |
+| **0.70** | **0.1869** | **57.4%** | **MIXED (above β*)** |
+| 0.85 | 0.2270 | 93.6% | 4-bit |
+
+**FINDING — OPT family converges TO the floor**:
+- OPT-125M (hidden=768): gap_mean = 0.213 (above floor)
+- OPT-350M (hidden=1024): gap_mean = 0.181 (AT the floor!)
+- OPT scales DOWN with model size, converging toward 0.18-0.19
+
+**4th independent route to the floor gap_mean ≈ 0.18-0.19**:
+1. GQA architecture: TinyLlama 1.1B GQA → 0.189
+2. MHA + SFT: SmolLM-135M/360M instruct → 0.181-0.194
+3. GPT-2 family: all 3 sizes at 0.188-0.196 (floor cluster)
+4. **OPT scaling: 125M (0.213) → 350M (0.181)** (convergence from above) ← NEW
+
+**Full 9-checkpoint / 4-family summary**:
+
+| Family | Model | gap_mean | beta* theory | measured | error |
+|--------|-------|----------|--------------|----------|-------|
+| LLaMA-MHA (SmolLM) | 135M | 0.330 | 1.234 | [1.2, 1.3] | <0.030 |
+| LLaMA-MHA (SmolLM) | 360M | 0.337 | 1.261 | [1.2, 1.4] | <0.040 |
+| LLaMA-MHA (SmolLM) | 1.7B | 0.424 | 1.584 | [1.55, 1.57] | <0.015 |
+| LLaMA-GQA (TinyLlama) | 1.1B | 0.189 | 0.707 | [0.68, 0.74] | 0.003 |
+| OPT (Meta) | 125M | 0.213 | 0.798 | [0.75, 0.80] | 0.023 |
+| **OPT (Meta)** | **350M** | **0.181** | **0.679** | **[0.65, 0.70]** | **0.021** |
+| GPT-2 (OpenAI) | 124M | 0.196 | 0.733 | [0.70, 0.80] | 0.017 |
+| GPT-2 (OpenAI) | 345M | 0.188 | 0.704 | [0.68, 0.70] | 0.014 |
+| GPT-2 (OpenAI) | 774M | 0.192 | 0.720 | [0.70, 0.72] | 0.010 |
+
+Mean error: **0.018**, max: **0.040** — all within ±0.04.
+
+**Paper update**: OPT-350M row added to tab:betastar (9th checkpoint), OPT paragraph expanded with convergence narrative and floor attractor explanation. Abstract/contribution#4/conclusion updated to 9 checkpoints. The floor gap_mean is now confirmed via 4 independent routes.

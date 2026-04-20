@@ -1,0 +1,11 @@
+{
+  "model": "facebook/opt-350m",
+  "n_params": "350M",
+  "hidden_size": 1024,
+  "n_layers": 24,
+  "n_heads": 16,
+  "n_signals": 3360,
+  "gap_mean": 0.1812151686598857,
+  "gap_std": 0.033019057310616655,
+  "beta_star": 0.6787084968535045
+}

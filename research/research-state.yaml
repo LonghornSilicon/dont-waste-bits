@@ -8,7 +8,7 @@ research_question: >
   Specifically: (H1) 17.75% latency reduction, (H2) +7.60 accuracy points over
   static 4-bit KV, (H3) within 0.30 points of FP16 — all on SmolLM-360M / HellaSwag.
 
-phase: CPU_COMPLETE  # Session 29: 29 sessions, ~65 experiments. 8 checkpoints/4 families/2x2 instruct matrix/complete GPT-2 family. Formula validated mean error 0.018, max 0.040. Paper near-final. Only GPU (1.7B HellaSwag) + FPGA hardware remain.
+phase: CPU_COMPLETE  # Session 30: 30 sessions, ~67 experiments. 9 checkpoints/4 families/2x2 instruct matrix/complete GPT-2 family/OPT family. Formula validated mean error 0.018, max 0.040. Floor attractor confirmed via 4 independent routes. Paper near-final. Only GPU + FPGA remain.
 
 hypotheses:
   H1:
@@ -280,8 +280,9 @@ final_status:
   tinyllama_instruct: COMPLETE  # Session 27: TinyLlama-Chat — gap_mean=0.188 (Δ=-0.3%, null!). GQA instruct calibration transfers. Completes 2x2 {MHA,GQA}x{base,instruct} matrix. tab:instruct updated.
   cross_arch_gpt2_medium: COMPLETE  # Session 28: GPT-2 Medium (345M, d=1024) — gap_mean=0.188, beta*=0.704, transition [0.68,0.70], error=0.014. LOWER than GPT-2 Small (0.196) despite larger dim — dimension hypothesis challenged. Floor gap_mean ≈ 0.18-0.19 = representation quality, not dimension. 7th checkpoint / 4 families.
   cross_arch_gpt2_large: COMPLETE  # Session 29: GPT-2 Large (774M, d=1280) — gap_mean=0.192, beta*=0.720, 50%-4bit at [0.70,0.72], error=0.010. NON-MONOTONIC: Large (0.192) between Small (0.196) and Medium (0.188). All 3 within 0.008 — GPT-2 family at the floor. 8th checkpoint / 4 families.
+  cross_arch_opt350m: COMPLETE  # Session 30: OPT-350M (Meta, 350M, d=1024) — gap_mean=0.181, beta*=0.679, 50%-4bit at [0.65,0.70], error=0.021. OPT family CONVERGES: 125M (0.213) -> 350M (0.181). 350M AT THE FLOOR. 4th route to floor confirmed. 9th checkpoint.
   instruct_calibration: COMPLETE  # Session 25: 135M-Instruct=0.181, 360M-Instruct=0.194. Both ~44% below base. Pattern scale-independent. Added tab:instruct to paper. Must re-calibrate on deployed model.
-  paper_status: NEAR_FINAL  # Session 29: GPT-2 Large (8th checkpoint) added to tab:betastar. Complete GPT-2 family (S/M/L non-monotonic, all within 0.008) confirms floor. 8 checkpoints / 4 families. Mean error 0.018, max 0.040. Only TBDs: 1.7B HellaSwag (GPU) and FPGA latency (hardware).
+  paper_status: NEAR_FINAL  # Session 30: OPT-350M (9th checkpoint) added. OPT family convergence to floor 0.181. Floor attractor confirmed via 4 independent routes. 9 checkpoints / 4 families. Mean error 0.018, max 0.040. Only TBDs: 1.7B HellaSwag (GPU) + FPGA latency (hardware).
   github: https://github.com/LonghornSilicon/dont-waste-bits
   git_heads:
     main: fe6e2ed

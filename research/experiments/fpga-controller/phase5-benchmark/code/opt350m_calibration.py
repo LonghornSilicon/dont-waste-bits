@@ -46,23 +46,33 @@ print(f"hidden={cfg.hidden_size}, layers={cfg.num_hidden_layers}, heads={cfg.num
 
 signals = []
 hooks = []
+k_buf = {}  # layer_idx -> k tensor
 
-def make_hook(tag):
+def make_k_hook(layer_idx):
     def hook_fn(module, inp, out):
         x = out[0] if isinstance(out, tuple) else out
-        x = x.detach()
-        for b in range(x.shape[0]):
-            for t in range(x.shape[1]):
-                v = x[b, t]
-                q4 = 1.0 - (quant_int4(v) - v).norm() / (v.norm() + 1e-8)
-                q8 = 1.0 - (quant_int8(v) - v).norm() / (v.norm() + 1e-8)
+        k_buf[layer_idx] = x.detach().clone()
+    return hook_fn
+
+def make_v_hook(layer_idx):
+    def hook_fn(module, inp, out):
+        x = out[0] if isinstance(out, tuple) else out
+        v = x.detach()
+        k = k_buf.get(layer_idx)
+        if k is None:
+            return
+        for b in range(k.shape[0]):
+            for t in range(k.shape[1]):
+                kv = torch.cat([k[b, t], v[b, t]], dim=0)  # concatenated, matches other checkpoints
+                q4 = 1.0 - (quant_int4(kv) - kv).norm() / (kv.norm() + 1e-8)
+                q8 = 1.0 - (quant_int8(kv) - kv).norm() / (kv.norm() + 1e-8)
                 signals.append((q4.item(), q8.item()))
     return hook_fn
 
-# OPT uses self_attn.k_proj and v_proj
-for layer in model.model.decoder.layers:
-    hooks.append(layer.self_attn.k_proj.register_forward_hook(make_hook('k')))
-    hooks.append(layer.self_attn.v_proj.register_forward_hook(make_hook('v')))
+# OPT uses self_attn.k_proj and v_proj — concatenate k+v per token (consistent with other checkpoints)
+for i, layer in enumerate(model.model.decoder.layers):
+    hooks.append(layer.self_attn.k_proj.register_forward_hook(make_k_hook(i)))
+    hooks.append(layer.self_attn.v_proj.register_forward_hook(make_v_hook(i)))
 
 with torch.no_grad():
     for text in TEXTS:
