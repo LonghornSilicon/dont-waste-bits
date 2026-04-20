@@ -175,9 +175,9 @@ frac4_360m_actual = [0.0, 0.0, 0.0, 41.7, 58.7, 100.0, 100.0, 100.0, 100.0]
 # 135M measured
 betas_135m = [0.9, 1.0, 1.1, 1.15, 1.2, 1.3, 1.5, 2.0]
 frac4_135m_actual = [0.0, 0.0, 0.0, 0.0, 0.0, 63.0, 100.0, 100.0]
-# 1.7B MEASURED (was "predicted")
-betas_1b7 = [1.0, 1.2, 1.3, 1.4, 1.5, 1.6, 2.0]
-frac4_1b7_actual = [0.0, 0.0, 0.0, 0.0, 0.0, 68.4, 97.6]
+# 1.7B MEASURED fine sweep
+betas_1b7 = [1.0, 1.50, 1.52, 1.55, 1.57, 1.58, 1.59, 1.60, 1.62, 1.65, 1.70, 2.0]
+frac4_1b7_actual = [0.0, 0.0, 0.0, 0.0, 59.2, 59.5, 61.0, 62.2, 65.2, 72.0, 75.7, 97.6]
 
 # Theoretical curves
 betas_fine = np.linspace(0.5, 3.5, 200)
@@ -210,9 +210,13 @@ ax5.axvline(1.584, color="#e53e3e", lw=1.2, linestyle="-.", alpha=0.6)
 ax5.annotate("beta*=1.26\n(135M/360M)", xy=(1.26, 50), xytext=(1.05, 65),
              arrowprops=dict(arrowstyle="->", color="#38a169", lw=1.2),
              fontsize=7.5, color="#38a169")
-ax5.annotate("beta*=1.58\n(1.7B)", xy=(1.584, 30), xytext=(2.0, 20),
+ax5.axvline(1.70, color="#d69e2e", lw=1.2, linestyle=":", alpha=0.7)
+ax5.annotate("beta*=[1.55,1.57]\n(1.7B transition)", xy=(1.56, 30), xytext=(1.9, 20),
              arrowprops=dict(arrowstyle="->", color="#e53e3e", lw=1.2),
              fontsize=7.5, color="#e53e3e")
+ax5.annotate("beta=1.70:\n2.84x (+16% vs DWB)", xy=(1.70, 75.7), xytext=(2.1, 60),
+             arrowprops=dict(arrowstyle="->", color="#d69e2e", lw=1.2),
+             fontsize=7.5, color="#d69e2e")
 
 ax5.set_xlabel("beta (FPGA penalty weight)", fontsize=10)
 ax5.set_ylabel("4-bit token fraction (%)", fontsize=10)

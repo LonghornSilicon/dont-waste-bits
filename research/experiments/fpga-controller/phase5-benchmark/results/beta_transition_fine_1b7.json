@@ -1,0 +1,99 @@
+{
+  "model": "HuggingFaceTB/SmolLM-1.7B",
+  "n_tokens": 15360,
+  "gap_mean": 0.4235,
+  "predicted_transition_beta": 1.586,
+  "elapsed_s": 10.6,
+  "sweep": [
+    {
+      "beta": 1.5,
+      "threshold": 0.401,
+      "p4_pct": 0.0,
+      "p8_pct": 100.0,
+      "avg_bits": 8.0,
+      "fpga_speedup": 1.804,
+      "outcome": "8-bit dominant"
+    },
+    {
+      "beta": 1.52,
+      "threshold": 0.4063,
+      "p4_pct": 0.0,
+      "p8_pct": 100.0,
+      "avg_bits": 8.0,
+      "fpga_speedup": 1.804,
+      "outcome": "8-bit dominant"
+    },
+    {
+      "beta": 1.55,
+      "threshold": 0.4144,
+      "p4_pct": 0.0,
+      "p8_pct": 100.0,
+      "avg_bits": 8.0,
+      "fpga_speedup": 1.804,
+      "outcome": "8-bit dominant"
+    },
+    {
+      "beta": 1.57,
+      "threshold": 0.4197,
+      "p4_pct": 59.2,
+      "p8_pct": 40.8,
+      "avg_bits": 5.634,
+      "fpga_speedup": 2.523,
+      "outcome": "mixed (near transition)"
+    },
+    {
+      "beta": 1.58,
+      "threshold": 0.4224,
+      "p4_pct": 59.5,
+      "p8_pct": 40.5,
+      "avg_bits": 5.619,
+      "fpga_speedup": 2.529,
+      "outcome": "mixed (near transition)"
+    },
+    {
+      "beta": 1.59,
+      "threshold": 0.425,
+      "p4_pct": 61.0,
+      "p8_pct": 39.0,
+      "avg_bits": 5.561,
+      "fpga_speedup": 2.555,
+      "outcome": "mixed (near transition)"
+    },
+    {
+      "beta": 1.6,
+      "threshold": 0.4277,
+      "p4_pct": 62.2,
+      "p8_pct": 37.8,
+      "avg_bits": 5.512,
+      "fpga_speedup": 2.576,
+      "outcome": "mixed (near transition)"
+    },
+    {
+      "beta": 1.62,
+      "threshold": 0.4331,
+      "p4_pct": 65.2,
+      "p8_pct": 34.8,
+      "avg_bits": 5.393,
+      "fpga_speedup": 2.63,
+      "outcome": "mixed (near transition)"
+    },
+    {
+      "beta": 1.65,
+      "threshold": 0.4411,
+      "p4_pct": 72.0,
+      "p8_pct": 28.0,
+      "avg_bits": 5.12,
+      "fpga_speedup": 2.763,
+      "outcome": "mixed (near transition)"
+    },
+    {
+      "beta": 1.7,
+      "threshold": 0.4545,
+      "p4_pct": 75.7,
+      "p8_pct": 24.3,
+      "avg_bits": 4.973,
+      "fpga_speedup": 2.839,
+      "outcome": "mixed (near transition)"
+    }
+  ]
+}
