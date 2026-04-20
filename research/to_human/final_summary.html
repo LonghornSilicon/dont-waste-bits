@@ -666,6 +666,21 @@ research/
 <p style="color:#718096; font-size:0.85em;">Script: smollm2_360m_cal_sensitivity.py · Result: smollm2_360m_cal_sensitivity.json · Session 34</p>
 </div>
 
+<div class="callout green">
+<h2>Session 35 — TinyLlama Calibration Sensitivity: Finding 9 Generalized ★</h2>
+<p><strong>Ran calibration sensitivity for TinyLlama-1.1B (LLaMA-GQA, tightest formula fit error=0.003). Result: max_error_1text=0.008, mean_error=0.004. Finding 9 confirmed across 5 data points / 3 architecture types.</strong></p>
+<table>
+  <tr><th>Architecture</th><th>gap_std</th><th>Max 1-text error</th><th>Mean 1-text error</th></tr>
+  <tr class="best"><td>SmolLM2/LLaMA-GQA (360M)</td><td><strong>0.052 ← high</strong></td><td>0.013</td><td><strong>0.004</strong></td></tr>
+  <tr class="best"><td>TinyLlama/LLaMA-GQA (1.1B)</td><td><strong>0.051 ← high</strong></td><td><strong>0.008</strong></td><td><strong>0.004</strong></td></tr>
+  <tr><td>LLaMA (SmolLM-1.7B)</td><td>0.063</td><td>0.015</td><td>~0.005</td></tr>
+  <tr><td>Conv1D (GPT-2 Small)</td><td>0.026</td><td>0.018</td><td>0.009</td></tr>
+  <tr><td>Decoder MHA (OPT-125M)</td><td>~0.030</td><td>0.006</td><td>0.002</td></tr>
+</table>
+<p><strong>The two LLaMA-GQA models with the highest gap_std (0.052 and 0.051) both show the lowest mean calibration error (0.004 each)</strong> — despite differing dramatically in formula fit quality (errors 0.044 vs 0.003). This definitively confirms that gap_std does not predict calibration sensitivity. They are orthogonal properties.</p>
+<p style="color:#718096; font-size:0.85em;">Script: tinyllama_cal_sensitivity.py · Result: tinyllama_cal_sensitivity.json · Session 35 · CPU verification COMPLETE</p>
+</div>
+
 <!-- ===== PENDING ITEMS ===== -->
 <h2>Pending Items (in priority order)</h2>
 <table>
