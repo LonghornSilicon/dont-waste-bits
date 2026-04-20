@@ -479,3 +479,28 @@ Trained binary {4,8} controller on synthetic signals. This is a MODEL-BASED PRED
 **Recommendation**: measure gap_mean on 10 texts (< 1 min CPU), set beta = gap_mean/0.267 + 0.1.
 
 **Paper updates**: Simulation table replaced with real data. Tab. tab:betastar row 3 updated. Abstract/conclusion/contributions revised. Figures regenerated with all three scales measured.
+
+---
+
+## 1.7B Fine Beta Sweep: Transition Window [1.55, 1.57] ★ NEW (Session 18)
+
+**Date**: 2026-04-19 (Session 18)
+
+**Experiment**: `beta_transition_fine_1b7.py` — 10 betas in [1.50-1.70] on cached 15,360 tokens (11 seconds).
+
+**Key results**:
+- Transition window: **[1.55, 1.57]** (theory predicted 1.584 — matches within ±0.015)
+- 1.7B transition is SOFTER than 360M: no sharp jump to 100%, instead a broad mixed plateau
+- Broad plateau β∈[1.57, 1.70+]: speedups 2.52–2.84× (ALL beat DWB's 2.44×)
+- **Best at β=1.70**: 75.7% 4-bit, avg_bits=5.03 (matches DWB), **2.84× speedup = +16% vs DWB**
+
+| β    | 4-bit% | avg_bits | speedup | vs DWB |
+|------|--------|----------|---------|--------|
+| 1.55 | 0%     | 8.00     | 1.80×   | −26%   |
+| 1.57 | 59.2%  | 5.63     | 2.52×   | +3%    |
+| 1.65 | 72.0%  | 5.12     | 2.76×   | +13%   |
+| **1.70** | **75.7%** | **5.03** | **2.84×** | **+16%** |
+
+**Why softer transition at 1.7B**: Wider gap distribution (std=0.063 vs 0.050 at 360M) means many tokens are near the threshold, creating a gradual rather than sharp transition.
+
+**Practical implication**: Any β ≥ 1.57 gives useful mixed allocation at 1.7B. Formula recommendation: β = gap_mean/0.267 + 0.1 ≈ 1.68, landing comfortably in the plateau.

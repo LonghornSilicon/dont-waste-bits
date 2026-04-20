@@ -356,7 +356,22 @@ fpga_controller_results:
     fpga_cost_at_best_beta: 0.375
     fpga_speedup_at_best_beta: 2.69
     comparison_vs_dwb: "+10% speedup (2.69x vs 2.44x)"
-    conclusion: "Real measured data confirms formula: beta*=0.4235/0.267=1.584. beta=1.5 just below transition (all 8-bit). beta=1.6 gives genuine mixed (68.4% 4-bit, 2.69x speedup, beats DWB). Cross-scale formula beta*=gap_mean/0.267 confirmed at ALL THREE SCALES."
+    conclusion: "Real measured data confirms formula: beta*=0.4235/0.267=1.584. beta=1.5 just below transition (all 8-bit). Broad mixed plateau beta=[1.57,1.70+] with speedups 2.52-2.84x all beating DWB (2.44x). beta=1.70: 5.03 bits (matches DWB), 2.84x speedup (+16% vs DWB). Cross-scale formula beta*=gap_mean/0.267 confirmed at ALL THREE SCALES."
+  phase5_fine_beta_1b7:
+    model: SmolLM-1.7B
+    method: fine-grained beta sweep [1.50-1.70] on cached 15,360-token signals
+    gap_distribution: {mean: 0.4235, std: 0.0629}
+    predicted_transition: 1.584
+    measured_transition_window: "[1.55, 1.57]"
+    note: "Softer transition than 360M due to wider gap distribution"
+    sweep:
+      1.50: {p4: 0.0, p8: 100.0, speedup: 1.80}
+      1.55: {p4: 0.0, p8: 100.0, speedup: 1.80}
+      1.57: {p4: 59.2, p8: 40.8, speedup: 2.52, note: "mixed zone begins"}
+      1.60: {p4: 62.2, p8: 37.8, speedup: 2.58}
+      1.65: {p4: 72.0, p8: 28.0, speedup: 2.76}
+      1.70: {p4: 75.7, p8: 24.3, speedup: 2.84, avg_bits: 5.03, note: "matches DWB bits, +16% speedup"}
+    conclusion: "Transition at [1.55,1.57] (predicted 1.584, error < 0.015). Broad plateau above transition: 2.52-2.84x speedup all beat DWB (2.44x). Best: beta=1.70 gives +16% vs DWB at equal avg_bits."
 
 blockers:
   - GPU (RTX 4090 on NVIDIA Brev) for latency measurement (H1) — only remaining blocker
