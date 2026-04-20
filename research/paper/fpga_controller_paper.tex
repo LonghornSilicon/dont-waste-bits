@@ -128,18 +128,18 @@ However, DWB's bit distribution (47.9\% 2-bit, 25.3\% 4-bit, 15.4\% 8-bit, 11.4\
 
 Before designing the controller, we characterize when INT4 KV quantization is lossless. The key quantity is the \emph{effective residual}:
 \[
-\epsilon_\text{eff} = \epsilon_\text{rel} \cdot (1 - r_\text{cancel})
+\epsilon_\text{eff} = \epsilon_\text{rel} \cdot r_\text{survive}
 \]
-where $\epsilon_\text{rel} = \|\hat{K} - K\|/\|K\|$ is the relative quantization error and $r_\text{cancel}$ is the attention cancellation ratio (fraction of error cancelled by softmax + matmul).
+where $\epsilon_\text{rel} = \|\hat{K} - K\|/\|K\|$ is the relative quantization error and $r_\text{survive}$ is the error survival fraction---the proportion of per-token quantization error that passes through the attention softmax and weighted-sum operations (the rest is effectively cancelled by normalization and averaging).
 
 \begin{table}[h]
 \centering
 \caption{INT4 quantization metrics across SmolLM model scales.}
 \begin{tabular}{lcccc}
 \toprule
-Model & $\epsilon_\text{rel}$ & $r_\text{cancel}$ & $\epsilon_\text{eff}$ & Lossless? \\
+Model & $\epsilon_\text{rel}$ & $r_\text{survive}$ & $\epsilon_\text{eff}$ & Lossless? \\
 \midrule
-SmolLM-135M & 0.249 & 0.32 & 0.069 & \textcolor{fpgagreen}{\checkmark} \\
+SmolLM-135M & 0.249 & 0.28 & 0.069 & \textcolor{fpgagreen}{\checkmark} \\
 SmolLM-360M & 0.270 & 0.30 & 0.081 & \textcolor{fpgagreen}{\checkmark} \\
 SmolLM-1.7B & 0.353 & 0.351 & 0.124 & \textcolor{paperred}{\texttimes} \\
 \bottomrule
@@ -147,7 +147,7 @@ SmolLM-1.7B & 0.353 & 0.351 & 0.124 & \textcolor{paperred}{\texttimes} \\
 \label{tab:losslessness}
 \end{table}
 
-The losslessness threshold lies between 8.1\% (360M, lossless) and 12.4\% (1.7B, lossy). The 1.7B model's larger hidden dimension (2048 vs. 960) produces higher KV variance, driving $\epsilon_\text{rel}$ above the threshold despite similar cancellation ratios.
+The losslessness threshold lies between 8.1\% (360M, lossless) and 12.4\% (1.7B, lossy). The 1.7B model's larger hidden dimension (2048 vs. 960) produces higher KV variance, driving $\epsilon_\text{rel}$ above the threshold despite similar survival fractions.
 
 \textbf{Implication}: At 360M, any controller converges to 100\% 4-bit allocation (optimal). The FPGA controller's benefit is largest at 1.7B+ where selective 8-bit upgrades are necessary.
 
