@@ -62,7 +62,7 @@ def extract_kv_signals():
 
     print(f"TinyLlama: {n_layers} layers, hidden={hidden_dim}, "
           f"n_heads={n_heads}, n_kv_heads={n_kv_heads}, head_dim={head_dim}")
-    print(f"  → k_proj/v_proj output dim per token: {kv_dim} (GQA)")
+    print(f"  GQA: k_proj/v_proj output dim per token: {kv_dim}")
 
     all_q4, all_q8 = [], []
     layer_kv = {i: {"k": [], "v": []} for i in range(n_layers)}

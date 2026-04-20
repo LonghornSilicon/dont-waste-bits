@@ -1,0 +1,144 @@
+{
+  "model": "TinyLlama-1.1B GQA",
+  "gap_mean": 0.1888,
+  "predicted_beta_star": 0.707,
+  "measured_transition": [
+    0.68,
+    0.7
+  ],
+  "theory_error": 0.017,
+  "sweep": {
+    "0.55": {
+      "p4_mean": 0.0,
+      "p4_runs": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "threshold": 0.1469,
+      "speedup": 1.804,
+      "regime": "8-bit"
+    },
+    "0.6": {
+      "p4_mean": 0.0,
+      "p4_runs": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "threshold": 0.1602,
+      "speedup": 1.804,
+      "regime": "8-bit"
+    },
+    "0.62": {
+      "p4_mean": 0.0,
+      "p4_runs": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "threshold": 0.1655,
+      "speedup": 1.804,
+      "regime": "8-bit"
+    },
+    "0.64": {
+      "p4_mean": 0.0,
+      "p4_runs": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "threshold": 0.1709,
+      "speedup": 1.804,
+      "regime": "8-bit"
+    },
+    "0.66": {
+      "p4_mean": 0.0,
+      "p4_runs": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "threshold": 0.1762,
+      "speedup": 1.804,
+      "regime": "8-bit"
+    },
+    "0.68": {
+      "p4_mean": 0.0,
+      "p4_runs": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "threshold": 0.1816,
+      "speedup": 1.804,
+      "regime": "8-bit"
+    },
+    "0.7": {
+      "p4_mean": 45.1,
+      "p4_runs": [
+        43.3,
+        47.3,
+        44.7
+      ],
+      "threshold": 0.1869,
+      "speedup": 2.305,
+      "regime": "MIXED"
+    },
+    "0.72": {
+      "p4_mean": 47.86666666666667,
+      "p4_runs": [
+        48.0,
+        47.8,
+        47.8
+      ],
+      "threshold": 0.1922,
+      "speedup": 2.345,
+      "regime": "MIXED"
+    },
+    "0.74": {
+      "p4_mean": 100.0,
+      "p4_runs": [
+        100.0,
+        100.0,
+        100.0
+      ],
+      "threshold": 0.1976,
+      "speedup": 3.483,
+      "regime": "4-bit"
+    },
+    "0.76": {
+      "p4_mean": 100.0,
+      "p4_runs": [
+        100.0,
+        100.0,
+        100.0
+      ],
+      "threshold": 0.2029,
+      "speedup": 3.483,
+      "regime": "4-bit"
+    },
+    "0.78": {
+      "p4_mean": 100.0,
+      "p4_runs": [
+        100.0,
+        100.0,
+        100.0
+      ],
+      "threshold": 0.2083,
+      "speedup": 3.483,
+      "regime": "4-bit"
+    },
+    "0.8": {
+      "p4_mean": 100.0,
+      "p4_runs": [
+        100.0,
+        100.0,
+        100.0
+      ],
+      "threshold": 0.2136,
+      "speedup": 3.483,
+      "regime": "4-bit"
+    }
+  }
+}

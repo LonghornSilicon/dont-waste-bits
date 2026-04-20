@@ -1,0 +1,162 @@
+{
+  "model": "TinyLlama/TinyLlama-1.1B-intermediate-step-1431k-3T",
+  "architecture": "TinyLlama-1.1B (GQA: n_kv_heads=4, n_heads=32, head_dim=64)",
+  "n_kv_heads": 4,
+  "n_heads": 32,
+  "kv_dim_per_token": 256,
+  "gap_mean": 0.1888,
+  "predicted_beta_star": 0.707,
+  "measured_transition": [
+    0.5,
+    0.8
+  ],
+  "theory_error": 0.057,
+  "formula_confirmed_0_04": false,
+  "elapsed_s": 56.6,
+  "sweep": {
+    "0.5": {
+      "beta": 0.5,
+      "threshold": 0.1335,
+      "p4_runs": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "p4_mean": 0.0,
+      "speedup": 1.804,
+      "regime": "8-bit"
+    },
+    "0.8": {
+      "beta": 0.8,
+      "threshold": 0.2136,
+      "p4_runs": [
+        100.0,
+        100.0,
+        100.0
+      ],
+      "p4_mean": 100.0,
+      "speedup": 3.483,
+      "regime": "4-bit"
+    },
+    "1.0": {
+      "beta": 1.0,
+      "threshold": 0.267,
+      "p4_runs": [
+        100.0,
+        100.0,
+        100.0
+      ],
+      "p4_mean": 100.0,
+      "speedup": 3.483,
+      "regime": "4-bit"
+    },
+    "1.1": {
+      "beta": 1.1,
+      "threshold": 0.2937,
+      "p4_runs": [
+        100.0,
+        100.0,
+        100.0
+      ],
+      "p4_mean": 100.0,
+      "speedup": 3.483,
+      "regime": "4-bit"
+    },
+    "1.2": {
+      "beta": 1.2,
+      "threshold": 0.3204,
+      "p4_runs": [
+        100.0,
+        100.0,
+        100.0
+      ],
+      "p4_mean": 100.0,
+      "speedup": 3.483,
+      "regime": "4-bit"
+    },
+    "1.3": {
+      "beta": 1.3,
+      "threshold": 0.3471,
+      "p4_runs": [
+        100.0,
+        100.0,
+        100.0
+      ],
+      "p4_mean": 100.0,
+      "speedup": 3.483,
+      "regime": "4-bit"
+    },
+    "1.4": {
+      "beta": 1.4,
+      "threshold": 0.3738,
+      "p4_runs": [
+        100.0,
+        100.0,
+        100.0
+      ],
+      "p4_mean": 100.0,
+      "speedup": 3.483,
+      "regime": "4-bit"
+    },
+    "1.5": {
+      "beta": 1.5,
+      "threshold": 0.4005,
+      "p4_runs": [
+        100.0,
+        100.0,
+        100.0
+      ],
+      "p4_mean": 100.0,
+      "speedup": 3.483,
+      "regime": "4-bit"
+    },
+    "1.6": {
+      "beta": 1.6,
+      "threshold": 0.4272,
+      "p4_runs": [
+        100.0,
+        100.0,
+        100.0
+      ],
+      "p4_mean": 100.0,
+      "speedup": 3.483,
+      "regime": "4-bit"
+    },
+    "1.7": {
+      "beta": 1.7,
+      "threshold": 0.4539,
+      "p4_runs": [
+        100.0,
+        100.0,
+        100.0
+      ],
+      "p4_mean": 100.0,
+      "speedup": 3.483,
+      "regime": "4-bit"
+    },
+    "1.8": {
+      "beta": 1.8,
+      "threshold": 0.4806,
+      "p4_runs": [
+        100.0,
+        100.0,
+        100.0
+      ],
+      "p4_mean": 100.0,
+      "speedup": 3.483,
+      "regime": "4-bit"
+    },
+    "2.0": {
+      "beta": 2.0,
+      "threshold": 0.534,
+      "p4_runs": [
+        100.0,
+        100.0,
+        100.0
+      ],
+      "p4_mean": 100.0,
+      "speedup": 3.483,
+      "regime": "4-bit"
+    }
+  }
+}
