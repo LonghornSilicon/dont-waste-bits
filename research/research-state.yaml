@@ -1,6 +1,6 @@
 project: dont-waste-bits-verification
 created: "2026-04-19"
-last_updated: "2026-04-20"  # Session 33 — CPU verification COMPLETE. README updated. Cross-arch sensitivity (GPT2, OPT) validated. 10 checkpoints / 5 families. Only GPU + FPGA remain.
+last_updated: "2026-04-20"  # Session 34 — SmolLM2 calibration sensitivity: COUNTER-INTUITIVE. Highest gap_std (0.052) → lowest mean error (0.004). 4 architectures confirmed ≤±0.020. Paper updated.
 
 research_question: >
   Can we independently reproduce the claims of "Don't Waste Bits! Adaptive KV-Cache

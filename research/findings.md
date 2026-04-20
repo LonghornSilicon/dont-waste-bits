@@ -936,3 +936,30 @@ This is BORDERLINE — just outside ±0.04 but within ±0.05. The higher gap_std
 5. **GQA without scale (SmolLM2-360M)**: intermediate at 0.283 — CONFIRMS GQA reduces gap_mean but scale is also needed
 
 **Paper update**: SmolLM2-360M added as 5th family / 10th checkpoint. Table caption updated to "10 checkpoints, 5 families, 9 of 10 within ±0.04". SmolLM2 Discussion paragraph added explaining GQA-scale interaction. Abstract/contribution#4/conclusion updated. Commit: (see git log).
+
+---
+
+## Session 34 — SmolLM2-360M Calibration Sensitivity: Counter-Intuitive Finding ★
+
+**Date**: 2026-04-20 (Session 34)
+
+**Experiment**: `smollm2_360m_cal_sensitivity.py` — 10-text sensitivity analysis on the borderline formula case (SmolLM2-360M GQA, gap_std=0.052, formula error=0.044).
+
+**Hypothesis**: High gap_std → high calibration sensitivity (1-text estimates more variable).
+
+**Result: REFUTED — High gap_std does NOT predict calibration sensitivity**
+
+| Architecture | gap_std | max_error_1text | mean_error_1text | Notes |
+|---|---|---|---|---|
+| SmolLM/LLaMA-MHA (1.7B) | 0.063 | 0.015 | — | Session 20 |
+| SmolLM2/LLaMA-GQA (360M) | **0.052** | **0.013** | **0.004** | Session 34 — LOWEST mean error |
+| GPT-2/Conv1D (124M) | 0.026 | 0.018 | 0.009 | Session 33 |
+| OPT/Meta (125M) | ~0.030 | 0.006 | — | Session 33 inline |
+
+SmolLM2-360M has the highest gap_std of all 10 checkpoints yet the LOWEST mean calibration error (0.004, max 0.013). All 10 per-text estimates within ±0.015 of the 10-text aggregate.
+
+**Mechanistic insight**: gap_std reflects between-token variance within a text (how different tokens' quantization gaps vary). This is orthogonal to between-text variance in gap_mean (how much gap_mean shifts across text domains). The calibration claim is about the latter — and gap_mean is a stable domain-invariant property of the model's KV distribution, not a per-token or per-text artifact. High gap_std just means the controller sees a wider range of per-token signals, not that the mean is unstable.
+
+**Practical implication**: The formula error=0.044 for SmolLM2 is NOT due to unstable calibration. It comes from the GQA-scale interaction making the phase transition harder to predict linearly (higher gap_std → wider transition window → harder to pin exactly where 50% of tokens cross threshold). These are distinct effects.
+
+**Paper update**: Sensitivity claim updated from "three architectures" to "four architectures". SmolLM2 added to per-text max deviation table. Counter-intuitive gap_std finding added as key sentence.

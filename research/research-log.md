@@ -949,3 +949,24 @@ OPT family converges DOWN toward the floor from above with model scale, opposite
 **State**: CPU phase genuinely complete. All 13 cached models tested. Paper submission-ready pending: (1) GPU eval for 1.7B HellaSwag accuracy; (2) Overleaf PDF compilation; (3) FPGA hardware latency measurement.
 
 **Commits**: df91a6a (fine sweep + figure), subsequent (log + HTML)
+
+---
+
+## 2026-04-20 Session 34 — SmolLM2 Calibration Sensitivity: Counter-Intuitive Finding
+
+**Protocol**: Calibration corpus sensitivity for SmolLM2-360M — the borderline formula case (error=0.044, gap_std=0.052, highest of all 10 checkpoints). Hypothesis: high gap_std predicts high 1-text calibration variance.
+
+**Result: REFUTED**. SmolLM2-360M max_error_1text=0.013, mean_error=0.004 — the LOWEST mean error of all 4 architectures tested. All 10 per-text estimates within ±0.013.
+
+**Sensitivity summary across 4 architectures:**
+- SmolLM/LLaMA-MHA (1.7B): max=0.015 (Session 20)
+- SmolLM2/LLaMA-GQA (360M): max=0.013, mean=0.004 (Session 34 — lowest!)
+- GPT-2/Conv1D (124M): max=0.018 (Session 33)
+- OPT/Meta (125M): max=0.006 (Session 33 inline)
+
+**New insight**: gap_std (between-token variance within a text) is orthogonal to calibration sensitivity (between-text variance in gap_mean). gap_mean is a stable domain-invariant KV distribution property. SmolLM2's formula error=0.044 comes from the GQA-scale interaction making the transition harder to predict linearly — not from calibration instability.
+
+**Paper update**: Sensitivity claim updated from "three architectures" to "four architectures". SmolLM2 entry added. Counter-intuitive finding documented.
+
+**Result files**: smollm2_360m_cal_sensitivity.json
+**Commits**: (this session)

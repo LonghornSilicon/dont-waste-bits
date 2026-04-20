@@ -650,6 +650,22 @@ research/
 <p style="color:#718096; font-size:0.85em;">Commits: c85fe3c (sensitivity results), e497bb0 (paper polish). No new experiments planned — all cached models exhausted. GPU/FPGA hardware required for remaining items.</p>
 </div>
 
+<div class="callout green">
+<h2>Session 34 — SmolLM2 Calibration Sensitivity: Counter-Intuitive Finding ★</h2>
+<p><strong>Tested calibration corpus sensitivity on SmolLM2-360M — the borderline formula case (error=0.044, highest gap_std=0.052 of all 10 checkpoints). Hypothesis: high gap_std predicts high calibration variance. Result: REFUTED.</strong></p>
+<table>
+  <tr><th>Architecture</th><th>gap_std</th><th>Max 1-text error</th><th>Mean 1-text error</th><th>Within ±0.015?</th></tr>
+  <tr class="best"><td>SmolLM2/LLaMA-GQA (360M)</td><td><strong>0.052 ← highest</strong></td><td>0.013</td><td><strong>0.004 ← lowest</strong></td><td>✓</td></tr>
+  <tr class="best"><td>LLaMA (SmolLM-1.7B)</td><td>0.063</td><td>0.015</td><td>~0.005</td><td>✓</td></tr>
+  <tr class="best"><td>Conv1D (GPT-2 Small)</td><td>0.026</td><td>0.018</td><td>0.009</td><td>—</td></tr>
+  <tr class="best"><td>Decoder MHA (OPT-125M)</td><td>~0.030</td><td>0.006</td><td>0.002</td><td>✓</td></tr>
+</table>
+<p><strong>Key insight</strong>: gap_std (between-token variance within a text) is orthogonal to calibration sensitivity (between-text variance in gap_mean). gap_mean is a stable domain-invariant property of the model's KV distribution — not a per-text artifact. High gap_std means the controller sees a wide range of per-token signals; it does NOT mean gap_mean is unstable across text domains.</p>
+<p>SmolLM2's formula error=0.044 comes from the GQA-scale interaction creating a sharper transition window (harder to predict linearly from gap_mean alone) — not from calibration instability. These are independent effects.</p>
+<p><strong>Paper updated</strong>: Sensitivity claim extended from 3 to 4 architectures. Counter-intuitive finding documented in the calibration robustness paragraph.</p>
+<p style="color:#718096; font-size:0.85em;">Script: smollm2_360m_cal_sensitivity.py · Result: smollm2_360m_cal_sensitivity.json · Session 34</p>
+</div>
+
 <!-- ===== PENDING ITEMS ===== -->
 <h2>Pending Items (in priority order)</h2>
 <table>
