@@ -1,0 +1,14 @@
+{
+  "model": "HuggingFaceTB/SmolLM-360M",
+  "type": "smoke_test_360m_pertok",
+  "elapsed_s": 89.1,
+  "bit_dist": {
+    "4": 100.0,
+    "8": 0.0
+  },
+  "avg_bits": 4.0,
+  "fpga_cost": 0.29,
+  "fpga_speedup": 3.483,
+  "avg_q4_local": 0.6418,
+  "avg_q8_local": 0.9785
+}
