@@ -1054,3 +1054,20 @@ OPT family converges DOWN toward the floor from above with model scale, opposite
 
 **Status**: CPU loop truly exhausted. All locally cached models tested (8 formal sensitivity JSONs + 10 checkpoints in calibration sweep).
 
+
+---
+
+## Session 40 -- 2026-04-20 -- SmolLM-135M and SmolLM-360M Sensitivity + Finding 10 Extension
+
+**Task**: Formal sensitivity tests for SmolLM-135M and SmolLM-360M (paper's primary model).
+
+**Result**:
+- SmolLM-135M: gap_mean=0.253 (technical), gap_std=0.054, max_error=0.017 (within +-0.020)
+- SmolLM-360M: gap_mean=0.265 (technical), gap_std=0.055, max_error=0.012 (within +-0.015)
+
+**Corpus dependency extension (Finding 10)**: SmolLM MHA shows larger cross-domain deltas (0.07) than OPT (0.043) or GPT-2 (0.037). Above-floor models are more domain-sensitive.
+
+**Updated correlation**: rho=0.639, p=0.064 (n=9 technical-text methodology) -- still NOT significant.
+
+**Paper update**: "eight" -> "nine" models; SmolLM-135M and 360M added to table (with gap_mean column); new Finding A9 observation about above-floor corpus dependency; rho updated 0.70->0.64.
+

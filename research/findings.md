@@ -1096,3 +1096,35 @@ TinyLlama has gap_std=0.051 (similar to SmolLM2's 0.052) but max_error_1text=0.0
 
 **Finding 9 status**: 8 data points / 4 architecture types. Statistically supported by two lines of evidence: (1) p=0.054 just outside significance; (2) direct counter-example (identical gap_std, 2.6× different max_error). Scale and pre-training quality are the actual drivers.
 
+
+---
+
+## Session 40 -- SmolLM-135M and SmolLM-360M Sensitivity: Paper's Primary Model + Within-MHA Family
+
+**Date**: 2026-04-20 (Session 40)
+
+**Experiment**: `smollm_sensitivity.py` — SmolLM base models (LLaMA-MHA). SmolLM-360M is the paper's PRIMARY TABLE 3 model; SmolLM-135M completes the within-family triple.
+
+**Results:**
+
+| Model | Params | gap_std | max_error | mean_error | Within +-0.015 | Within +-0.020 |
+|---|---|---|---|---|---|---|
+| SmolLM-135M | 135M | 0.054 | 0.017 | 0.006 | NO | YES |
+| SmolLM-360M | 360M | 0.055 | 0.012 | 0.005 | YES | YES |
+
+SmolLM-360M (paper's primary model): max_error=0.012 -- within +-0.015. Single text suffices.
+SmolLM-135M: max_error=0.017 -- outside +-0.015 but within +-0.020. Just one text (text 6, error=0.017) pulls the max above 0.015; mean_error=0.006 is excellent.
+
+**Finding 10 extension -- Corpus dependency at larger magnitude:**
+- SmolLM-135M: gap_mean=0.253 (technical texts) vs ~0.330 (original calibration) -- delta=0.077
+- SmolLM-360M: gap_mean=0.265 (technical texts) vs ~0.337 (original calibration) -- delta=0.072
+- Compare: OPT delta=0.043, GPT-2 delta=0.037
+
+**New hypothesis**: Above-floor models (gap_mean>0.20) show LARGER corpus dependency than floor models (gap_mean~0.18-0.19). Floor convergence may correlate with domain-invariant KV distributions. SmolLM MHA base (above-floor) shows the largest deltas; TinyLlama/GQA (at floor) showed no such discrepancy in earlier sensitivity tests.
+
+**Updated 9-model correlation (all using technical text methodology):**
+- Spearman rho=0.639, p=0.064 (n=9) -- still NOT significant at alpha=0.05
+- Gap_std remains a non-significant predictor after adding 2 more models
+
+**Scientific note**: SmolLM-1.7B sensitivity (calibration_sensitivity_1b7.json) used a bootstrapping methodology from cached wikitext data -- NOT directly comparable to the 9 technical-text models here. It is listed in the main paper separately.
+
