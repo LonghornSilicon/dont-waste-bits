@@ -51,7 +51,7 @@
 <!-- ===== CPU COMPLETE BANNER ===== -->
 <div style="background:#22543d; color:white; border-radius:10px; padding:18px 22px; margin:18px 0; text-align:center;">
   <div style="font-size:1.5em; font-weight:bold; margin-bottom:6px;">✓ CPU RESEARCH PHASE COMPLETE</div>
-  <div style="font-size:0.95em; opacity:0.9;">31 sessions · 10 checkpoints · 5 model families · 9 of 10 within ±0.04 · GQA-scale interaction confirmed · floor attractor via 4 routes</div>
+  <div style="font-size:0.95em; opacity:0.9;">32 sessions · 10 checkpoints · 5 model families · 9 of 10 within ±0.04 · GQA-scale interaction · floor via 4 routes · paper near-final</div>
   <div style="margin-top:8px; font-size:0.88em; opacity:0.8;">Paper ready for Overleaf · GPU needed for 1.7B HellaSwag · FPGA board for latency</div>
 </div>
 
@@ -624,6 +624,15 @@ research/
 </table>
 <p><strong>Key insight</strong>: GQA reduces gap_mean but floor convergence requires scale ≥1B. The gradient MHA(0.337) → smallGQA(0.283) → largeGQA(0.189) shows both factors matter. The borderline formula error (0.044) is explained by the highest gap_std of all 10 checkpoints (0.052 vs typical 0.025–0.035) — intermediate regime with higher per-token variance.</p>
 <p style="color:#718096; font-size:0.85em;">Paper updated: SmolLM2-360M as 5th family, 10th checkpoint. Table caption "10 checkpoints, 5 families, 9 of 10 within ±0.04". SmolLM2 Discussion paragraph. Abstract/conclusion updated. Commit: 596debc</p>
+</div>
+
+<!-- ===== SESSION 32 ===== -->
+<div class="callout green">
+<h2>Session 32 ✓ CPU Verification FINAL — Fine Sweep Confirms, Summary Figure Added</h2>
+<p><strong>Fine beta sweep on SmolLM2-360M pins crossing at β=1.103 (error=0.044). Characterization confirmed: 9 of 10 within ±0.04. All 13 cached models exhausted. Summary figure added to paper. Paper is submission-ready (pending 1.7B GPU eval).</strong></p>
+<p><strong>New figure</strong> (<code>figures/all_checkpoints_summary.pdf</code>) — floor attractor + formula accuracy bar chart — added to paper Discussion section.</p>
+<p>Paper polish: three stale "six/four" count references updated; figure \ref{fig:all_checkpoints} added after cross-architecture summary.</p>
+<p style="color:#718096; font-size:0.85em;">Commit: df91a6a. CPU research phase DEFINITIVELY COMPLETE — all cached models tested, formula validated, paper consistent.</p>
 </div>
 
 <!-- ===== PENDING ITEMS ===== -->

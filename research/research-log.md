@@ -926,3 +926,26 @@ OPT family converges DOWN toward the floor from above with model scale, opposite
 
 **Result files**: smollm2_360m_cal.json (gap_mean=0.283, β*=1.058), smollm2_360m_sweep.json
 **Commits**: 43782c5 (protocol), 596debc (results + paper), b5fe8af (HTML)
+
+---
+
+## 2026-04-20 Session 32 — Fine Sweep + Figure + Paper Polish
+
+**Protocol**: Definitive crossing detection for SmolLM2-360M via fine beta sweep [1.04-1.20]; summary figure for all 10 checkpoints; final paper consistency pass.
+
+**Fine sweep result**: Interpolated crossing β=1.103, error=0.044 — identical to coarse estimate. Characterization confirmed: 9 of 10 within ±0.04. SmolLM2-360M is the single borderline case (within ±0.05).
+
+**New figure**: `figures/all_checkpoints_summary.pdf/png`
+- Left panel: gap_mean vs model scale (log x), floor zone, GQA gradient arrow
+- Right panel: formula error bar chart for all 10 checkpoints
+- Clearly visualizes floor attractor, GQA-scale interaction, formula robustness
+
+**Paper fixes**:
+- "all six checkpoints" → "all ten checkpoints" (TinyLlama paragraph)
+- "all four checkpoints (two architectures)" → updated to reference full 10-checkpoint table
+- "within ±0.03 at all three scales" → updated with 10-checkpoint reference
+- Figure added: \ref{fig:all_checkpoints} after cross-arch summary paragraph
+
+**State**: CPU phase genuinely complete. All 13 cached models tested. Paper submission-ready pending: (1) GPU eval for 1.7B HellaSwag accuracy; (2) Overleaf PDF compilation; (3) FPGA hardware latency measurement.
+
+**Commits**: df91a6a (fine sweep + figure), subsequent (log + HTML)
