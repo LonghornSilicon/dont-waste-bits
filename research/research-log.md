@@ -897,3 +897,32 @@ OPT family converges DOWN toward the floor from above with model scale, opposite
 
 **Result files**: opt350m_cal.json (gap_mean=0.1812, β*=0.679), opt350m_sweep.json (50% crossing=0.70, confirmed)
 **Commits**: 10fa9b7 (protocol), 6541226 (results + paper), 58d7ec4 (HTML report)
+
+---
+
+## 2026-04-20 Session 31 — SmolLM2-360M: GQA-Scale Interaction, 5th Family
+
+**Protocol**: Within-family GQA vs MHA comparison at fixed scale. SmolLM2-360M (GQA, kv_heads=5, attn_heads=15, d=960) vs SmolLM-360M (MHA, attn_heads=15, d=960). Prediction: GQA drives gap_mean toward floor (~0.18-0.19). SmolLM2 was cached from earlier experiments — the cleanest possible controlled test.
+
+**Model**: HuggingFaceTB/SmolLM2-360M (360M, LLaMA, GQA, 32 layers). 3,936 signals.
+
+**Result: GQA REDUCES GAP_MEAN BUT REQUIRES SCALE FOR FLOOR**
+- SmolLM-360M (MHA): gap_mean = 0.337, β*=1.260
+- SmolLM2-360M (GQA): gap_mean = **0.283**, β*=**1.058** — **-16% reduction from GQA alone**
+- TinyLlama-1.1B (GQA+larger): gap_mean = 0.189 — at the floor
+
+**Formula accuracy**: 50%-4bit crossing between β=1.10 (49.2%) and β=1.20 (77.5%). Interpolated crossing ≈ 1.103. Theory: 1.058. Error: 0.044 — BORDERLINE (just outside ±0.04, within ±0.05). Highest gap_std of all 10 checkpoints (0.052).
+
+**Key findings**:
+1. GQA-scale interaction confirmed: GQA alone (360M) gives intermediate gap_mean; floor needs GQA+scale
+2. Gradient: MHA-360M (0.337) → GQA-360M (0.283) → GQA-1.1B (0.189)
+3. Single data point outside ±0.04 found in 10 checkpoints — formula remains robust
+
+**Paper updates**:
+- tab:betastar: SmolLM2-360M as 5th family, 10th checkpoint (borderline footnote)
+- Caption: "10 checkpoints, 5 families, 9 of 10 within ±0.04"
+- SmolLM2 Discussion paragraph: GQA-scale interaction, within-family comparison
+- Abstract/contribution#4/conclusion: 10 checkpoints, 5 families, GQA-scale insight
+
+**Result files**: smollm2_360m_cal.json (gap_mean=0.283, β*=1.058), smollm2_360m_sweep.json
+**Commits**: 43782c5 (protocol), 596debc (results + paper), b5fe8af (HTML)
