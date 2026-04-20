@@ -1,0 +1,51 @@
+{
+  "model": "SmolLM-1.7B (simulated)",
+  "gap_distribution": {
+    "mean": 0.4,
+    "std": 0.058
+  },
+  "beta_sweep": [
+    {
+      "beta": 1.0,
+      "p4_pct": 0.0,
+      "p8_pct": 100.0,
+      "avg_bits": 8.0,
+      "fpga_cost": 0.56,
+      "speedup": 1.8,
+      "acc_predicted": 48.0,
+      "beats_dwb_speedup": false
+    },
+    {
+      "beta": 1.5,
+      "p4_pct": 53.5,
+      "p8_pct": 46.5,
+      "avg_bits": 5.86,
+      "fpga_cost": 0.416,
+      "speedup": 2.43,
+      "acc_predicted": 44.3,
+      "beats_dwb_speedup": false
+    },
+    {
+      "beta": 2.0,
+      "p4_pct": 100.0,
+      "p8_pct": 0.0,
+      "avg_bits": 4.0,
+      "fpga_cost": 0.29,
+      "speedup": 3.48,
+      "acc_predicted": 41.1,
+      "beats_dwb_speedup": true
+    },
+    {
+      "beta": 3.0,
+      "p4_pct": 100.0,
+      "p8_pct": 0.0,
+      "avg_bits": 4.0,
+      "fpga_cost": 0.29,
+      "speedup": 3.48,
+      "acc_predicted": 41.1,
+      "beats_dwb_speedup": true
+    }
+  ],
+  "best_beta": 2.0,
+  "note": "Simulation using predicted gap distribution from scaling analysis. Accuracy predicted by linear interpolation INT4(41.1%)->8bit(48.0%). Not a measurement. Validate with Brev A4000 run."
+}
