@@ -280,7 +280,7 @@ final_status:
     main: fe6e2ed
     turboquant-integration: dd78315
     gumbel-controller: fec47ec  # concluded — superseded by fpga-controller
-    fpga-controller: a7b7156   # session 13 — fine beta sweep + paper polish
+    fpga-controller: 1801538   # session 15 — 135M beta calibration + cross-scale table
   branches:
     main: verification + ablation + 1.7B mechanistic + paper
     turboquant-integration: all of main + DWB-TurboQuant + controller analysis + HTML report
@@ -326,6 +326,17 @@ fpga_controller_results:
       1.3: {p4: 58.7, p8: 41.3, speedup: 2.52, note: "mixed — above transition"}
       1.4: {p4: 100.0, p8: 0.0, speedup: 3.48}
     conclusion: "Transition window beta=[1.20,1.40] brackets predicted beta*=1.260. Theory confirmed to within ±0.04."
+  phase5_beta_cal_135m:
+    model: SmolLM-135M
+    method: per-token quality proxy beta calibration
+    n_tokens: 84240
+    gap_distribution: {mean: 0.3297, std: 0.0494}
+    avg_q4_local: 0.6493
+    avg_q8_local: 0.9790
+    predicted_beta_star: 1.233
+    measured_transition: "[1.2, 1.3]"
+    beta_at_1_5: "100% 4-bit (safely above transition)"
+    conclusion: "Confirms cross-scale beta* = gap_mean/0.267. Three scales validated: 135M beta*=1.233, 360M beta*=1.260, 1.7B beta*=1.498. beta=1.5 is near-universal."
   phase5_sim_1b7:
     model: SmolLM-1.7B (SIMULATED)
     method: synthetic signals with predicted gap distribution

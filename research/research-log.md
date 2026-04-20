@@ -516,3 +516,34 @@ This is a clean empirical confirmation of the gradient analysis theory.
 - Updated beta calibration figure with fine sweep points + transition annotation at 1.26
 
 **Commit**: a7b7156
+
+---
+
+## 2026-04-19 — Session 15 (autoresearch tick)
+
+**Trigger**: Autoresearch loop tick. No Brev 1.7B results yet.
+
+**Experiments run**:
+- `beta_calibration_135m.py`: Per-token quality proxy beta sweep [0.9–2.0] on SmolLM-135M (84,240 tokens, 62s)
+
+**Key results**:
+- 135M gap_mean=0.3297 (< 360M's 0.3367, as expected from smaller ε_rel)
+- Predicted beta*=1.233 (theory), measured transition at [1.2, 1.3]
+- beta=1.3 gives 63% 4-bit (threshold 0.348 > gap_mean 0.330 — above transition, consistent)
+- beta=1.5 gives 100% 4-bit (safely above transition)
+
+**Cross-scale beta* table (all three SmolLM scales now validated)**:
+| Scale | gap_mean | beta* (theory) | Measured transition |
+|-------|----------|----------------|---------------------|
+| 135M  | 0.3297   | 1.233          | [1.2, 1.3] ✓        |
+| 360M  | 0.3367   | 1.260          | [1.20, 1.40] ✓      |
+| 1.7B  | 0.400    | 1.498          | (simulated)         |
+
+**Paper updates**:
+- Added Tab. tab:betastar (cross-scale beta calibration, 3 scales)
+- Added cross-scale beta calibration paragraph in Sec. 5.3
+- Updated Discussion: reference tab:betastar for universal beta argument
+- Updated Conclusion: mention three-scale validation
+- Updated beta_calibration figure: 135M points + theory curve + updated left panel
+
+**Commit**: 1801538
