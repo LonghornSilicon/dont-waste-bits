@@ -349,14 +349,20 @@ controller eliminates this suboptimal 2-bit option entirely.
 
 **Key pending experiment**: SmolLM-1.7B where eff_residual=12.4% > threshold. Phase 5 v2 script (`run_phase5_1b7_pertok.py`) pushed to GitHub (commit 096ab5e) and ready to run on Brev A4000.
 
-**Critical fix — per-token quality proxy**: Global quality scores (q4=0.671, q8=0.979 at 1.7B) cause 100% 8-bit collapse for all β. Analytical proof: dL/dp4 = -α*(q4-q8) + β*(c4-c8)/1.01 = +0.23 (all positive → 8-bit always wins). Fix: per-token proxy q_local = 1 - ||quant_err||/||kv_norm||. Validated gradient analysis:
+**Critical fix — per-token quality proxy + correct beta**: Two discoveries:
 
-| kv_norm | q4_local | q8_local | dL/dp4 | decision |
-|---------|----------|----------|--------|----------|
-| 0.2–5.0 | 0.85–0.99 | 0.98–1.00 | negative | **4-bit** |
-| 10.0+ | 0.40–0.70 | 0.90–0.95 | **positive** | **8-bit** |
+1. **Global quality scores fail**: q4=0.671, q8=0.979 → dL/dp4 > 0 for all β → 100% 8-bit.
+2. **Per-token proxy alone insufficient**: avg q8_local - q4_local = 0.337 at 360M, so even per-token quality gives 100% 8-bit with beta=0.5 (threshold only 0.134).
 
-High-norm tokens (high KV variance) flip to 8-bit; low-norm stay 4-bit. Mixed allocation emerges naturally.
+**Correct beta = 1.5** (validated by smoke test on 360M):
+- Threshold = 1.5 × 0.267 = 0.401 > avg gap 0.337 → avg gradient pushes 4-bit ✅
+- Smoke test beta sweep at 360M (q8-q4: mean=0.337, std=0.050):
+  - beta=1.0: 100% 8-bit (threshold < gap), 1.80× speedup
+  - **beta=1.5: 100% 4-bit** (correct for 360M where INT4 is lossless), 3.48× speedup ✅
+  - beta=2.0: 100% 4-bit, 3.48×
+- At 1.7B (expected larger gap ≈ 0.38): beta=1.5 threshold=0.401 ≈ 60th percentile → ~40-60% 4-bit mixed allocation
+
+Phase 5 script now sweeps [1.0, 1.5, 2.0, 3.0] and selects best. Code validated end-to-end on 360M (smoke test PASS).
 
 ---
 
@@ -368,6 +374,7 @@ High-norm tokens (high KV variance) flip to 8-bit; low-norm stay 4-bit. Mixed al
 - **INT4 losslessness is scale-dependent**: Lossless at 135M/360M (15 heads); genuine degradation at 1.7B (32 heads). Standard INT4 matches paper's 41.1% baseline at 1.7B; int4_int3range matches at 135M/360M.
 - **500 samples sufficient for 360M**: At n=500, CI=±4.4pp. The +8pp gap is statistically significant.
 - **1.7B validates paper's core claim**: Genuine INT4 degradation occurs at scale — H2 is strongest at 1.7B.
-- **Global quality scores fail at 1.7B**: q4=0.671, q8=0.979 → dL/dp4 > 0 for all β → 100% 8-bit, 1.80× speedup (worse than DWB). Always use per-token quality proxy at 1.7B+.
-- **Per-token quality proxy**: q_local = 1 - ||quant_err||/||kv_norm|| computed during Stage 1. High-norm tokens get low q4_local → 8-bit; low-norm stay 4-bit. Enables genuine mixed allocation.
-- **Phase 5 script**: Use `run_phase5_1b7_pertok.py` (NOT `run_phase5_1b7.py`). v1 is mathematically broken at 1.7B.
+- **Global quality scores fail at ANY scale**: avg q8-q4 ≈ 0.337 even at 360M → dL/dp4 > 0 with beta=0.5 → 100% 8-bit. Not just a 1.7B problem.
+- **Per-token quality proxy requires correct beta**: q_local alone doesn't fix it — need beta≥1.5 so FPGA threshold (beta*0.267) exceeds avg quality gap (0.337).
+- **beta=1.5 validated**: Smoke test on 360M shows clean flip from 100% 8-bit (beta=1.0) to 100% 4-bit (beta=1.5). Phase 5 script sweeps [1.0,1.5,2.0,3.0] automatically.
+- **Phase 5 script**: Use `run_phase5_1b7_pertok.py` (commit bc778ba). v1 (`run_phase5_1b7.py`) is broken for two reasons: wrong betas AND global quality scores.
