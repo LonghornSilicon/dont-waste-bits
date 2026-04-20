@@ -272,9 +272,9 @@ final_status:
   latency_experiments: AWAITING_GPU  # H1: 17.75% reduction, arithmetic verified; RTX 4090 required
   paper_writeup: NEAR_FINAL  # fpga_controller_paper.tex (fpga-controller branch) — all claims supported, 1.7B accuracy TBD
   fpga_controller_360m: COMPLETE  # Phase 1-4 all show 100% 4-bit at 360M — correct and expected
-  fpga_controller_1b7: CPU_COMPLETE_GPU_PENDING  # Real CPU measurement: gap=0.4235, beta*=1.584, transition [1.55,1.57]. beta=1.70: 5.03 bits, 2.84x speedup (+16% vs DWB). Only 1.7B HellaSwag accuracy pending GPU.
+  fpga_controller_1b7: CPU_COMPLETE_GPU_PENDING  # MEASURED: gap=0.4235, beta*=1.584, transition [1.55,1.57]. beta=1.70 (5-seed mean): 79.9% 4-bit, 4.80 bits, 2.93x speedup (+20% vs DWB at fewer bits). Only 1.7B HellaSwag accuracy pending GPU.
   beta_calibration_1b7: COMPLETE  # beta_calibration_1b7.json + beta_transition_fine_1b7.json — all measured on real model signals
-  paper_status: NEAR_FINAL  # all three scales MEASURED, simulation replaced with real data, beta* formula confirmed, Table 1 has real 1.7B FPGA metrics (2.69x vs DWB 2.44x). Only gap: 1.7B HellaSwag accuracy (GPU eval).
+  paper_status: NEAR_FINAL  # all three scales MEASURED, simulation replaced with real data, beta* formula confirmed. Table 1: 360M 3.48x (+43%), 1.7B 2.93x (+20% at fewer bits). Only gap: 1.7B HellaSwag accuracy (GPU eval). Session 19 final consistency pass complete.
   github: https://github.com/LonghornSilicon/dont-waste-bits
   git_heads:
     main: fe6e2ed
