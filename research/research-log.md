@@ -970,3 +970,22 @@ OPT family converges DOWN toward the floor from above with model scale, opposite
 
 **Result files**: smollm2_360m_cal_sensitivity.json
 **Commits**: (this session)
+
+---
+
+## Session 35 — 2026-04-20 — TinyLlama Calibration Sensitivity
+
+**Task**: Validate Finding 9 (gap_std ⊥ calibration sensitivity) for TinyLlama-1.1B.
+
+**Protocol**: Run `tinyllama_cal_sensitivity.py` (separate K/V methodology matching original). 10 texts, compare 1-text vs 10-text beta* estimates.
+
+**Result**:
+- gap_mean_10text=0.1962, gap_std=0.0511
+- max_error_1text=0.008, mean_error=0.004
+- All within ±0.015 ✓
+
+**Finding**: TinyLlama (gap_std=0.051) shows max_error=0.008 — excellent, same mean_error (0.004) as SmolLM2-360M despite being at completely different scale and formula-fit quality. Two LLaMA-GQA models with high gap_std both show lowest calibration sensitivity. Finding 9 confirmed across 5 data points / 3 architecture types.
+
+**Paper update**: Added TinyLlama to per-text max deviations list. Updated counter-intuitive finding sentence to mention both GQA models.
+
+**Status**: CPU verification fully complete. GPU/FPGA hardware awaiting.

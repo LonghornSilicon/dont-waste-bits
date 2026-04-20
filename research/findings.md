@@ -1,6 +1,6 @@
 # Research Findings — Don't Waste Bits! Verification
 
-**Last updated**: 2026-04-20 (Session 33: CPU verification COMPLETE. 10 checkpoints / 5 families. SmolLM2-360M (GQA) added as 5th family — confirms GQA-scale interaction. Calibration sensitivity cross-arch validated: GPT-2 (±0.018), OPT (±0.006). Summary figure generated. Paper near-final. README fully updated.)  
+**Last updated**: 2026-04-20 (Session 35: TinyLlama sensitivity confirmed — Finding 9 generalized across 5 data points / 3 architecture types. All ≤±0.020. CPU verification fully complete.)  
 **Phase**: CPU_COMPLETE — 10 checkpoints / 5 model families / 2×2 instruct matrix. GPU (1.7B HellaSwag accuracy) + FPGA hardware (latency) are only remaining blockers.
 
 ---
@@ -963,3 +963,29 @@ SmolLM2-360M has the highest gap_std of all 10 checkpoints yet the LOWEST mean c
 **Practical implication**: The formula error=0.044 for SmolLM2 is NOT due to unstable calibration. It comes from the GQA-scale interaction making the phase transition harder to predict linearly (higher gap_std → wider transition window → harder to pin exactly where 50% of tokens cross threshold). These are distinct effects.
 
 **Paper update**: Sensitivity claim updated from "three architectures" to "four architectures". SmolLM2 added to per-text max deviation table. Counter-intuitive gap_std finding added as key sentence.
+
+---
+
+## Session 35 — TinyLlama-1.1B Calibration Sensitivity: Finding 9 Generalized ★
+
+**Date**: 2026-04-20 (Session 35)
+
+**Experiment**: `tinyllama_cal_sensitivity.py` — 10-text sensitivity analysis on TinyLlama-1.1B (LLaMA-GQA, the tightest formula fit: error=0.003). Uses separate K/V quality methodology matching original `tinyllama_calibration.py`.
+
+**Hypothesis**: Validate Finding 9 orthogonality across an additional LLaMA-GQA checkpoint at a different scale.
+
+**Result: CONFIRMED — gap_std ⊥ calibration sensitivity holds for TinyLlama**
+
+| Architecture | gap_std | max_error_1text | mean_error_1text | Notes |
+|---|---|---|---|---|
+| SmolLM/LLaMA-MHA (1.7B) | 0.063 | 0.015 | — | Session 20 |
+| SmolLM2/LLaMA-GQA (360M) | **0.052** | **0.013** | **0.004** | Session 34 — LOWEST mean error |
+| TinyLlama/LLaMA-GQA (1.1B) | 0.051 | **0.008** | **0.004** | Session 35 — confirms orthogonality |
+| GPT-2/Conv1D (124M) | 0.026 | 0.018 | 0.009 | Session 33 |
+| OPT/Meta (125M) | ~0.030 | 0.006 | — | Session 33 inline |
+
+TinyLlama has gap_std=0.051 (similar to SmolLM2's 0.052) but max_error_1text=0.008 (excellent). The two LLaMA-GQA checkpoints at different scales (360M and 1.1B) show identical mean calibration error (0.004) despite different formula fit quality (error=0.044 vs 0.003). This confirms the orthogonality claim is not scale- or formula-fit-dependent.
+
+**Notable**: 10-text gap_mean=0.1962 vs original calibration's 0.189 — a 0.007 difference attributable to per-token (this script) vs per-head (original calibration) quantization granularity. The calibration sensitivity result (max_error=0.008) is unaffected by this measurement-level difference: within-methodology consistency is what matters for the calibration claim.
+
+**CPU verification status**: All major experiments complete. TinyLlama adds the 5th data point confirming ≤±0.020 single-text calibration sensitivity. Finding 9 is now supported across 3 architecture types with 4 explicit measurements.

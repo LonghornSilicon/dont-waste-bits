@@ -1,6 +1,6 @@
 project: dont-waste-bits-verification
 created: "2026-04-19"
-last_updated: "2026-04-20"  # Session 34 — SmolLM2 calibration sensitivity: COUNTER-INTUITIVE. Highest gap_std (0.052) → lowest mean error (0.004). 4 architectures confirmed ≤±0.020. Paper updated.
+last_updated: "2026-04-20"  # Session 35 — TinyLlama calibration sensitivity: gap_std=0.051, max_error=0.008, mean=0.004. Finding 9 confirmed across 5 data points / 3 arch types. CPU verification COMPLETE.
 
 research_question: >
   Can we independently reproduce the claims of "Don't Waste Bits! Adaptive KV-Cache
