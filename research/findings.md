@@ -347,10 +347,16 @@ Why we beat the paper: Paper allocates 47.9% of tokens to 2-bit. On Xilinx Ultra
 2-bit uses the same 4-bit BRAM port — same hardware cost but worse accuracy. Our binary {4,8}
 controller eliminates this suboptimal 2-bit option entirely.
 
-**Key pending experiment**: SmolLM-1.7B where eff_residual=12.4% > threshold. INT4 is
-genuinely lossy there, and the binary controller should learn to mix 4-bit and 8-bit rather
-than collapsing to 100% 4-bit. That is the regime where the FPGA controller shows its full
-advantage over both pure INT4 and the paper's DWB approach.
+**Key pending experiment**: SmolLM-1.7B where eff_residual=12.4% > threshold. Phase 5 v2 script (`run_phase5_1b7_pertok.py`) pushed to GitHub (commit 096ab5e) and ready to run on Brev A4000.
+
+**Critical fix — per-token quality proxy**: Global quality scores (q4=0.671, q8=0.979 at 1.7B) cause 100% 8-bit collapse for all β. Analytical proof: dL/dp4 = -α*(q4-q8) + β*(c4-c8)/1.01 = +0.23 (all positive → 8-bit always wins). Fix: per-token proxy q_local = 1 - ||quant_err||/||kv_norm||. Validated gradient analysis:
+
+| kv_norm | q4_local | q8_local | dL/dp4 | decision |
+|---------|----------|----------|--------|----------|
+| 0.2–5.0 | 0.85–0.99 | 0.98–1.00 | negative | **4-bit** |
+| 10.0+ | 0.40–0.70 | 0.90–0.95 | **positive** | **8-bit** |
+
+High-norm tokens (high KV variance) flip to 8-bit; low-norm stay 4-bit. Mixed allocation emerges naturally.
 
 ---
 
@@ -362,3 +368,6 @@ advantage over both pure INT4 and the paper's DWB approach.
 - **INT4 losslessness is scale-dependent**: Lossless at 135M/360M (15 heads); genuine degradation at 1.7B (32 heads). Standard INT4 matches paper's 41.1% baseline at 1.7B; int4_int3range matches at 135M/360M.
 - **500 samples sufficient for 360M**: At n=500, CI=±4.4pp. The +8pp gap is statistically significant.
 - **1.7B validates paper's core claim**: Genuine INT4 degradation occurs at scale — H2 is strongest at 1.7B.
+- **Global quality scores fail at 1.7B**: q4=0.671, q8=0.979 → dL/dp4 > 0 for all β → 100% 8-bit, 1.80× speedup (worse than DWB). Always use per-token quality proxy at 1.7B+.
+- **Per-token quality proxy**: q_local = 1 - ||quant_err||/||kv_norm|| computed during Stage 1. High-norm tokens get low q4_local → 8-bit; low-norm stay 4-bit. Enables genuine mixed allocation.
+- **Phase 5 script**: Use `run_phase5_1b7_pertok.py` (NOT `run_phase5_1b7.py`). v1 is mathematically broken at 1.7B.
