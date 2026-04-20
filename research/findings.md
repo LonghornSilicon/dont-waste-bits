@@ -1,7 +1,7 @@
 # Research Findings — Don't Waste Bits! Verification
 
-**Last updated**: 2026-04-20 (Session 29: GPT-2 Large (774M) — GPT-2 family non-monotonic! Large (0.192) between Medium (0.188) and Small (0.196), all within 0.008 band. 8th checkpoint. Floor = representation quality cluster, not dimension.)  
-**Phase**: CPU_SATURATED — 8 checkpoints / 4 families / 2×2 instruct matrix / complete GPT-2 family (Small+Medium+Large). GPU (1.7B accuracy) + FPGA hardware (latency) remain.
+**Last updated**: 2026-04-20 (Session 33: CPU verification COMPLETE. 10 checkpoints / 5 families. SmolLM2-360M (GQA) added as 5th family — confirms GQA-scale interaction. Calibration sensitivity cross-arch validated: GPT-2 (±0.018), OPT (±0.006). Summary figure generated. Paper near-final. README fully updated.)  
+**Phase**: CPU_COMPLETE — 10 checkpoints / 5 model families / 2×2 instruct matrix. GPU (1.7B HellaSwag accuracy) + FPGA hardware (latency) are only remaining blockers.
 
 ---
 

@@ -1,6 +1,6 @@
 project: dont-waste-bits-verification
 created: "2026-04-19"
-last_updated: "2026-04-20"  # Session 32
+last_updated: "2026-04-20"  # Session 33 — CPU verification COMPLETE. README updated. Cross-arch sensitivity (GPT2, OPT) validated. 10 checkpoints / 5 families. Only GPU + FPGA remain.
 
 research_question: >
   Can we independently reproduce the claims of "Don't Waste Bits! Adaptive KV-Cache
