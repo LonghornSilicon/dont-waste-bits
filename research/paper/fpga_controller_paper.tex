@@ -446,7 +446,7 @@ The fine-grained sweep reveals a measured transition window of $[1.55, 1.57]$ fo
 
 \textbf{Latency validation}: Measured FPGA throughput on Xilinx Ultrascale+ FPGA is pending. Our reported speedup (3.48$\times$) is derived from the BRAM port cost model (Table~\ref{tab:bram}); hardware validation requires the same Xilinx Ultrascale+ platform used by DWB.
 
-\textbf{Cross-architecture validation}: We validated the $\beta^* = \text{gap\_mean}/0.267$ formula on three additional architectures beyond SmolLM/LLaMA-style MHA (Table~\ref{tab:betastar}).
+\textbf{Cross-architecture validation}: We validated the $\beta^* = \text{gap\_mean}/0.267$ formula on four additional model families beyond SmolLM/LLaMA-style MHA (Table~\ref{tab:betastar}, Figure~\ref{fig:all_checkpoints}).
 
 \emph{TinyLlama-1.1B}~\citep{zhang2024tinyllama} (LLaMA-2 base; \textbf{Grouped Query Attention} with $n_\text{kv}=4$, $n_q=32$, $d_\text{head}=64$): gap\_mean$=0.189$, $\beta^*=0.707$. Fine sweep confirms transition at $[0.68, 0.74]$, within $\pm 0.003$ of prediction---the tightest fit across all ten checkpoints. Strikingly, TinyLlama-1.1B has \emph{lower} gap\_mean than SmolLM-360M (0.189 vs.\ 0.337) despite being $3\times$ larger. The mechanism: GQA reduces the K/V projection dimension from 2048 (MHA, SmolLM-1.7B) to 256 (GQA, TinyLlama-1.1B). Smaller K/V vectors have lower per-token variance, reducing INT4 quantization error and hence gap\_mean. \textbf{GQA acts as implicit KV regularization: it lowers $\beta^*$ far below what scale alone would predict.}
 
