@@ -662,4 +662,11 @@ Conclusion updated to "five checkpoints across three architectures (all within +
 
 The ~44% reduction in gap_mean is scale-independent and reproducible. The shift exceeds any cross-architecture difference measured. Instruct models converge to 0.18-0.19 gap_mean regardless of scale.
 
-**Paper update**: Added "Fine-tuning shifts the KV distribution" paragraph + Table tab:instruct (2 rows showing base vs instruct for 135M and 360M) to Discussion.
+**Transition verification** (Session 25c): Beta sweep on 360M-Instruct controller confirms prediction:
+- beta=0.50: 0% 4-bit (8-bit) — threshold 0.134 < gap 0.194 ✓
+- beta=0.70: 15.6% 4-bit (entering mixed) — threshold 0.187 ≈ gap ✓
+- beta=0.75: 52.6% 4-bit (mixed, above transition) — threshold 0.200 > gap ✓
+- beta=0.80: 100% 4-bit ✓; beta=1.00: 100% 4-bit ✓
+- Measured transition: [0.70, 0.80], theory error = 0.023 — within ±0.04 ✓
+
+**Paper update**: "Fine-tuning shifts the KV distribution" paragraph + Table tab:instruct (now 6 cols including measured transition for 360M-Instruct, verified error=0.023) added to Discussion.
