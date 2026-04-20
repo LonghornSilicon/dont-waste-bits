@@ -242,7 +242,7 @@ This two-stage design enables controller training on machines without GPU or suf
 
 \begin{table}[h]
 \centering
-\caption{HellaSwag results. FPGA speedup vs.\ FP16 computed from BRAM cost model. $\dagger$: Accuracy from Table 3 of~\cite{haeri2026dwb}; DWB's 1.7B bit distribution is not reported in the paper, so avg\_bits and FPGA cost are assumed equal to the 360M distribution. $\ddagger$: Our measurements. FP16/INT4 baselines: 500 samples (95\% CI $\pm$4.4pp). Binary controller: 200 samples (95\% CI $\pm$7pp). $\star$: GPU evaluation pending (accuracy). $\S$: From CPU fine sweep at $\beta{=}1.70$ (75.7\% 4-bit, 24.3\% 8-bit; matches DWB avg\_bits=5.05); BRAM cost $= 0.757{\times}0.290 + 0.243{\times}0.560 = 0.357$, speedup $= 1.010/0.357 = 2.84\times$. Accuracy TBD (GPU evaluation pending).}
+\caption{HellaSwag results. FPGA speedup vs.\ FP16 computed from BRAM cost model. $\dagger$: Accuracy from Table 3 of~\cite{haeri2026dwb}; DWB's 1.7B bit distribution is not reported in the paper, so avg\_bits and FPGA cost are assumed equal to the 360M distribution. $\ddagger$: Our measurements. FP16/INT4 baselines: 500 samples (95\% CI $\pm$4.4pp). Binary controller: 200 samples (95\% CI $\pm$7pp). $\star$: GPU evaluation pending (accuracy). $\S$: From CPU fine sweep at $\beta{=}1.70$ (5-seed mean: 79.9\%$\pm$2.8pp 4-bit, avg\_bits=4.80, fewer bits than DWB's 5.05); BRAM cost $= 0.799{\times}0.290{+}0.201{\times}0.560{=}0.344$, speedup $= 1.010/0.344 = 2.93\times$. Accuracy TBD (GPU evaluation pending).}
 \begin{tabular}{llcccc}
 \toprule
 Scale & Method & Acc. & avg\_bits & FPGA cost & FPGA speedup \\
@@ -255,7 +255,7 @@ Scale & Method & Acc. & avg\_bits & FPGA cost & FPGA speedup \\
 \multirow{4}{*}{1.7B} & FP16 (no quant)$^\dagger$ & 49.0\% & 16.0 & 1.010 & 1.00$\times$ \\
  & Static INT4 (standard)$^\dagger$ & 41.1\% & 4.0 & 0.290 & 3.48$\times$ \\
  & Paper DWB$^\dagger$ & 48.6\% & 5.05$^\dagger$ & 0.414$^\dagger$ & 2.44$\times$$^\dagger$ \\
- & \textbf{Ours (Binary ctrl.)}$^\star$ & \textbf{TBD} & \textbf{5.03}$^\S$ & \textbf{0.357}$^\S$ & \textbf{2.84}$\times$$^\S$ \\
+ & \textbf{Ours (Binary ctrl.)}$^\star$ & \textbf{TBD} & \textbf{4.80}$^\S$ & \textbf{0.344}$^\S$ & \textbf{2.93}$\times$$^\S$ \\
 \bottomrule
 \end{tabular}
 \label{tab:main}
@@ -413,8 +413,8 @@ $\beta$ & 4-bit\% & 8-bit\% & avg\_bits & FPGA speedup & Outcome \\
 \hdashline
 1.57 & 59.2\% & 40.8\% & 5.63 & 2.52$\times$ & \textit{Mixed zone begins} \\
 1.60 & 62.2\% & 37.8\% & 5.51 & 2.58$\times$ & Mixed \\
-\textbf{1.65} & \textbf{72.0\%} & \textbf{28.0\%} & \textbf{5.12} & \textbf{2.76}$\times$ & \textbf{Good operating point} \\
-1.70 & 75.7\% & 24.3\% & 5.03 & 2.84$\times$ & Matches DWB avg\_bits \\
+\textbf{1.65} & \textbf{71.0$\pm$3\%} & \textbf{29\%} & \textbf{5.16} & \textbf{2.74}$\times$ & \textbf{Good operating point (5-seed mean)} \\
+1.70 & 79.9$\pm$3\% & 20\% & 4.80 & 2.93$\times$ & Fewer bits AND faster than DWB \\
 2.0  & 97.6\% & 2.4\% & 4.10 & 3.41$\times$ & Near all-4-bit \\
 \midrule
 Paper DWB & 47.9\%$^*$ & 15.4\%$^*$ & 5.05 & 2.44$\times$ & Mixed \\
@@ -424,7 +424,7 @@ Paper DWB & 47.9\%$^*$ & 15.4\%$^*$ & 5.05 & 2.44$\times$ & Mixed \\
 \label{tab:sim_1b7}
 \end{table}
 
-The fine-grained sweep reveals a measured transition window of $[1.55, 1.57]$ for 1.7B---narrower than the theory's single-point prediction of $\beta^* = 1.584$ but tightly bracketing it. The 1.7B transition is \emph{softer} than at 360M (where $\beta$ jumped from 0\% to 100\% 4-bit within $\pm 0.05$): at 1.7B, the wider gap distribution (std=0.063 vs. 0.050) creates a broad mixed-allocation plateau spanning $\beta \in [1.57, 1.70+]$. All points in this plateau Pareto-dominate DWB (2.44$\times$), with speedups 2.52--2.84$\times$ ($+$3\% to $+$16\%). At $\beta = 1.70$, avg\_bits$=5.03$ matches DWB's compression ratio at \textbf{2.84$\times$} FPGA speedup ($+$16\%). HellaSwag accuracy is pending GPU evaluation.
+The fine-grained sweep reveals a measured transition window of $[1.55, 1.57]$ for 1.7B---narrower than the theory's single-point prediction of $\beta^* = 1.584$ but tightly bracketing it. The 1.7B transition is \emph{softer} than at 360M (where $\beta$ jumped from 0\% to 100\% 4-bit within $\pm 0.05$): at 1.7B, the wider gap distribution (std=0.063 vs. 0.050) creates a broad mixed-allocation plateau spanning $\beta \in [1.57, 1.70+]$. All points in this plateau Pareto-dominate DWB (2.44$\times$), with speedups 2.52--2.84$\times$ ($+$3\% to $+$16\%). At $\beta = 1.70$, a 5-seed multi-run average gives 79.9\%$\pm$2.8pp 4-bit (avg\_bits=4.80, \emph{fewer} than DWB's 5.05) at \textbf{2.93$\times$} FPGA speedup ($+$20\% vs. DWB at equal or lower bit usage). HellaSwag accuracy is pending GPU evaluation.
 
 \textbf{$\beta^* = \text{gap\_mean}/0.267$ as a universal calibration criterion}: The cross-scale beta calibration (Table~\ref{tab:betastar}) confirms that the gradient-derived formula $\beta^* = \overline{\Delta q}/0.267$ predicts the phase transition within $\pm 0.03$ at all three scales. At 135M and 360M, $\beta=1.5$ is safely above the transition (all 4-bit; INT4 is lossless). At 1.7B, $\beta^*=1.584$ places $\beta=1.5$ just below the transition; any $\beta > 1.57$ gives useful mixed allocation. \textbf{Recommendation}: measure gap\_mean on a 10-text calibration corpus (under 1 minute on CPU), set $\beta = \text{gap\_mean}/0.267 + 0.1$ for a safety margin. At 1.7B this gives $\beta \approx 1.68$, landing in the broad mixed-allocation plateau. This eliminates per-model grid search.
 
@@ -436,7 +436,7 @@ The fine-grained sweep reveals a measured transition window of $[1.55, 1.57]$ fo
 
 \section{Conclusion}
 
-We identified a fundamental flaw in DWB's KV cache quantization: the 2-bit option wastes no FPGA BRAM bandwidth (identical 4-bit port on Xilinx Ultrascale+) while catastrophically degrading accuracy ($-$16.6pp). By restricting bit choices to $\{4, 8\}$---the only options with distinct BRAM costs---our binary FPGA-aware controller Pareto-dominates DWB at any given hardware budget. At SmolLM-360M (where INT4 is lossless), the controller achieves 3.48$\times$ FPGA throughput---43\% faster than DWB---at equal accuracy. At SmolLM-1.7B (where INT4 is lossy), the controller achieves genuine mixed allocation across a broad plateau $\beta \in [1.57, 1.70+]$; at $\beta=1.70$ (matching DWB's avg\_bits), it yields 2.84$\times$ FPGA throughput---\textbf{16\% faster than DWB}---pending HellaSwag accuracy evaluation. We additionally provide: (1) a formal BRAM port cost model for Xilinx Ultrascale+; (2) a mechanistic characterization of scale-dependent losslessness (threshold $\epsilon_\text{eff} \approx 10\%$); (3) a universal beta calibration criterion $\beta^* = \text{gap\_mean}/0.267$ predicting the phase transition from CPU-only calibration (validated experimentally at all three scales: 135M, 360M, 1.7B), enabling exact per-model tuning without GPU grid search; and (4) a reference implementation predating the DWB code release.
+We identified a fundamental flaw in DWB's KV cache quantization: the 2-bit option wastes no FPGA BRAM bandwidth (identical 4-bit port on Xilinx Ultrascale+) while catastrophically degrading accuracy ($-$16.6pp). By restricting bit choices to $\{4, 8\}$---the only options with distinct BRAM costs---our binary FPGA-aware controller Pareto-dominates DWB at any given hardware budget. At SmolLM-360M (where INT4 is lossless), the controller achieves 3.48$\times$ FPGA throughput---43\% faster than DWB---at equal accuracy. At SmolLM-1.7B (where INT4 is lossy), the controller achieves genuine mixed allocation across a broad plateau $\beta \in [1.57, 1.70+]$; at $\beta=1.70$ (5-seed mean: 79.9\% 4-bit, avg\_bits=4.80), it yields 2.93$\times$ FPGA throughput---\textbf{20\% faster than DWB at fewer bits}---pending HellaSwag accuracy evaluation. We additionally provide: (1) a formal BRAM port cost model for Xilinx Ultrascale+; (2) a mechanistic characterization of scale-dependent losslessness (threshold $\epsilon_\text{eff} \approx 10\%$); (3) a universal beta calibration criterion $\beta^* = \text{gap\_mean}/0.267$ predicting the phase transition from CPU-only calibration (validated experimentally at all three scales: 135M, 360M, 1.7B), enabling exact per-model tuning without GPU grid search; and (4) a reference implementation predating the DWB code release.
 
 \bibliographystyle{plain}
 \bibliography{fpga_refs}
