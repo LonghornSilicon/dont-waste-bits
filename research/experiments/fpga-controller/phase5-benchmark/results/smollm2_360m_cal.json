@@ -1,0 +1,17 @@
+{
+  "model": "HuggingFaceTB/SmolLM2-360M",
+  "n_params": "360M",
+  "hidden_size": 960,
+  "n_layers": 32,
+  "n_heads": 15,
+  "n_kv_heads": 5,
+  "n_signals": 3936,
+  "gap_mean": 0.2826188995646752,
+  "gap_std": 0.05169973122516306,
+  "beta_star": 1.0584977511785587,
+  "architecture": "GQA",
+  "comparison_smollm_mha": {
+    "gap_mean": 0.3372,
+    "beta_star": 1.263
+  }
+}

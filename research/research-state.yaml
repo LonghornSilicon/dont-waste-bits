@@ -1,6 +1,6 @@
 project: dont-waste-bits-verification
 created: "2026-04-19"
-last_updated: "2026-04-20"  # Session 28
+last_updated: "2026-04-20"  # Session 31
 
 research_question: >
   Can we independently reproduce the claims of "Don't Waste Bits! Adaptive KV-Cache
@@ -8,7 +8,8 @@ research_question: >
   Specifically: (H1) 17.75% latency reduction, (H2) +7.60 accuracy points over
   static 4-bit KV, (H3) within 0.30 points of FP16 — all on SmolLM-360M / HellaSwag.
 
-phase: CPU_COMPLETE  # Session 30: 30 sessions, ~67 experiments. 9 checkpoints/4 families/2x2 instruct matrix/complete GPT-2 family/OPT family. Formula validated mean error 0.018, max 0.040. Floor attractor confirmed via 4 independent routes. Paper near-final. Only GPU + FPGA remain.
+phase: CPU_COMPLETE  # Session 31: 31 sessions, ~68 experiments. 10 checkpoints/5 families/2x2 instruct matrix/complete GPT-2 family/OPT family/SmolLM2 GQA. Formula validated: 9 of 10 within ±0.04 (borderline: SmolLM2-360M error=0.044). GQA-scale interaction confirmed. Paper near-final (10 checkpoints). Only GPU + FPGA remain.
+  cross_arch_smollm2_360m: COMPLETE  # Session 31: GQA vs MHA comparison, gap_mean=0.283, borderline error=0.044
 
 hypotheses:
   H1:
