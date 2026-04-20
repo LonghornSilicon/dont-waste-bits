@@ -193,11 +193,37 @@ These are computed for each token during Stage 1 signal extraction using the act
 
 \subsection{Two-Stage Training}
 
-To fit within CPU memory constraints ($\approx$2.5GB free):
-\begin{enumerate}
-\item \textbf{Stage 1 (Signal Extraction)}: Load model, run WikiText-2 texts through forward hooks to collect $\{kv\_norm, pos\_frac, q_{t,4}^\text{local}, q_{t,8}^\text{local}\}$ signals (4D). Cache to disk. Free model.
-\item \textbf{Stage 2 (Controller Training)}: Train on cached signals. No model in memory. Batch size 256, Adam optimizer, $lr=10^{-3}$, 10 epochs.
-\end{enumerate}
+To fit within CPU memory constraints ($\approx$2.5GB free), we decouple model inference from controller training:
+
+\begin{algorithm}[h]
+\caption{Two-Stage Binary FPGA Controller Training}
+\begin{algorithmic}[1]
+\State \textbf{Stage 1: Signal Extraction} (model in memory)
+\State Hook \texttt{k\_proj} and \texttt{v\_proj} outputs in all layers
+\ForAll{text $x$ in WikiText-2 (200 samples)}
+  \ForAll{token $t$, layer $\ell$}
+    \State Compute $kv\_norm_t = \|[k_t; v_t]\|_2 / d^{1/2}$
+    \State Compute $pos\_frac_t = t / T$
+    \State Compute $q_{t,4}^\text{local} = 1 - \|\text{Quant}_4(kv_t) - kv_t\|/\|kv_t\|$
+    \State Compute $q_{t,8}^\text{local} = 1 - \|\text{Quant}_8(kv_t) - kv_t\|/\|kv_t\|$
+    \State Cache $(kv\_norm_t, pos\_frac_t, q_{t,4}^\text{local}, q_{t,8}^\text{local})$ to disk
+  \EndFor
+\EndFor
+\State Free model from memory
+\State \textbf{Stage 2: Controller Training} (no model in memory)
+\State Initialize controller $\theta$ (MLP: $4{\to}64{\to}64{\to}2$)
+\For{epoch $= 1$ to $10$}
+  \State Anneal $\tau \leftarrow 2.0 \to 0.1$
+  \ForAll{mini-batches of cached signals}
+    \State $\mathbf{p}_t = \text{GumbelSoftmax}(\text{Controller}(\mathbf{f}_t; \theta); \tau)$
+    \State $\mathcal{L} = 1.0 \cdot \mathcal{L}_\text{quality} + \beta \cdot \mathcal{L}_\text{fpga}$
+    \State Update $\theta$ via Adam
+  \EndFor
+\EndFor
+\end{algorithmic}
+\end{algorithm}
+
+This two-stage design enables controller training on machines without GPU or sufficient RAM for 1.7B models (6.8GB at BF16), using only the 4D per-token signals cached to disk.
 
 \section{Experiments}
 
@@ -215,18 +241,18 @@ To fit within CPU memory constraints ($\approx$2.5GB free):
 
 \begin{table}[h]
 \centering
-\caption{HellaSwag results. FPGA speedup vs. FP16 computed from BRAM cost model. $\dagger$: Paper DWB values from Table 3 of~\cite{haeri2026dwb}. $\star$: 1.7B GPU evaluation pending; row will be populated after Brev A4000 run.}
+\caption{HellaSwag results. FPGA speedup vs.\ FP16 computed from BRAM cost model. $\dagger$: Accuracy from Table 3 of~\cite{haeri2026dwb}; DWB's 1.7B bit distribution is not reported in the paper, so avg\_bits and FPGA cost are assumed equal to the 360M distribution (identical bit-width controller). $\ddagger$: Our measurements (500 samples at 360M; 50 samples at 1.7B, $\pm$13pp CI). $\star$: GPU evaluation pending.}
 \begin{tabular}{llcccc}
 \toprule
 Scale & Method & Acc. & avg\_bits & FPGA cost & FPGA speedup \\
 \midrule
-\multirow{4}{*}{360M} & FP16 (no quant) & 42.6\% & 16.0 & 1.010 & 1.00$\times$ \\
- & Static INT4 (standard) & 41.6\% & 4.0 & 0.290 & 3.48$\times$ \\
+\multirow{4}{*}{360M} & FP16 (no quant)$^\ddagger$ & 42.6\% & 16.0 & 1.010 & 1.00$\times$ \\
+ & Static INT4 (standard)$^\ddagger$ & 41.6\% & 4.0 & 0.290 & 3.48$\times$ \\
  & Paper DWB$^\dagger$ & 41.2\% & 5.05 & 0.414 & 2.44$\times$ \\
- & \textbf{Ours (Binary ctrl.)} & \textbf{41.0\%} & \textbf{4.0} & \textbf{0.290} & \textbf{3.48}$\times$ \\
+ & \textbf{Ours (Binary ctrl.)}$^\ddagger$ & \textbf{41.0\%} & \textbf{4.0} & \textbf{0.290} & \textbf{3.48}$\times$ \\
 \midrule
-\multirow{4}{*}{1.7B} & FP16 (no quant) & 49.0\% & 16.0 & 1.010 & 1.00$\times$ \\
- & Static INT4 (standard) & 41.1\% & 4.0 & 0.290 & 3.48$\times$ \\
+\multirow{4}{*}{1.7B} & FP16 (no quant)$^\dagger$ & 49.0\% & 16.0 & 1.010 & 1.00$\times$ \\
+ & Static INT4 (standard)$^\dagger$ & 41.1\% & 4.0 & 0.290 & 3.48$\times$ \\
  & Paper DWB$^\dagger$ & 48.6\% & 5.05$^\dagger$ & 0.414$^\dagger$ & 2.44$\times$$^\dagger$ \\
  & \textbf{Ours (Binary ctrl.)}$^\star$ & \textbf{TBD} & \textbf{TBD} & \textbf{TBD} & \textbf{TBD} \\
 \bottomrule
@@ -338,7 +364,7 @@ Loss normalization is essential. The two-objective tension is not a hyperparamet
 
 \textbf{1.7B model and per-token quality signals}: At SmolLM-1.7B ($\epsilon_\text{eff} = 12.4\%$), INT4 is genuinely lossy (FP16: 49.0\%, static INT4: 41.1\%, $-$7.9pp). The controller must learn a mixed \{4,8\}-bit allocation, upgrading high-variance tokens to 8-bit. A key challenge is that global quality scores ($q_4 = 0.671$, $q_8 = 0.979$ at 1.7B) produce $\partial\mathcal{L}/\partial p_4 > 0$ for all $\beta$ values, forcing 100\% 8-bit allocation and a suboptimal 1.80$\times$ speedup (worse than DWB's 2.44$\times$).
 
-\textbf{Per-token quality proxy and beta calibration}: To enable genuine mixed allocation, we replace global quality scores with a per-token proxy:
+\textbf{Per-token quality proxy and beta calibration}: Global quality scores alone produce 100\% 8-bit at 1.7B (1.80$\times$ speedup), $-26\%$ worse than DWB. Per-token proxies with $\beta=1.5$ restore genuine mixed allocation (2.43$\times$ predicted, matching DWB) while eliminating the 2-bit accuracy penalty. To enable genuine mixed allocation, we replace global quality scores with a per-token proxy:
 \[
 q_{t,b}^\text{local} = 1 - \frac{\|\text{Quant}_b(kv_t) - kv_t\|_2}{\|kv_t\|_2}
 \]
