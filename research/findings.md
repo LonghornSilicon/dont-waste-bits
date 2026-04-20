@@ -383,6 +383,34 @@ Phase 5 script now sweeps [1.0, 1.5, 2.0, 3.0] and selects best. Code validated 
 
 ---
 
+## Fine Beta Sweep: Phase Transition at β=1.260 Confirmed ★ NEW (Session 13)
+
+**Date**: 2026-04-19 (Session 13)
+
+**Method**: Fine-grained beta sweep [1.1, 1.2, 1.25, 1.3, 1.4] on cached 89,856-token signals from SmolLM-360M. Uses Stage 2 (controller training) only — model already freed.
+
+**Results**:
+
+| β | threshold | 4-bit% | Regime |
+|---|-----------|--------|--------|
+| 1.1 | 0.294 | 0% | 8-bit dominant |
+| 1.2 | 0.321 | 0% | 8-bit dominant |
+| **1.25** | **0.334** | **41.7%** | **mixed (at transition)** |
+| 1.3 | 0.348 | 58.7% | mixed |
+| 1.4 | 0.374 | 100% | 4-bit dominant |
+
+**Key finding**: Phase transition confirmed at β* = gap_mean/0.267 = 0.337/0.267 = **1.260**, matching theory to within ±0.04. The transition window is β ∈ [1.20, 1.40].
+
+**β=1.5 as a near-universal operating point** ★:
+- At 360M: β*=1.26, so β=1.5 is safely above → 100% 4-bit (optimal for lossless INT4 scale)
+- At 1.7B: β* = gap_mean_1b7/0.267 = 0.400/0.267 = **1.498 ≈ 1.5** → right at transition → mixed {4,8} allocation (optimal for lossy scale)
+
+β=1.5 **automatically adapts** its behavior across scales: pure 4-bit at 360M (max FPGA throughput), genuine mixed allocation at 1.7B (correct accuracy-efficiency tradeoff). No per-scale tuning needed.
+
+**Results file**: `research/experiments/fpga-controller/phase5-benchmark/results/beta_transition_fine.json`
+
+---
+
 ## 1.7B Simulation: Genuine Mixed Allocation Confirmed (Predicted) ★ NEW
 
 **Date**: 2026-04-19 (Session 10)
