@@ -792,3 +792,22 @@ Hypothesis: Formula holds across GQA architectures. Prediction: gap_mean in [0.3
 **Paper updates**: TinyLlama row in tab:betastar, GQA mechanistic paragraph in Discussion, 
 all counts updated: 5→6 checkpoints, 3→4 families. TinyLlama BibTeX added.
 **Commit**: b16ce6a
+
+---
+
+## 2026-04-20 Session 27 — TinyLlama-1.1B-Chat GQA Instruct Null Shift
+
+**Protocol**: Test whether SFT shifts gap_mean for GQA models as it does for MHA.
+**Prediction**: ~44% reduction (like SmolLM instruct). 
+**Result: REFUTED (null shift)**
+- TinyLlama base: 0.1888; TinyLlama-Chat: 0.1883; delta=-0.3% (noise level)
+
+**Key finding**: GQA already places gap_mean at the "instruction-level floor" (~0.18-0.19).
+SFT has nothing to regularize — the floor is architecture-determined, not training-determined.
+
+**Practical implication completed**:
+- MHA models: must re-calibrate beta* after SFT (44% shift)  
+- GQA models: base calibration transfers to instruct (null shift)
+
+**Paper**: tab:instruct expanded with TinyLlama GQA rows; Discussion updated with GQA null-shift.
+**Commit**: 969c3f6
