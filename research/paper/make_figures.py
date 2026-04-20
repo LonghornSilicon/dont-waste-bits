@@ -144,6 +144,8 @@ from scipy.stats import norm
 pdf_360m = norm.pdf(x, gap_360m_mean, gap_360m_std)
 pdf_1b7  = norm.pdf(x, gap_1b7_mean,  gap_1b7_std)
 
+pdf_135m = norm.pdf(x, 0.3297, 0.0494)
+ax4.plot(x, pdf_135m, color="#805ad5", lw=2, label="SmolLM-135M (measured)")
 ax4.plot(x, pdf_360m, color="#4299e1", lw=2, label="SmolLM-360M (measured)")
 ax4.plot(x, pdf_1b7,  color="#e53e3e", lw=2, label="SmolLM-1.7B (estimated)")
 
@@ -165,19 +167,26 @@ ax4.spines["right"].set_visible(False)
 # Actual controller training outcomes (coarse + fine sweep combined):
 betas_measured = [1.0, 1.1, 1.2, 1.25, 1.3, 1.4, 1.5, 2.0, 3.0]
 frac4_360m_actual = [0.0, 0.0, 0.0, 41.7, 58.7, 100.0, 100.0, 100.0, 100.0]
+# 135M measured points
+betas_135m = [0.9, 1.0, 1.1, 1.15, 1.2, 1.3, 1.5, 2.0]
+frac4_135m_actual = [0.0, 0.0, 0.0, 0.0, 0.0, 63.0, 100.0, 100.0]
 
-# Theoretical curve for 360M (fraction of tokens where gap < threshold)
+# Theoretical curves for all scales
 betas_fine = np.linspace(0.5, 3.5, 200)
+gap_135m_mean, gap_135m_std = 0.3297, 0.0494
+frac4_135m_theory = [norm.cdf(b * 0.270/1.01, gap_135m_mean, gap_135m_std)*100
+                     for b in betas_fine]
 frac4_360m_theory = [norm.cdf(b * 0.270/1.01, gap_360m_mean, gap_360m_std)*100
                      for b in betas_fine]
-# Predict 1.7B (estimated gap distribution)
-frac4_1b7_pred = [norm.cdf(b * 0.270/1.01, gap_1b7_mean, gap_1b7_std)*100
-                  for b in betas_fine]
+frac4_1b7_pred    = [norm.cdf(b * 0.270/1.01, gap_1b7_mean, gap_1b7_std)*100
+                     for b in betas_fine]
 
-ax5.plot(betas_fine, frac4_360m_theory, "-", color="#4299e1", lw=1.5,
-         alpha=0.5, label="360M theoretical")
+ax5.plot(betas_fine, frac4_135m_theory, "-", color="#805ad5", lw=1.5, alpha=0.5)
+ax5.plot(betas_135m, frac4_135m_actual, "^", color="#805ad5",
+         ms=7, zorder=6, label="135M measured")
+ax5.plot(betas_fine, frac4_360m_theory, "-", color="#4299e1", lw=1.5, alpha=0.5)
 ax5.plot(betas_measured, frac4_360m_actual, "o", color="#4299e1",
-         ms=8, zorder=6, label="360M measured (controller)")
+         ms=8, zorder=6, label="360M measured")
 ax5.plot(betas_fine, frac4_1b7_pred, "--", color="#e53e3e",
          lw=2, label="1.7B predicted")
 
