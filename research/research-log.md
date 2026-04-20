@@ -596,3 +596,29 @@ This is a clean empirical confirmation of the gradient analysis theory.
 **Commits**: 9e9ba7b (protocol), c35d77f (results + paper), 73f9be8 (HTML)
 
 **Status**: All FPGA metrics measured on CPU. Only remaining gap: 1.7B HellaSwag accuracy (GPU eval).
+
+---
+
+## 2026-04-19 — Session 18 (autoresearch tick)
+
+**Trigger**: Autoresearch loop tick. Continued from session 17.
+
+**Experiments run**:
+1. `beta_transition_fine_1b7.py` — fine sweep [1.50-1.70] on cached 1.7B signals (11s)
+2. `reproducibility_test_1b7.py` — 5-seed test at beta=[1.60,1.65,1.70] (15s)
+
+**Key results**:
+- Transition window: [1.55, 1.57] (theory: 1.584, measured: <1.57, within 0.015)
+- 1.7B transition is SOFTER than 360M: broad plateau beta∈[1.57,1.70+]
+- Multi-seed means: beta=1.70 -> 79.9%±2.8pp 4-bit -> 2.93x speedup (+20% vs DWB at 4.80 bits — fewer than DWB's 5.05!)
+- Training stochasticity: ±2-3pp (much smaller than feared, single runs reliable)
+
+**Paper updates**:
+- Table 1: 1.7B metrics updated to multi-seed mean: 4.80 bits, 0.344 cost, 2.93x speedup (+20%)
+- Fine sweep table: ±std notation added for beta=1.65, 1.70
+- Conclusion/discussion: "+20%" claim, "fewer bits AND faster than DWB"
+- make_figures.py: updated with full fine sweep data points + annotated transition and plateau
+
+**Commits**: d085780 (protocol), e882e36 (fine sweep), 4876fdb, 536e27e (state/HTML), 8ca6e20 (reproducibility)
+
+**Status**: Paper scientifically complete. Only gap: 1.7B HellaSwag accuracy (1 cell, GPU needed).
