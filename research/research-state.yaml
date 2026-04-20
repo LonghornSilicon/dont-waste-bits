@@ -8,7 +8,7 @@ research_question: >
   Specifically: (H1) 17.75% latency reduction, (H2) +7.60 accuracy points over
   static 4-bit KV, (H3) within 0.30 points of FP16 — all on SmolLM-360M / HellaSwag.
 
-phase: CPU_ACTIVE  # Session 26: TinyLlama-1.1B GQA added — 6 checkpoints/4 families. GPU (1.7B accuracy) + FPGA hardware (latency) remain blockers.
+phase: CPU_SATURATED  # Session 27: All CPU experiments exhausted. 27 sessions, ~60 experiments. 6 checkpoints/4 families/2x2 instruct matrix complete. Only GPU (1.7B accuracy) + FPGA hardware remain.
 
 hypotheses:
   H1:

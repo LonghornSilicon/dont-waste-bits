@@ -322,7 +322,7 @@ The measured transition between $\beta=1.2$ (all 8-bit) and $\beta=1.4$ (all 4-b
 
 \begin{table}[h]
 \centering
-\caption{Cross-scale and cross-architecture $\beta^*$ calibration across 6 checkpoints and 4 model families. $\beta^* = \text{gap\_mean}/0.267$ is the theoretical phase transition, confirmed within $\leq\pm0.04$ at every checkpoint. Setting $\beta \approx \beta^*{+}0.1$ provides a safe margin. The formula is hardware-derived (0.267 $=$ $(c_8{-}c_4)/C_\text{FP16}$) and adapts to any model's KV statistics via a single CPU calibration pass. GQA models (TinyLlama) have substantially lower gap\_mean than MHA models at comparable scale---reflecting K/V head dimensionality reduction.}
+\caption{Cross-scale and cross-architecture $\beta^*$ calibration across 6 checkpoints and 4 model families. $\beta^* = \text{gap\_mean}/0.267$ is the theoretical phase transition. Prediction errors: mean $0.021$, max $0.040$, all $\leq\pm0.04$. Setting $\beta \approx \beta^*{+}0.1$ provides a safe margin. The formula is hardware-derived ($0.267 = (c_8{-}c_4)/C_\text{FP16}$) and adapts to any model's KV statistics via a single CPU calibration pass ($<$3 seconds). GQA models (TinyLlama) have substantially lower gap\_mean than MHA at comparable scale, reflecting K/V head dimensionality reduction.}
 \begin{tabular}{llcccl}
 \toprule
 Model family & Scale & gap mean & $\beta^*$ (theory) & $\beta^*$ (measured) & Source \\
