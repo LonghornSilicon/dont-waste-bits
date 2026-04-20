@@ -1,0 +1,17 @@
+{
+  "model": "facebook/opt-125m",
+  "note": "Domain-sensitivity test: confirms +-0.020 bound holds in both technical and general-text domains",
+  "technical_texts": {
+    "gap_mean": 0.17,
+    "gap_std": 0.028,
+    "max_error": 0.006,
+    "mean_error": 0.0023
+  },
+  "general_texts": {
+    "gap_mean": 0.1706,
+    "gap_std": 0.0272,
+    "max_error": 0.009,
+    "mean_error": 0.0022
+  },
+  "cross_domain_gap_mean_delta": 0.0006
+}

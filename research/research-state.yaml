@@ -1,6 +1,6 @@
 project: dont-waste-bits-verification
 created: "2026-04-19"
-last_updated: "2026-04-20"  # Session 41 — SmolLM-360M-Instruct: gap_mean=0.265 on technical texts, IDENTICAL to base (delta=0.0002). Instruct floor effect is corpus-dependent: visible on wikitext (-44%), absent on technical texts. Extends Finding 10 with corpus x instruct interaction. 12 formal sensitivity JSONs. Paper updated: corpus dependency paragraph extended with instruct-base convergence finding.
+last_updated: "2026-04-20"  # Session 42 — OPT-125M domain cross-test: general vs technical sentences give delta=0.0006 (negligible). Finding 10 refactored: corpus dependency is length-driven (short sentences vs long-form text), NOT domain-driven (technical vs general). Paper corrected. Both domains confirm +-0.020 bound (max_error 0.006 technical, 0.009 general).
 
 research_question: >
   Can we independently reproduce the claims of "Don't Waste Bits! Adaptive KV-Cache

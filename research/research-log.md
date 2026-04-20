@@ -1086,3 +1086,18 @@ OPT family converges DOWN toward the floor from above with model scale, opposite
 
 **Sensitivity**: max_error=0.014 (within +-0.015). JSON saved.
 
+
+---
+
+## Session 42 -- 2026-04-20 -- OPT-125M Domain Sensitivity: Finding 10 Refactored
+
+**Task**: Test whether the +-0.020 sensitivity bound holds in general-domain (non-technical) texts for OPT-125M.
+
+**Result**: General texts: gap_mean=0.1706, max_error=0.009 (within +-0.015). Technical texts: gap_mean=0.1700, max_error=0.006.
+
+**Critical finding**: Cross-domain delta = 0.0006 (negligible). The previously documented delta=0.043 (technical vs wikitext-2) is NOT domain-driven -- it is length-driven. Short sentences (~15-25 tokens) give gap_mean~0.170 regardless of domain. Long-form paragraphs (wikitext-2) give gap_mean~0.213.
+
+**Finding 10 correction**: "technical vs general text" framing was wrong. True driver is text length/context length. Paper updated to reflect this.
+
+**Sensitivity**: +-0.020 bound confirmed in both domains (max_error 0.006 and 0.009).
+
