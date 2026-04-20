@@ -5,19 +5,19 @@ KEY FIX over v1: Uses per-token quantization error as quality proxy instead of
 global empirical quality scores.
 
 Problem with global quality scores at 1.7B:
-  Global: q4=0.671, q8=0.979 → ALL beta values push to 100% 8-bit (L_8bit < L_4bit)
-  → FPGA speedup = 1.010/0.560 = 1.80x — worse than DWB (2.44x)!
+  Global: q4=0.671, q8=0.979 -> ALL beta values push to 100% 8-bit (L_8bit < L_4bit)
+  -> FPGA speedup = 1.010/0.560 = 1.80x — worse than DWB (2.44x)!
 
-Why: Global scores give uniform gradient → no incentive to differentiate tokens.
-Controller maximizes quality/cost ratio globally → one class wins everywhere.
+Why: Global scores give uniform gradient -> no incentive to differentiate tokens.
+Controller maximizes quality/cost ratio globally -> one class wins everywhere.
 
 Fix: Per-token quality proxy computed during Stage 1:
   q4_local = 1 - ||quantize(kv, 4) - kv|| / ||kv||
   q8_local = 1 - ||quantize(kv, 8) - kv|| / ||kv||
 
-High-kv_norm tokens (larger values, higher INT4 error) get lower q4_local → pushed to 8-bit
-Low-kv_norm tokens (smaller values, lower INT4 error) get higher q4_local → stay at 4-bit
-→ Genuine mixed {4,8}-bit allocation!
+High-kv_norm tokens (larger values, higher INT4 error) get lower q4_local -> pushed to 8-bit
+Low-kv_norm tokens (smaller values, lower INT4 error) get higher q4_local -> stay at 4-bit
+-> Genuine mixed {4,8}-bit allocation!
 
 Run on GPU (A4000 or better, 16GB VRAM):
   python run_phase5_1b7_pertok.py
@@ -340,7 +340,7 @@ def main():
     for b_test in [0.5, 1.0, 1.5, 2.0, 3.0]:
         thr = b_test * (0.560 - 0.290) / 1.01
         f4 = (gap < thr).mean()
-        print(f"  beta={b_test}: threshold={thr:.4f} → est. {f4*100:.1f}% 4-bit", flush=True)
+        print(f"  beta={b_test}: threshold={thr:.4f} -> est. {f4*100:.1f}% 4-bit", flush=True)
 
     # Sweep betas from low to high — find mixed allocation regime
     # Need threshold > avg gap for meaningful 4-bit assignment.
@@ -371,11 +371,11 @@ def main():
         p4 = r["bit_dist"].get(4, 0)
         # Prefer genuine mixed (20-90% 4-bit), then pure 4-bit, then pure 8-bit
         if 20 <= p4 <= 90:
-            return (0, -r["fpga_speedup"])   # mixed → ranked by speedup
+            return (0, -r["fpga_speedup"])   # mixed -> ranked by speedup
         elif p4 > 90:
-            return (1, -r["fpga_speedup"])   # mostly 4-bit → also good
+            return (1, -r["fpga_speedup"])   # mostly 4-bit -> also good
         else:
-            return (2, -r["fpga_speedup"])   # mostly 8-bit → last resort
+            return (2, -r["fpga_speedup"])   # mostly 8-bit -> last resort
     sweep_sorted = sorted(sweep, key=score)
     best_beta = sweep_sorted[0]["beta"]
     print(f"\nBest beta: {best_beta} (fpga_speedup={sweep_sorted[0]['fpga_speedup']:.2f}x)", flush=True)

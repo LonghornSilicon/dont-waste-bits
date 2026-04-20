@@ -208,7 +208,7 @@ def main():
     for beta in [0.5, 1.0, 1.5, 2.0, 3.0]:
         thr = beta * 0.270 / 1.01
         f4 = (gap < thr).mean()
-        print(f"  beta={beta}: threshold={thr:.4f} → est {f4*100:.1f}% 4-bit")
+        print(f"  beta={beta}: threshold={thr:.4f} -> est {f4*100:.1f}% 4-bit")
 
     print("\nRunning beta sweep [1.0, 1.5, 2.0, 3.0]...")
     best_ctrl, best_metrics, best_beta = None, None, None
@@ -216,7 +216,7 @@ def main():
         ctrl = train_controller(signals, q_local, epochs=EPOCHS, lr=LR, batch_size=BATCH_SIZE, beta_override=beta)
         m = eval_bit_distribution(ctrl, signals, q_local)
         p4 = m["bit_dist"].get("4", 0)
-        print(f"  beta={beta}: {m['bit_dist']} → speedup={m['fpga_speedup']:.2f}x")
+        print(f"  beta={beta}: {m['bit_dist']} -> speedup={m['fpga_speedup']:.2f}x")
         # Pick mixed or mostly-4-bit with highest speedup
         if best_metrics is None or m["fpga_speedup"] > best_metrics["fpga_speedup"]:
             best_ctrl, best_metrics, best_beta = ctrl, m, beta
