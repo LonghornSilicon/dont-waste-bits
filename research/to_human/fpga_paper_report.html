@@ -40,7 +40,7 @@
 <body>
 
 <h1>Don't Waste BRAM: FPGA-Aware KV Cache Quantization</h1>
-<p style="color:#718096; font-size:0.9em;">Research progress report — 2026-04-19 | Phases 1–4 complete + Phase 5 script validated (commit 61cdf12)</p>
+<p style="color:#718096; font-size:0.9em;">Research progress report — 2026-04-19 | Phases 1–4 complete + Phase 5 script validated + paper improved (commit 00be181)</p>
 
 <div class="abstract">
 <strong>Abstract</strong><br>
@@ -194,7 +194,8 @@ Both terms normalized to [0,1] — critical for gradient stability
   <tr><td>Background + FPGA BRAM Cost Model</td><td>✅ Written</td></tr>
   <tr><td>Scale-Dependent Losslessness</td><td>✅ Written</td></tr>
   <tr><td>Binary FPGA Controller Design</td><td>✅ Written</td></tr>
-  <tr><td>Experiments (360M)</td><td>✅ Written</td></tr>
+  <tr><td>Experiments (360M) — global quality beta sweep</td><td>✅ Written</td></tr>
+  <tr><td>Experiments — per-token beta calibration (Section 5.3)</td><td>✅ Written (smoke test validated)</td></tr>
   <tr><td>Feature + Training Ablation</td><td>✅ Written</td></tr>
   <tr><td>Related Work</td><td>✅ Written</td></tr>
   <tr><td>Discussion + Future Work</td><td>✅ Written</td></tr>
@@ -203,23 +204,28 @@ Both terms normalized to [0,1] — critical for gradient stability
 </table>
 
 <div class="result-box">
-<strong>Phase 5 script validated + beta fix (commit 61cdf12)</strong><br>
-<strong>New discovery: beta calibration is critical.</strong> Per-token quality proxy alone insufficient — need beta=1.5 so FPGA cost threshold (0.401) exceeds avg q8-q4 gap (0.337).<br><br>
-<strong>Smoke test PASSED on 360M:</strong>
+<strong>Paper improvements (commit 00be181):</strong>
+<ul>
+  <li><strong>Controller section</strong> — formally defines two quality modes: global scores [0.943, 0.966] (360M) and per-token proxies q_t,b^local (1.7B). Dual-regime training framework now explicit.</li>
+  <li><strong>Table 1 (Main Results)</strong> — extended to two-scale layout with 1.7B TBD row pre-populated with DWB baseline; will be filled after Brev run.</li>
+  <li><strong>Section 5.3 (NEW)</strong> — "Per-Token Quality Proxy: Beta Calibration Validation" with measured smoke test data:</li>
+</ul>
 <table style="margin:8px 0">
-  <tr><th>beta</th><th>threshold</th><th>est. 4-bit%</th><th>result</th><th>speedup</th></tr>
-  <tr><td>1.0</td><td>0.267</td><td>6.7%</td><td>100% 8-bit</td><td>1.80x</td></tr>
-  <tr style="background:#f0fff4"><td><strong>1.5</strong></td><td>0.401</td><td>92%</td><td><strong>100% 4-bit</strong></td><td><strong>3.48x</strong></td></tr>
-  <tr><td>2.0</td><td>0.535</td><td>99%</td><td>100% 4-bit</td><td>3.48x</td></tr>
+  <tr><th>beta</th><th>threshold</th><th>avg_bits</th><th>4-bit%</th><th>FPGA speedup</th></tr>
+  <tr><td>1.0</td><td>0.267</td><td>8.00</td><td>0%</td><td>1.80×</td></tr>
+  <tr style="background:#f0fff4"><td><strong>1.5</strong></td><td>0.401</td><td>4.00</td><td><strong>100%</strong></td><td><strong>3.48×</strong></td></tr>
+  <tr><td>2.0</td><td>0.534</td><td>4.00</td><td>100%</td><td>3.48×</td></tr>
+  <tr><td>3.0</td><td>0.802</td><td>4.00</td><td>100%</td><td>3.48×</td></tr>
 </table>
-Script now sweeps [1.0, 1.5, 2.0, 3.0] and auto-selects best. At 1.7B (larger gap ~0.40), beta=1.5 should give ~50% 4-bit mixed allocation.<br><br>
-Run on Brev A4000: <code>git checkout fpga-controller &amp;&amp; git pull &amp;&amp; python research/experiments/fpga-controller/phase5-benchmark/code/run_phase5_1b7_pertok.py</code>
+The clean phase transition at β=1.5 is now a standalone validated experiment in the paper.<br><br>
+<strong>update_paper_1b7.py</strong> updated to match new TBD row format — will correctly patch Table 1 and both pending notes in Discussion + Section 5.3.
 </div>
 
 <div class="warning-box">
-<strong>Awaiting Brev results: SmolLM-1.7B (commit 61cdf12 validated)</strong><br>
-Script smoke-tested locally. User runs on Brev A4000 (~30-50 min).<br>
-Once done: run <code>update_paper_1b7.py --results phase5_1b7_pertok_results.json</code> to auto-update Table 1.
+<strong>Awaiting Brev results: SmolLM-1.7B (latest: commit 00be181)</strong><br>
+Script smoke-tested locally. Run on Brev A4000 (~30-50 min):<br>
+<code>git checkout fpga-controller &amp;&amp; git pull &amp;&amp; python research/experiments/fpga-controller/phase5-benchmark/code/run_phase5_1b7_pertok.py</code><br><br>
+Once done: <code>python research/experiments/fpga-controller/phase5-benchmark/code/update_paper_1b7.py --results research/experiments/fpga-controller/phase5-benchmark/results/phase5_1b7_pertok_results.json</code>
 </div>
 </div>
 
