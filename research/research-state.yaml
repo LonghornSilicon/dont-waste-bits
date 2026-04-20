@@ -272,13 +272,13 @@ final_status:
   latency_experiments: AWAITING_GPU  # H1: 17.75% reduction, arithmetic verified; RTX 4090 required
   paper_writeup: COMPLETE  # research/paper/main.tex + refs.bib + paper_rendered.html (commit a775006)
   fpga_controller_360m: COMPLETE  # Phase 1-4 all show 100% 4-bit at 360M — correct and expected
-  fpga_controller_1b7: PENDING  # Key experiment: 1.7B is the interesting regime (eff_residual=12.4%)
+  fpga_controller_1b7: AWAITING_BREV  # Script pushed (096ab5e). Use run_phase5_1b7_pertok.py (NOT v1). Expected: 60-80% 4-bit, ~45-48% acc
   github: https://github.com/LonghornSilicon/dont-waste-bits
   git_heads:
     main: fe6e2ed
     turboquant-integration: dd78315
     gumbel-controller: fec47ec  # concluded — superseded by fpga-controller
-    fpga-controller: 557dd09   # phase5 1.7B GPU script ready
+    fpga-controller: 096ab5e   # phase5 v2 per-token quality script pushed
   branches:
     main: verification + ablation + 1.7B mechanistic + paper
     turboquant-integration: all of main + DWB-TurboQuant + controller analysis + HTML report

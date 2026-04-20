@@ -202,16 +202,26 @@ Both terms normalized to [0,1] — critical for gradient stability
   <tr><td>Figures + LaTeX compilation</td><td>⏳ Pending Overleaf</td></tr>
 </table>
 
+<div class="result-box">
+<strong>🚀 Phase 5 script pushed to GitHub (commit 096ab5e)</strong><br>
+Run on Brev A4000: <code>git checkout fpga-controller &amp;&amp; git pull &amp;&amp; python research/experiments/fpga-controller/phase5-benchmark/code/run_phase5_1b7_pertok.py</code><br><br>
+<strong>CRITICAL:</strong> Use <code>run_phase5_1b7_pertok.py</code> (v2), NOT <code>run_phase5_1b7.py</code> (v1).<br>
+v1 uses global quality scores → dL/dp4 &gt; 0 for all β → 100% 8-bit → 1.80× speedup (worse than DWB 2.44×).<br>
+v2 uses per-token quality proxy (1 − ‖quant_err‖/‖kv_norm‖) → token-specific gradients → genuine mixed {4,8}-bit.<br>
+Expected: 60–80% 4-bit, ~45–48% HellaSwag acc, FPGA cost ~0.35–0.42. Runtime: ~30–50 min on A4000.
+</div>
+
 <div class="warning-box">
-<strong>⚠ Pending: SmolLM-1.7B experiment</strong><br>
-The 1.7B experiment is the key result: INT4 is genuinely lossy there (−7.9pp), and the binary controller should learn mixed {4,8}-bit allocation. This will show maximum FPGA advantage. Requires ~16GB RAM or NVIDIA GPU (A4000 or better on Brev). This is the single remaining blocker for a complete paper.
+<strong>⚠ Awaiting Brev results: SmolLM-1.7B per-token controller</strong><br>
+Script is pushed (fpga-controller branch, commit 096ab5e). User is running on Brev A4000.
+Once <code>phase5_1b7_pertok_results.json</code> arrives: update Table 1, abstract, and Discussion in paper.
 </div>
 </div>
 
 <div class="section">
 <h2>Next Steps</h2>
 <ol>
-  <li><strong>GPU access (Brev A4000/A10)</strong> — Run Phase 5: SmolLM-1.7B binary FPGA controller. Expected: mixed {4,8}-bit allocation, ~45-48% accuracy, FPGA cost ~0.30-0.35</li>
+  <li><strong>Brev A4000 (running)</strong> — Phase 5 pertok script pushed. Expected results: mixed {4,8}-bit, ~45-48% acc, FPGA cost ~0.35-0.42</li>
   <li><strong>Compile PDF</strong> — Upload <code>research/paper/fpga_controller_paper.tex</code> + <code>fpga_refs.bib</code> to Overleaf</li>
   <li><strong>Add figures</strong> — FPGA cost comparison chart, losslessness threshold diagram</li>
   <li><strong>Target venue</strong> — MLSys 2027 or DATE 2027 (Design Automation and Test in Europe)</li>

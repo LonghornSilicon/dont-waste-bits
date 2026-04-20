@@ -293,7 +293,15 @@ Loss normalization is essential. The two-objective tension is not a hyperparamet
 
 \section{Discussion and Future Work}
 
-\textbf{1.7B model}: At SmolLM-1.7B ($\epsilon_\text{eff} = 12.4\%$), INT4 is genuinely lossy (FP16: 49.0\%, static INT4: 41.1\%, $-$7.9pp). The binary controller should learn a mixed \{4,8\}-bit allocation where high-variance tokens are upgraded to 8-bit. We predict this will show the maximum FPGA advantage: accuracy matching or exceeding DWB while maintaining FPGA cost $<$ 0.35 (vs. DWB's 0.414). This experiment requires GPU to fit the model (16GB minimum); we report it as the key open experiment pending hardware access.
+\textbf{1.7B model and per-token quality signals}: At SmolLM-1.7B ($\epsilon_\text{eff} = 12.4\%$), INT4 is genuinely lossy (FP16: 49.0\%, static INT4: 41.1\%, $-$7.9pp). The controller must learn a mixed \{4,8\}-bit allocation, upgrading high-variance tokens to 8-bit. A key challenge is that global quality scores ($q_4 = 0.671$, $q_8 = 0.979$ at 1.7B) produce $\partial\mathcal{L}/\partial p_4 > 0$ for all $\beta$ values, forcing 100\% 8-bit allocation and a suboptimal 1.80$\times$ speedup (worse than DWB's 2.44$\times$).
+
+\textbf{Per-token quality proxy}: To enable genuine mixed allocation, we replace global quality scores with a per-token proxy:
+\[
+q_{t,b}^\text{local} = 1 - \frac{\|\text{Quant}_b(kv_t) - kv_t\|_2}{\|kv_t\|_2}
+\]
+This gives token-specific quality scores: high-$\|kv\|$ tokens receive lower $q_{t,4}^\text{local}$ (pushed toward 8-bit) while low-$\|kv\|$ tokens stay 4-bit. The per-token quality is available at signal-extraction time (Stage 1) with no additional forward pass. We extend the controller to 4D features $\mathbf{f}_t = [kv\_norm_t, pos\_frac_t, q_{t,4}^\text{local}, q_{t,8}^\text{local}]$.
+
+We predict this produces 60--80\% 4-bit, 20--40\% 8-bit allocation, accuracy $\approx 45$--48\% on HellaSwag, and FPGA cost $\approx 0.35$--0.42 at 1.7B---representing a genuine improvement over DWB's 0.414 FPGA cost while recovering accuracy. Results are pending GPU evaluation.
 
 \textbf{Latency validation}: Measured FPGA throughput on Xilinx Ultrascale+ FPGA is pending. Our reported speedup (3.48$\times$) is derived from the BRAM port cost model (Table~\ref{tab:bram}); hardware validation requires the same Xilinx Ultrascale+ platform used by DWB.
 
