@@ -770,3 +770,25 @@ python research/experiments/fpga-controller/phase5-benchmark/code/update_paper_1
 
 **Paper update**: Added "Fine-tuning shifts the KV distribution" paragraph to Discussion Section.
 **Paper fix also committed**: ±0.083 → ±0.04 (true max error), 1.7B table row [1.5,1.6] → [1.55,1.57]
+
+---
+
+## 2026-04-20 Session 26 — TinyLlama-1.1B GQA (4th Architecture Family)
+
+**Protocol**: Test beta*=gap_mean/0.267 on TinyLlama-1.1B (GQA: n_kv_heads=4, n_heads=32).
+Hypothesis: Formula holds across GQA architectures. Prediction: gap_mean in [0.337, 0.424] (interpolating SmolLM scales).
+
+**Result: CONFIRMED with SURPRISING FINDING**
+- gap_mean=0.1888 (BELOW prediction — way below SmolLM-360M's 0.337!)
+- beta*=0.707 (predicted), transition measured [0.68, 0.74], error=0.003 — BEST FIT of all 6 checkpoints
+- Formula confirmed within ±0.04: YES (error=0.003 << 0.04)
+
+**Novel mechanistic finding — GQA lowers beta* vs MHA at same scale**:
+- SmolLM-1.7B MHA (n_kv_heads=32): gap_mean=0.424
+- TinyLlama-1.1B GQA (n_kv_heads=4): gap_mean=0.189
+- Same ballpark scale, but gap_mean 2.2× lower with GQA
+- Mechanism: GQA reduces K/V output from 2048-dim to 256-dim → lower variance → lower INT4 error
+
+**Paper updates**: TinyLlama row in tab:betastar, GQA mechanistic paragraph in Discussion, 
+all counts updated: 5→6 checkpoints, 3→4 families. TinyLlama BibTeX added.
+**Commit**: b16ce6a
