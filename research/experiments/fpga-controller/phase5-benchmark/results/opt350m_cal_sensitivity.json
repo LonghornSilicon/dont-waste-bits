@@ -1,0 +1,94 @@
+{
+  "model": "facebook/opt-350m",
+  "architecture": "OPT/Meta (350M, 1024d, 24L, 16H)",
+  "note": "OPT within-family comparison: 125M (max_error=0.006) vs 350M. Scale-driven calibration improvement prediction.",
+  "gap_mean_10text": 0.1812,
+  "gap_std_10text": 0.033,
+  "beta_star_10text": 0.679,
+  "per_text_results": [
+    {
+      "text_idx": 0,
+      "n_tokens": 264,
+      "gap_mean": 0.1793,
+      "gap_std": 0.0324,
+      "beta_star": 0.672,
+      "error_vs_10text": 0.007
+    },
+    {
+      "text_idx": 1,
+      "n_tokens": 360,
+      "gap_mean": 0.1832,
+      "gap_std": 0.0339,
+      "beta_star": 0.686,
+      "error_vs_10text": 0.007
+    },
+    {
+      "text_idx": 2,
+      "n_tokens": 264,
+      "gap_mean": 0.1817,
+      "gap_std": 0.0335,
+      "beta_star": 0.681,
+      "error_vs_10text": 0.002
+    },
+    {
+      "text_idx": 3,
+      "n_tokens": 264,
+      "gap_mean": 0.1816,
+      "gap_std": 0.0326,
+      "beta_star": 0.68,
+      "error_vs_10text": 0.001
+    },
+    {
+      "text_idx": 4,
+      "n_tokens": 312,
+      "gap_mean": 0.182,
+      "gap_std": 0.0327,
+      "beta_star": 0.682,
+      "error_vs_10text": 0.003
+    },
+    {
+      "text_idx": 5,
+      "n_tokens": 264,
+      "gap_mean": 0.1804,
+      "gap_std": 0.0329,
+      "beta_star": 0.676,
+      "error_vs_10text": 0.003
+    },
+    {
+      "text_idx": 6,
+      "n_tokens": 336,
+      "gap_mean": 0.1803,
+      "gap_std": 0.0331,
+      "beta_star": 0.675,
+      "error_vs_10text": 0.003
+    },
+    {
+      "text_idx": 7,
+      "n_tokens": 432,
+      "gap_mean": 0.1819,
+      "gap_std": 0.0333,
+      "beta_star": 0.681,
+      "error_vs_10text": 0.003
+    },
+    {
+      "text_idx": 8,
+      "n_tokens": 504,
+      "gap_mean": 0.1802,
+      "gap_std": 0.0324,
+      "beta_star": 0.675,
+      "error_vs_10text": 0.004
+    },
+    {
+      "text_idx": 9,
+      "n_tokens": 360,
+      "gap_mean": 0.1813,
+      "gap_std": 0.0332,
+      "beta_star": 0.679,
+      "error_vs_10text": 0.0
+    }
+  ],
+  "max_error_1text": 0.007,
+  "mean_error_1text": 0.0033,
+  "confirmed_015": true,
+  "confirmed_020": true
+}

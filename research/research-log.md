@@ -1035,3 +1035,22 @@ OPT family converges DOWN toward the floor from above with model scale, opposite
 
 **Status**: All cached models tested. CPU verification loop exhausted. GPU/FPGA awaiting hardware.
 
+
+---
+
+## Session 39 — 2026-04-20 — OPT-350M Sensitivity: 8th Model + Correlation Correction
+
+**Task**: OPT-350M (350M, 24L, 16H) calibration sensitivity — OPT within-family + 8-model formal analysis.
+
+**Result**: gap_mean=0.1812, gap_std=0.033, max_error=0.007, mean_error=0.003. All within ±0.015.
+
+**Key scientific correction**: Previous findings.md said correlation was "near-zero" — actually Spearman rho=0.63 (n=7) → rho=0.70 (n=8), p=0.054. NOT significant at α=0.05, but not near-zero. Updated paper and findings to say "not statistically validated predictor" with formal p-value.
+
+**Direct counter-example**: GPT-2 Small (gap_std=0.033, max_error=0.018) vs OPT-350M (gap_std=0.033, max_error=0.007) — same gap_std, 2.6× different max_error. This is the clearest refutation of gap_std as predictor.
+
+**OPT within-family**: Scale barely changes either quantity (125M→350M: +0.005 gap_std, +0.001 max_error). Scale-driven sensitivity improvement is GPT-2-specific, not universal.
+
+**Paper update**: "seven" → "eight" in sensitivity section; Spearman ρ=0.70, p=0.054 added; counter-example and OPT row added to appendix table.
+
+**Status**: CPU loop truly exhausted. All locally cached models tested (8 formal sensitivity JSONs + 10 checkpoints in calibration sweep).
+

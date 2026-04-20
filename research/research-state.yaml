@@ -1,6 +1,6 @@
 project: dont-waste-bits-verification
 created: "2026-04-19"
-last_updated: "2026-04-20"  # Session 38 — GPT-2 Large sensitivity: gap_std=0.026, max_error=0.004 (BEST). Full GPT-2 family complete. Non-monotonic gap_std (S=0.033, M=0.052, L=0.026) vs monotonic max_error (0.018→0.011→0.004) definitively breaks gap_std→sensitivity causal link. Finding 9: 7 data points / 4 arch types. CPU verification loop EXHAUSTED — all cached models tested.
+last_updated: "2026-04-20"  # Session 39 — OPT-350M sensitivity: gap_std=0.033, max_error=0.007. Critical counter-example: GPT-2 Small and OPT-350M share identical gap_std=0.033 but max_error 0.018 vs 0.007 (2.6x). Spearman rho=0.70, p=0.054 (n=8, n.s.). Finding 9: 8 data points / 4 arch types. Paper corrected: "seven" → "eight" + correlation stats + direct counter-example cited. CPU loop truly exhausted.
 
 research_question: >
   Can we independently reproduce the claims of "Don't Waste Bits! Adaptive KV-Cache
