@@ -121,7 +121,7 @@ def pareto_figure():
                alpha=0.10, color="#27ae60", label="Phase 7d $\\pm 1.5\\sigma$ band")
 
     ax.set_xlabel("FPGA speedup vs. FP16 (BRAM cost model)", fontsize=10)
-    ax.set_ylabel("HellaSwag accuracy (\\%)", fontsize=10)
+    ax.set_ylabel("HellaSwag accuracy (%)", fontsize=10)
     ax.set_title("SmolLM-1.7B: accuracy–speedup Pareto frontier",
                  fontsize=11)
     ax.set_xlim(0.8, 3.7)
@@ -153,7 +153,7 @@ def routing_figure():
     xs = np.arange(len(labels))
     bars = ax.bar(xs, accs, color=colors, edgecolor="black", alpha=0.85)
     for b, a in zip(bars, accs):
-        ax.text(b.get_x() + b.get_width() / 2, a + 0.25, f"{a:.1f}\\%",
+        ax.text(b.get_x() + b.get_width() / 2, a + 0.25, f"{a:.1f}%",
                 ha="center", fontsize=9, fontweight="bold")
 
     # Phase 7d 5-seed band
@@ -166,11 +166,11 @@ def routing_figure():
 
     # DWB reference line
     ax.axhline(48.6, color="#c0392b", linestyle=":", linewidth=1.2, alpha=0.9)
-    ax.text(len(labels) - 0.5, 48.75, "DWB: 48.6\\%",
+    ax.text(len(labels) - 0.5, 48.75, "DWB: 48.6%",
             ha="right", fontsize=8.5, color="#c0392b")
 
     ax.set_xticks(xs); ax.set_xticklabels(labels, fontsize=9)
-    ax.set_ylabel("HellaSwag accuracy (\\%)", fontsize=10)
+    ax.set_ylabel("HellaSwag accuracy (%)", fontsize=10)
     ax.set_ylim(41, 52)
     ax.set_title("SmolLM-1.7B routing-strategy ablation ($n{=}200$, seed 0)",
                  fontsize=11)

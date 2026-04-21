@@ -1,0 +1,49 @@
+{
+  "experiment": "fp16_multiseed_matched_to_phase7j",
+  "model": "HuggingFaceTB/SmolLM-1.7B",
+  "n_samples": 500,
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "per_seed": {
+    "0": {
+      "accuracy_pct": 64.0,
+      "elapsed_s": 61.1
+    },
+    "1": {
+      "accuracy_pct": 67.4,
+      "elapsed_s": 49.8
+    },
+    "2": {
+      "accuracy_pct": 63.2,
+      "elapsed_s": 49.9
+    },
+    "3": {
+      "accuracy_pct": 64.0,
+      "elapsed_s": 50.8
+    },
+    "4": {
+      "accuracy_pct": 65.6,
+      "elapsed_s": 60.9
+    }
+  },
+  "summary": {
+    "accuracy_mean": 64.84,
+    "accuracy_std": 1.676,
+    "accuracy_range": [
+      63.2,
+      67.4
+    ]
+  },
+  "compare": {
+    "fp16_first500_subset": 52.0,
+    "int4_first500_subset": 47.0,
+    "dwb_paper_fp16": 49.0,
+    "dwb_paper_int4": 41.1
+  },
+  "elapsed_s": 280.0
+}

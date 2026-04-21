@@ -1,0 +1,56 @@
+{
+  "experiment": "phase7j_static_int4_multiseed",
+  "model": "HuggingFaceTB/SmolLM-1.7B",
+  "n_samples": 500,
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "per_seed": {
+    "0": {
+      "accuracy_pct": 56.8,
+      "fpga_speedup": 3.483,
+      "elapsed_s": 1480.8
+    },
+    "1": {
+      "accuracy_pct": 62.6,
+      "fpga_speedup": 3.483,
+      "elapsed_s": 1495.6
+    },
+    "2": {
+      "accuracy_pct": 58.2,
+      "fpga_speedup": 3.483,
+      "elapsed_s": 1779.3
+    },
+    "3": {
+      "accuracy_pct": 58.0,
+      "fpga_speedup": 3.483,
+      "elapsed_s": 2082.7
+    },
+    "4": {
+      "accuracy_pct": 59.8,
+      "fpga_speedup": 3.483,
+      "elapsed_s": 2039.1
+    }
+  },
+  "summary": {
+    "accuracy_mean": 59.08,
+    "accuracy_std": 2.239,
+    "accuracy_sem": 1.001,
+    "accuracy_ci95_pp": 1.962,
+    "accuracy_range": [
+      56.8,
+      62.6
+    ],
+    "fpga_speedup": 3.483
+  },
+  "compare_paper": {
+    "dwb_paper_fp16": 49.0,
+    "dwb_paper_int4": 41.1,
+    "our_baseline_first500_int4": 47.0
+  },
+  "elapsed_s": 8883.9
+}
