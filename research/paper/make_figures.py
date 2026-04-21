@@ -27,10 +27,15 @@ for bar, val in zip(bars, speedups):
     ax1.text(bar.get_x() + bar.get_width()/2, val + 0.05,
              f"{val:.2f}×", ha="center", va="bottom", fontsize=10, fontweight="bold")
 
-# annotate the +43% gap
-ax1.annotate("", xy=(3, 3.48), xytext=(2, 2.44),
-             arrowprops=dict(arrowstyle="->", color="#38a169", lw=1.5))
-ax1.text(2.55, 3.05, "+43%", color="#38a169", fontsize=9, fontweight="bold")
+# annotate the +43% gap — two-segment path well clear of bar-value labels
+ax1.annotate("", xy=(2.95, 3.30), xytext=(2.05, 2.62),
+             arrowprops=dict(arrowstyle="-|>", color="#38a169",
+                             lw=1.8, shrinkA=2, shrinkB=2,
+                             connectionstyle="arc3,rad=-0.22"))
+ax1.text(2.50, 2.76, "+43%", color="#38a169", fontsize=10,
+         fontweight="bold", ha="center",
+         bbox=dict(boxstyle="round,pad=0.18", facecolor="white",
+                   edgecolor="#38a169", linewidth=0.8))
 
 ax1.spines["top"].set_visible(False)
 ax1.spines["right"].set_visible(False)
@@ -68,15 +73,27 @@ for label, d in {**pure_pts, **main_pts}.items():
     ax2.scatter(d["fpga"], d["acc"], c=d["color"], marker=d["marker"],
                 s=d["size"], zorder=5, label=label)
 
-# Arrow: DWB → ours: same cost budget, +0.2pp accuracy
-ax2.annotate("", xy=(0.296, 41.0), xytext=(0.408, 41.2),
-             arrowprops=dict(arrowstyle="->", color="#38a169", lw=1.5))
-ax2.text(0.33, 40.8, "Pareto\ndominates", color="#38a169", fontsize=7.5, ha="center")
+# Arrow: DWB → ours: same cost budget, +0.2pp accuracy (curve placed ABOVE the
+# points so the label never sits on top of the green diamond)
+ax2.annotate("", xy=(0.305, 41.2), xytext=(0.408, 41.35),
+             arrowprops=dict(arrowstyle="-|>", color="#38a169",
+                             lw=1.6, shrinkA=2, shrinkB=2,
+                             connectionstyle="arc3,rad=0.30"))
+ax2.text(0.355, 42.05, "Pareto\ndominates",
+         color="#38a169", fontsize=8, ha="center", fontweight="bold",
+         bbox=dict(boxstyle="round,pad=0.20", facecolor="white",
+                   edgecolor="#38a169", linewidth=0.7))
 
-# 2-bit annotation: same BRAM cost as 4-bit, far worse accuracy
-ax2.annotate("2-bit: same BRAM\nas 4-bit, −16.6pp!", xy=(0.290, 25.3),
-             xytext=(0.45, 27), fontsize=7.5, color="#e53e3e", ha="center",
-             arrowprops=dict(arrowstyle="->", color="#e53e3e", lw=1))
+# 2-bit annotation: place the label in empty low-left space (where there are no
+# data points or legend) with a curved arrow to the 2-bit marker.
+ax2.annotate("2-bit: same BRAM as\n4-bit, $-$16.6pp accuracy!",
+             xy=(0.305, 25.3), xytext=(0.42, 32.5),
+             fontsize=7.8, color="#e53e3e", ha="center", fontweight="bold",
+             arrowprops=dict(arrowstyle="-|>", color="#e53e3e", lw=1.4,
+                             shrinkA=3, shrinkB=3,
+                             connectionstyle="arc3,rad=0.25"),
+             bbox=dict(boxstyle="round,pad=0.22", facecolor="white",
+                       edgecolor="#e53e3e", linewidth=0.7))
 
 ax2.set_xlabel("FPGA BRAM Cost (normalized, lower = faster)", fontsize=10)
 ax2.set_ylabel("HellaSwag Accuracy (%)", fontsize=10)
@@ -89,7 +106,9 @@ ax2.annotate("", xy=(0.22, 43.8), xytext=(0.42, 43.8),
              arrowprops=dict(arrowstyle="->", color="#2d3748", lw=1.2))
 ax2.text(0.21, 44.1, "better", color="#2d3748", fontsize=8)
 
-ax2.legend(fontsize=7, loc="lower right", ncol=1)
+# Place legend on the right-middle area, well clear of both the 2-bit annotation
+# (red box in mid-plot area) and the Pareto-dominates callout (top-left).
+ax2.legend(fontsize=6.8, loc="center right", ncol=1, framealpha=0.92)
 ax2.spines["top"].set_visible(False)
 ax2.spines["right"].set_visible(False)
 
@@ -114,13 +133,19 @@ for bar, val in zip(bars3, costs):
     ax3.text(bar.get_x() + bar.get_width()/2, val + 0.02,
              f"{val:.3f}", ha="center", va="bottom", fontsize=11, fontweight="bold")
 
-# annotation: 2-bit = 4-bit cost
-ax3.annotate("Same BRAM\nport cost!", xy=(0.5, 0.295), xytext=(0.5, 0.55),
-             arrowprops=dict(arrowstyle="-", color="#e53e3e", lw=1.5,
-                             connectionstyle="arc3,rad=0"),
-             fontsize=9, color="#e53e3e", ha="center")
-ax3.annotate("", xy=(1.5, 0.295), xytext=(1.0, 0.55),
-             arrowprops=dict(arrowstyle="-", color="#e53e3e", lw=1.5))
+# annotation: 2-bit and 4-bit share the same BRAM port cost. Place the text
+# ABOVE both bars (at x=0.5, which is between bar 0="2-bit" and bar 1="4-bit")
+# and draw two clear arrows with visible arrowheads down to each bar top.
+ax3.text(0.5, 0.67, "Same BRAM\nport cost!",
+         ha="center", fontsize=9.5, color="#e53e3e", fontweight="bold",
+         bbox=dict(boxstyle="round,pad=0.25", facecolor="white",
+                   edgecolor="#e53e3e", linewidth=0.9))
+ax3.annotate("", xy=(0.0, 0.31), xytext=(0.38, 0.60),
+             arrowprops=dict(arrowstyle="-|>", color="#e53e3e", lw=1.5,
+                             shrinkA=2, shrinkB=2))
+ax3.annotate("", xy=(1.0, 0.31), xytext=(0.62, 0.60),
+             arrowprops=dict(arrowstyle="-|>", color="#e53e3e", lw=1.5,
+                             shrinkA=2, shrinkB=2))
 
 ax3.spines["top"].set_visible(False)
 ax3.spines["right"].set_visible(False)
@@ -157,9 +182,15 @@ ax4.axvline(thr15, color="#38a169", lw=1.8, linestyle="--", label=f"beta=1.5 thr
 ax4.axvline(thr16, color="#d69e2e", lw=1.5, linestyle=":", label=f"beta=1.6 thr ({thr16:.3f})")
 ax4.fill_betweenx([0, 8], 0.1, thr15, alpha=0.10, color="#38a169")
 ax4.fill_betweenx([0, 8], thr15, thr16, alpha=0.10, color="#d69e2e")
-ax4.text(thr15 - 0.005, 7.0, "4-bit\nzone", ha="right", fontsize=7, color="#38a169")
-ax4.text((thr15+thr16)/2, 7.0, "1.7B\ntrans.", ha="center", fontsize=7, color="#d69e2e")
-ax4.text(thr16 + 0.005, 7.0, "8-bit\nzone", ha="left", fontsize=7, color="#718096")
+# Zone labels at a consistent y (bottom strip) with generous margins from plot
+# edges so none are clipped. The narrow 1.7B transition zone only gets a
+# single-line caret label to avoid collisions.
+ax4.text(0.22, 0.7, "4-bit zone", ha="center", fontsize=8.5, color="#38a169",
+         fontweight="bold")
+ax4.text((thr15+thr16)/2, 0.7, "1.7B trans.", ha="center", fontsize=7,
+         color="#d69e2e", fontweight="bold", rotation=90)
+ax4.text(0.63, 0.7, "8-bit zone", ha="center", fontsize=8.5, color="#718096",
+         fontweight="bold")
 
 ax4.set_xlabel("q8_local - q4_local gap", fontsize=10)
 ax4.set_ylabel("Density", fontsize=10)
@@ -207,22 +238,39 @@ ax5.axhline(54.1, color="#718096", lw=1.2, linestyle=":", alpha=0.6,
 # annotate phase transitions
 ax5.axvline(1.26, color="#38a169", lw=1.2, linestyle="-.", alpha=0.6)
 ax5.axvline(1.584, color="#e53e3e", lw=1.2, linestyle="-.", alpha=0.6)
-ax5.annotate("beta*=1.26\n(135M/360M)", xy=(1.26, 50), xytext=(1.05, 65),
-             arrowprops=dict(arrowstyle="->", color="#38a169", lw=1.2),
-             fontsize=7.5, color="#38a169")
+# Cleaner annotations on top of the curves, each with a white-backed pill box so
+# the text never fights with the legend or the scatter markers behind it.
+ax5.annotate(r"$\beta^*{=}1.26$" + "\n(135M/360M)",
+             xy=(1.26, 50), xytext=(0.80, 78),
+             arrowprops=dict(arrowstyle="-|>", color="#38a169", lw=1.3,
+                             shrinkA=2, shrinkB=2,
+                             connectionstyle="arc3,rad=0.20"),
+             fontsize=7.5, color="#38a169", ha="center", fontweight="bold",
+             bbox=dict(boxstyle="round,pad=0.22", facecolor="white",
+                       edgecolor="#38a169", linewidth=0.7))
 ax5.axvline(1.70, color="#d69e2e", lw=1.2, linestyle=":", alpha=0.7)
-ax5.annotate("beta*=[1.55,1.57]\n(1.7B transition)", xy=(1.56, 30), xytext=(1.9, 20),
-             arrowprops=dict(arrowstyle="->", color="#e53e3e", lw=1.2),
-             fontsize=7.5, color="#e53e3e")
-ax5.annotate("beta=1.70:\n2.84x (+16% vs DWB)", xy=(1.70, 75.7), xytext=(2.1, 60),
-             arrowprops=dict(arrowstyle="->", color="#d69e2e", lw=1.2),
-             fontsize=7.5, color="#d69e2e")
+ax5.annotate(r"$\beta^*{=}[1.55,1.57]$" + "\n(1.7B transition)",
+             xy=(1.56, 30), xytext=(2.05, 16),
+             arrowprops=dict(arrowstyle="-|>", color="#e53e3e", lw=1.3,
+                             shrinkA=2, shrinkB=2,
+                             connectionstyle="arc3,rad=0.20"),
+             fontsize=7.5, color="#e53e3e", ha="center", fontweight="bold",
+             bbox=dict(boxstyle="round,pad=0.22", facecolor="white",
+                       edgecolor="#e53e3e", linewidth=0.7))
+ax5.annotate(r"$\beta{=}1.70$: 2.84$\times$" + "\n(+16% vs DWB)",
+             xy=(1.70, 75.7), xytext=(2.45, 94),
+             arrowprops=dict(arrowstyle="-|>", color="#d69e2e", lw=1.3,
+                             shrinkA=2, shrinkB=2,
+                             connectionstyle="arc3,rad=-0.20"),
+             fontsize=7.5, color="#d69e2e", ha="center", fontweight="bold",
+             bbox=dict(boxstyle="round,pad=0.22", facecolor="white",
+                       edgecolor="#d69e2e", linewidth=0.7))
 
 ax5.set_xlabel("beta (FPGA penalty weight)", fontsize=10)
 ax5.set_ylabel("4-bit token fraction (%)", fontsize=10)
 ax5.set_title("Beta Calibration (all three scales MEASURED)\n(4-bit% vs. penalty weight)", fontsize=10)
 ax5.set_ylim(0, 115)
-ax5.legend(fontsize=7, loc="upper left", ncol=1)
+ax5.legend(fontsize=7, loc="center right", ncol=1, framealpha=0.92)
 ax5.spines["top"].set_visible(False)
 ax5.spines["right"].set_visible(False)
 

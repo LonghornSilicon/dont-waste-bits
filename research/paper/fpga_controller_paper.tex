@@ -278,23 +278,14 @@ Our binary \{4,8\}-bit scheme achieves accuracy statistically indistinguishable 
 
 The 1.7B result raises a second question: given the correct \{4,8\}-bit set and the correct split ratio, \emph{which} tokens should be routed to 8-bit? We run three ablations on SmolLM-1.7B / HellaSwag at the target 74/26 split (FPGA speedup $= 1.010/(0.74{\cdot}0.29 + 0.26{\cdot}0.56) = 2.80\times$).
 
-\textbf{Phase 7c --- routing-strategy ablation} (Table~\ref{tab:phase7c}): three routing strategies at $n{=}200$, seed 0. The Phase 7f entry is the pathological reverse of the KV-norm strategy and is included in the same table for direct comparison.
+\textbf{Phase 7c --- routing-strategy ablation} (Figure~\ref{fig:routing}): four routing strategies at $n{=}200$, seed 0, at the target $p_4{=}0.74$ split (except the Gumbel controller, which drifts to $p_4{=}0.96$ at inference because its per-token quality proxy is recomputed on the live K tensor). The KV-norm-\emph{inverted} bar is the pathological reverse of the KV-norm strategy and, strikingly, returns the \emph{same} 44.5\% --- KV L2 norm carries no usable directional signal at this split.
 
-\begin{table}[h]
+\begin{figure}[h]
 \centering
-\caption{Routing-strategy ablation on SmolLM-1.7B / HellaSwag ($n{=}200$, seed 0). Random, KV-norm and KV-norm-inverted all use the target $p_4{=}0.74$ split; the learned Gumbel controller was $\beta^*$-calibrated to the same target on cached training signals but \emph{drifted to $p_4{=}0.955$ at inference} (its per-token quality proxy is recomputed on the live K tensor, producing a more aggressive 4-bit assignment than the training-time estimate) --- giving a stronger Pareto point but at a different operating ratio. The two KV-norm directions are identical to three significant figures, so KV L2 norm carries no usable directional signal at this split. 95\% CI at $n{=}200$ is $\approx\pm$7pp; Phase 7d seed-std is $\pm$0.75pp.}
-\begin{tabular}{lcccc}
-\toprule
-Strategy & Acc. & $p_4$ & FPGA cost & FPGA speedup \\
-\midrule
-Random (Bernoulli, $p_4{=}0.74$)                 & \textbf{48.50\%} & 73.9\% & 0.360 & 2.80$\times$ \\
-KV-norm (bottom-74\% by L2 $\to$ 4-bit)          & 44.50\%          & 74.1\% & 0.360 & 2.81$\times$ \\
-KV-norm-\emph{inverted} (top-74\% by L2 $\to$ 4-bit) & 44.50\%      & 74.1\% & 0.360 & 2.81$\times$ \\
-Binary Gumbel controller ($\beta^*$-calibrated)  & 47.50\%          & 95.5\% & 0.302 & 3.34$\times$ \\
-\bottomrule
-\end{tabular}
-\label{tab:phase7c}
-\end{table}
+\includegraphics[width=0.90\linewidth]{figures/routing_ablation}
+\caption{Routing-strategy ablation on SmolLM-1.7B / HellaSwag ($n{=}200$, seed 0). Green band is the Phase 7d 5-seed ($n{=}500$) $\pm 1\sigma$ reference. Random matches DWB's 48.6\% dotted line. The two KV-norm directions are indistinguishable (44.5\% vs.\ 44.5\%). Gumbel controller reaches 47.5\% but at a different $p_4{=}0.96$ operating point (3.34$\times$, stronger Pareto but not comparable at fixed split).}
+\label{fig:routing}
+\end{figure}
 
 \textbf{Phase 7d --- 5-seed random-routing validation} (Table~\ref{tab:phase7d}): with the 74/26 split fixed, we repeat uniform random routing on $n{=}500$ HellaSwag for seeds $\{0,1,2,3,4\}$ to quantify routing-noise variance.
 
@@ -316,6 +307,22 @@ avg\_bits / FPGA speedup (all seeds) & $5.04 \pm 0.00$ \ / \ $2.80\times \pm 0.0
 \end{tabular}
 \label{tab:phase7d}
 \end{table}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.88\linewidth]{figures/pareto_frontier}
+\caption{Accuracy-speedup Pareto frontier at SmolLM-1.7B. Green diamonds are the two 5-seed validated operating points (Phase 7d at $p_4{=}0.74$ and Phase 7g at $p_4{=}0.81$) with $\pm 1\sigma$ error bars. Blue circles trace the Phase 7e single-seed sweep across $p_4 \in \{0.60, 0.67, 0.74, 0.81, 0.88\}$. The green band shows the Phase 7d $\pm 1.5\sigma$ neighborhood; note that the entire sweep from $p_4{=}0.60$ to $p_4{=}0.81$ lies inside it and Pareto-dominates DWB (red triangle, 48.6\% at 2.44$\times$). Accuracy cliffs at $p_4{=}1.0$ (static INT4). KV-norm and KV-norm-inverted (orange triangles) fall $\approx$3.5pp below the plateau at the same operating cost.}
+\label{fig:pareto}
+\end{figure}
+
+\noindent\textbf{Per-layer mechanism.} A CPU diagnostic on 30 WikiText-2 texts (Figure~\ref{fig:per_layer}) reveals why KV-norm routing is no better than random even though the feature looks principled: the per-token 4-bit quality proxy varies monotonically across transformer layers (Layer 1: $q_{t,4}^{\mathrm{local}}{=}0.73$; Layer 23: $q_{t,4}^{\mathrm{local}}{=}0.45$), driven by a monotonic growth in KV norms (38$\to$107). 8-bit is near-lossless at every layer ($q_{t,8}^{\mathrm{local}}{>}0.97$). Crucially, within a layer the L2 norm does not single out "fragile" tokens --- high- and low-norm tokens in the same layer suffer comparable 4-bit loss, which is why the sanity-check reversal returns the same 44.5\%.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.88\linewidth]{figures/per_layer_q_local}
+\caption{Per-layer quantization quality on SmolLM-1.7B (30 WikiText-2 texts, 128 tokens each). 8-bit is near-lossless at every layer (green squares, $q_{t,8}^{\mathrm{local}}{>}0.97$); 4-bit quality degrades monotonically from L1 ($q_{t,4}^{\mathrm{local}}{=}0.73$) to L23 ($0.45$, red circle outlier), driven by KV norms growing $\sim 3\times$ across depth. Within-layer norm does not separate fragile tokens --- this is why KV-norm routing (either direction) tracks random.}
+\label{fig:per_layer}
+\end{figure}
 
 \noindent\textbf{Interpretation.} Three effects, all pointing the same way. First, the Phase 7d seed-std ($\pm$0.75pp) is small: uniform random routing at 74/26 is a reproducible baseline, not a lucky draw. Second, both KV-norm directions return \emph{identical} 44.5\% --- whatever L2 norm is measuring, it is not a signal that, when routed consistently with or against, shifts accuracy. The $-$4pp gap vs.\ random is therefore not about "picking the wrong side" of the norm; it's about routing being \emph{systematic} at all (correlated 4-bit assignments amplify correlated quantization errors, while random routing decorrelates them). Third, the learned controller actually Pareto-dominates random on its own terms, but at a different operating ratio ($p_4{=}0.955$, 3.34$\times$ speedup, 47.5\% accuracy) --- the controller's per-token quality proxy, when recomputed on live K tensors, prefers 4-bit on nearly everything. Taken together: at the 74/26 fixed split on SmolLM-1.7B, the per-token \emph{routing decision} carries no measurable accuracy signal above seed noise. What matters is (i) using $\{4,8\}$-bit rather than DWB's $\{2,4,8,16\}$-bit (the hardware-aware contribution of this paper), and (ii) picking a good split ratio (our beta-calibration formula, Table~\ref{tab:betastar}). This is a strictly stronger conclusion than "the controller works": it removes the controller as a necessary ingredient, and reduces the FPGA-aware KV-quant recipe to two design choices.
 

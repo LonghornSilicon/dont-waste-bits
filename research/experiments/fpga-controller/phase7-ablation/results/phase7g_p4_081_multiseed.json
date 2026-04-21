@@ -1,0 +1,82 @@
+{
+  "experiment": "phase7g_p4_081_multiseed",
+  "model": "HuggingFaceTB/SmolLM-1.7B",
+  "n_samples": 500,
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "target_p4": 0.81,
+  "per_seed": {
+    "0": {
+      "accuracy_pct": 48.4,
+      "avg_bits": 4.761,
+      "fpga_cost": 0.3414,
+      "fpga_speedup": 2.959,
+      "p4_pct": 80.98,
+      "p8_pct": 19.02,
+      "n_tokens": 522312,
+      "elapsed_s": 769.2
+    },
+    "1": {
+      "accuracy_pct": 47.4,
+      "avg_bits": 4.756,
+      "fpga_cost": 0.3411,
+      "fpga_speedup": 2.961,
+      "p4_pct": 81.09,
+      "p8_pct": 18.91,
+      "n_tokens": 522312,
+      "elapsed_s": 759.9
+    },
+    "2": {
+      "accuracy_pct": 47.6,
+      "avg_bits": 4.759,
+      "fpga_cost": 0.3412,
+      "fpga_speedup": 2.96,
+      "p4_pct": 81.02,
+      "p8_pct": 18.98,
+      "n_tokens": 522312,
+      "elapsed_s": 761.4
+    },
+    "3": {
+      "accuracy_pct": 48.4,
+      "avg_bits": 4.757,
+      "fpga_cost": 0.3411,
+      "fpga_speedup": 2.961,
+      "p4_pct": 81.08,
+      "p8_pct": 18.92,
+      "n_tokens": 522312,
+      "elapsed_s": 769.7
+    },
+    "4": {
+      "accuracy_pct": 49.8,
+      "avg_bits": 4.758,
+      "fpga_cost": 0.3411,
+      "fpga_speedup": 2.961,
+      "p4_pct": 81.06,
+      "p8_pct": 18.94,
+      "n_tokens": 522312,
+      "elapsed_s": 778.2
+    }
+  },
+  "summary": {
+    "accuracy_mean": 48.32,
+    "accuracy_std": 0.944,
+    "accuracy_sem": 0.422,
+    "accuracy_ci95_pp": 0.828,
+    "accuracy_range": [
+      47.4,
+      49.8
+    ],
+    "fpga_speedup_mean": 2.96
+  },
+  "compare_phase7d_p4_074": {
+    "accuracy_mean_pct": 48.04,
+    "accuracy_std_pp": 0.754,
+    "fpga_speedup_mean": 2.804
+  },
+  "elapsed_s": 3842.5
+}
