@@ -1,0 +1,31 @@
+{
+  "experiment": "baselines_1b7",
+  "model": "HuggingFaceTB/SmolLM-1.7B",
+  "n_samples": 500,
+  "seed": 0,
+  "conditions": {
+    "fp16": {
+      "accuracy_pct": 52.0,
+      "fpga_cost": 1.01,
+      "fpga_speedup": 1.0,
+      "elapsed_s": 50.3
+    },
+    "static_int4": {
+      "accuracy_pct": 47.0,
+      "fpga_cost": 0.29,
+      "fpga_speedup": 3.483,
+      "elapsed_s": 812.7
+    }
+  },
+  "paper_reference": {
+    "fp16_paper": {
+      "accuracy_pct": 49.0,
+      "source": "DWB Table 3"
+    },
+    "int4_paper": {
+      "accuracy_pct": 41.1,
+      "source": "DWB Table 3"
+    }
+  },
+  "elapsed_s": 867.2
+}
