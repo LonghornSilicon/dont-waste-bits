@@ -1,0 +1,259 @@
+{
+  "experiment": "rotated_q_local (offline Hadamard + signs baked into K/V proj weights)",
+  "model": "HuggingFaceTB/SmolLM-1.7B",
+  "n_texts": 30,
+  "max_len": 128,
+  "seed": 42,
+  "num_layers": 24,
+  "per_layer": [
+    {
+      "layer": 0,
+      "n_tokens": 3517,
+      "q4_mean": 0.8483,
+      "q4_std": 0.0074,
+      "q8_mean": 0.9889,
+      "q8_std": 0.0006,
+      "gap_mean": 0.1406,
+      "norm_mean": 38.296
+    },
+    {
+      "layer": 1,
+      "n_tokens": 3517,
+      "q4_mean": 0.7987,
+      "q4_std": 0.0189,
+      "q8_mean": 0.9883,
+      "q8_std": 0.001,
+      "gap_mean": 0.1896,
+      "norm_mean": 48.555
+    },
+    {
+      "layer": 2,
+      "n_tokens": 3517,
+      "q4_mean": 0.8097,
+      "q4_std": 0.0189,
+      "q8_mean": 0.9892,
+      "q8_std": 0.0007,
+      "gap_mean": 0.1795,
+      "norm_mean": 54.299
+    },
+    {
+      "layer": 3,
+      "n_tokens": 3517,
+      "q4_mean": 0.8007,
+      "q4_std": 0.0228,
+      "q8_mean": 0.9887,
+      "q8_std": 0.0011,
+      "gap_mean": 0.1881,
+      "norm_mean": 53.087
+    },
+    {
+      "layer": 4,
+      "n_tokens": 3517,
+      "q4_mean": 0.8077,
+      "q4_std": 0.0151,
+      "q8_mean": 0.9892,
+      "q8_std": 0.0007,
+      "gap_mean": 0.1816,
+      "norm_mean": 58.633
+    },
+    {
+      "layer": 5,
+      "n_tokens": 3517,
+      "q4_mean": 0.8049,
+      "q4_std": 0.0187,
+      "q8_mean": 0.9891,
+      "q8_std": 0.0009,
+      "gap_mean": 0.1841,
+      "norm_mean": 60.08
+    },
+    {
+      "layer": 6,
+      "n_tokens": 3517,
+      "q4_mean": 0.8086,
+      "q4_std": 0.0163,
+      "q8_mean": 0.9893,
+      "q8_std": 0.0008,
+      "gap_mean": 0.1807,
+      "norm_mean": 60.684
+    },
+    {
+      "layer": 7,
+      "n_tokens": 3517,
+      "q4_mean": 0.7972,
+      "q4_std": 0.0161,
+      "q8_mean": 0.9887,
+      "q8_std": 0.0011,
+      "gap_mean": 0.1914,
+      "norm_mean": 63.085
+    },
+    {
+      "layer": 8,
+      "n_tokens": 3517,
+      "q4_mean": 0.8054,
+      "q4_std": 0.0157,
+      "q8_mean": 0.9893,
+      "q8_std": 0.0009,
+      "gap_mean": 0.1839,
+      "norm_mean": 65.548
+    },
+    {
+      "layer": 9,
+      "n_tokens": 3517,
+      "q4_mean": 0.8058,
+      "q4_std": 0.0138,
+      "q8_mean": 0.9893,
+      "q8_std": 0.0008,
+      "gap_mean": 0.1835,
+      "norm_mean": 62.956
+    },
+    {
+      "layer": 10,
+      "n_tokens": 3517,
+      "q4_mean": 0.808,
+      "q4_std": 0.0212,
+      "q8_mean": 0.9894,
+      "q8_std": 0.0012,
+      "gap_mean": 0.1814,
+      "norm_mean": 64.306
+    },
+    {
+      "layer": 11,
+      "n_tokens": 3517,
+      "q4_mean": 0.8095,
+      "q4_std": 0.0176,
+      "q8_mean": 0.9895,
+      "q8_std": 0.001,
+      "gap_mean": 0.18,
+      "norm_mean": 65.428
+    },
+    {
+      "layer": 12,
+      "n_tokens": 3517,
+      "q4_mean": 0.8113,
+      "q4_std": 0.0209,
+      "q8_mean": 0.9896,
+      "q8_std": 0.0012,
+      "gap_mean": 0.1783,
+      "norm_mean": 66.362
+    },
+    {
+      "layer": 13,
+      "n_tokens": 3517,
+      "q4_mean": 0.8193,
+      "q4_std": 0.0145,
+      "q8_mean": 0.99,
+      "q8_std": 0.0008,
+      "gap_mean": 0.1708,
+      "norm_mean": 70.513
+    },
+    {
+      "layer": 14,
+      "n_tokens": 3517,
+      "q4_mean": 0.8107,
+      "q4_std": 0.0182,
+      "q8_mean": 0.9896,
+      "q8_std": 0.001,
+      "gap_mean": 0.1789,
+      "norm_mean": 71.331
+    },
+    {
+      "layer": 15,
+      "n_tokens": 3517,
+      "q4_mean": 0.8132,
+      "q4_std": 0.0199,
+      "q8_mean": 0.9897,
+      "q8_std": 0.0011,
+      "gap_mean": 0.1765,
+      "norm_mean": 72.683
+    },
+    {
+      "layer": 16,
+      "n_tokens": 3517,
+      "q4_mean": 0.8222,
+      "q4_std": 0.0182,
+      "q8_mean": 0.9902,
+      "q8_std": 0.001,
+      "gap_mean": 0.168,
+      "norm_mean": 73.683
+    },
+    {
+      "layer": 17,
+      "n_tokens": 3517,
+      "q4_mean": 0.8302,
+      "q4_std": 0.0192,
+      "q8_mean": 0.9906,
+      "q8_std": 0.0011,
+      "gap_mean": 0.1604,
+      "norm_mean": 79.54
+    },
+    {
+      "layer": 18,
+      "n_tokens": 3517,
+      "q4_mean": 0.819,
+      "q4_std": 0.0331,
+      "q8_mean": 0.99,
+      "q8_std": 0.0018,
+      "gap_mean": 0.171,
+      "norm_mean": 80.916
+    },
+    {
+      "layer": 19,
+      "n_tokens": 3517,
+      "q4_mean": 0.8324,
+      "q4_std": 0.0152,
+      "q8_mean": 0.9908,
+      "q8_std": 0.0008,
+      "gap_mean": 0.1583,
+      "norm_mean": 91.339
+    },
+    {
+      "layer": 20,
+      "n_tokens": 3517,
+      "q4_mean": 0.834,
+      "q4_std": 0.0139,
+      "q8_mean": 0.9909,
+      "q8_std": 0.0008,
+      "gap_mean": 0.1568,
+      "norm_mean": 94.761
+    },
+    {
+      "layer": 21,
+      "n_tokens": 3517,
+      "q4_mean": 0.8299,
+      "q4_std": 0.0157,
+      "q8_mean": 0.9906,
+      "q8_std": 0.0009,
+      "gap_mean": 0.1607,
+      "norm_mean": 102.161
+    },
+    {
+      "layer": 22,
+      "n_tokens": 3517,
+      "q4_mean": 0.8301,
+      "q4_std": 0.0157,
+      "q8_mean": 0.9906,
+      "q8_std": 0.0009,
+      "gap_mean": 0.1605,
+      "norm_mean": 112.74
+    },
+    {
+      "layer": 23,
+      "n_tokens": 3517,
+      "q4_mean": 0.8326,
+      "q4_std": 0.0158,
+      "q8_mean": 0.9908,
+      "q8_std": 0.0009,
+      "gap_mean": 0.1581,
+      "norm_mean": 129.264
+    }
+  ],
+  "q4_mean_across_layers": {
+    "min": 0.7972,
+    "max": 0.8483,
+    "spread": 0.0511
+  },
+  "gap_spread": 0.0508,
+  "comparison_to_unrotated": null,
+  "verdict": "ROTATION HELPS SUBSTANTIALLY \u2014 run full 5-seed HellaSwag at p4=0.96",
+  "elapsed_s": 69.5
+}
