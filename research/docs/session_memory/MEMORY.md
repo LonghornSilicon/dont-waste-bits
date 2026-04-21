@@ -1,0 +1,4 @@
+- [Phase 7 ablation result (1.7B, A4000)](project_phase7_result.md) — at p4=0.74 split, random/controller/KV-norm are within ±1 seed-std: 48.6%±0.71% at 2.81× speedup
+- [Paper + experiment layout](reference_paper_artifacts.md) — fpga_controller_paper.tex, phase5/phase7 scripts, torch cu121 env pitfalls
+- [DWB-TurboQuant revisit plan](project_turboquant_revisit_plan.md) — 130nm tape-out, inference-only; preferred lane is offline Hadamard rotation baked into KV weights (no runtime rotation hw)
+- [FPGA layout decision rule](project_fpga_layout_decision.md) — goal is *simplest* layout that hits 48% acc; 7j≈7k unlocks ~10K-gate static-INT4 design, mixed layout needs ~25K. Decision matrix tied to 7j/7k/rotated-INT4 outcomes.
