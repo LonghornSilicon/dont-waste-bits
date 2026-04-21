@@ -5,3 +5,15 @@ __pycache__/
 *.log
 .claude/
 research/src/dont-waste-bits-original/
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
+**/.ipynb_checkpoints/
+
+# LaTeX intermediates
+*.aux
+*.bbl
+*.blg
+*.out
+*.toc
+*.synctex.gz
