@@ -34,6 +34,7 @@ def pareto_figure():
     d_7e = json.load(open(PHASE7 / "phase7e_split_sweep.json"))
     d_7f = json.load(open(PHASE7 / "phase7f_kv_norm_inverted.json"))
     d_7g = json.load(open(PHASE7 / "phase7g_p4_081_multiseed.json"))
+    d_7i = json.load(open(PHASE7 / "phase7i_p4_096_multiseed.json"))
 
     # Baselines (reported in the DWB paper or from arithmetic)
     fp16_pt   = (1.00, 49.0, "FP16")
@@ -48,6 +49,9 @@ def pareto_figure():
     p7g = (d_7g["summary"]["fpga_speedup_mean"],
            d_7g["summary"]["accuracy_mean"],
            d_7g["summary"]["accuracy_std"])
+    p7i = (d_7i["summary"]["fpga_speedup_mean"],
+           d_7i["summary"]["accuracy_mean"],
+           d_7i["summary"]["accuracy_std"])
 
     # Phase 7e sweep: single seed n=200
     sweep = [(m["fpga_speedup"], m["accuracy_pct"], k)
@@ -90,6 +94,11 @@ def pareto_figure():
     ax.errorbar(p7g[0], p7g[1], yerr=p7g[2], fmt="D",
                 c="#16a085", ms=9, capsize=4, zorder=5,
                 label=f"Phase 7g 5-seed ($p_4{{=}}0.81$): {p7g[1]:.2f}%$\\pm${p7g[2]:.2f}pp")
+
+    # Phase 7i 5-seed (BRAM-bound operating point, +38% vs DWB)
+    ax.errorbar(p7i[0], p7i[1], yerr=p7i[2], fmt="D",
+                c="#0b7a5a", ms=10, capsize=4, zorder=5,
+                label=f"Phase 7i 5-seed ($p_4{{=}}0.96$): {p7i[1]:.2f}%$\\pm${p7i[2]:.2f}pp")
 
     # Routing-strategy singletons (Phase 7c, n=200)
     s7c = d_7c["strategies"]
